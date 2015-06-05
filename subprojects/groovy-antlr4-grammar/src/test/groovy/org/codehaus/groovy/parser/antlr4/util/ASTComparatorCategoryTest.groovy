@@ -1,4 +1,4 @@
-package com.xseagullx.groovy.gsoc.util
+package org.codehaus.groovy.parser.antlr4.util
 
 import org.codehaus.groovy.ast.builder.AstBuilder
 import org.codehaus.groovy.control.CompilePhase

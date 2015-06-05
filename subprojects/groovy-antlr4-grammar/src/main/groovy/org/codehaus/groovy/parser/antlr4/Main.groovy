@@ -1,5 +1,5 @@
 
-package com.xseagullx.groovy.gsoc
+package org.codehaus.groovy.parser.antlr4
 
 import groovy.util.logging.Log
 import org.codehaus.groovy.ast.ModuleNode

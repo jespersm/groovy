@@ -1,4 +1,4 @@
-package com.xseagullx.groovy.gsoc
+package org.codehaus.groovy.parser.antlr4
 
 import org.codehaus.groovy.ast.ModuleNode
 import org.codehaus.groovy.control.CompilationFailedException

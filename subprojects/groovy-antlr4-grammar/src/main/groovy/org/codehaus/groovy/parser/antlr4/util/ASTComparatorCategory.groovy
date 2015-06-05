@@ -1,5 +1,5 @@
 
-package com.xseagullx.groovy.gsoc.util
+package org.codehaus.groovy.parser.antlr4.util
 
 import groovy.util.logging.Log
 import org.codehaus.groovy.ast.*

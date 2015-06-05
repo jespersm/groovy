@@ -1,4 +1,4 @@
-@Annotated package com.xseagullx.groovy.gsoc;
+@Annotated package org.codehaus.groovy.parser.antlr4;
 
 import groovy.transform.Canonical
 import groovy.util.logging.Log
