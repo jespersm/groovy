@@ -12,8 +12,12 @@ public class GrammarPredicates {
     };
 
     public static boolean isClassName(TokenStream nameOrPath) {
-        Token token = nameOrPath.LT(1);
-        if (nameOrPath.LT(2).getType() == GroovyParser.DOT) return true;
+        int index = 1;
+        Token token = nameOrPath.LT(index);
+        while (nameOrPath.LT(index+1).getType() == GroovyParser.DOT) {
+            index += 2;
+            token = nameOrPath.LT(index);
+        }
         String tokenText = token.getText();
         if (Arrays.binarySearch(primitiveClassNames, tokenText)!=-1) return true;
         return Character.isUpperCase(tokenText.codePointAt(0));

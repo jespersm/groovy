@@ -26,7 +26,7 @@ class GrammarPredicatesTest extends Specification {
             name    | res
             "a"     | false
             "A"     | true
-//             "a.a"   | false // Suppress failing test for now
+             "a.a"   | false // Suppress failing test for now
             "a.A"   | true
             "void"  | true
             "int"   | true
