@@ -1,4 +1,13 @@
 package org.codehaus.groovy.parser.antlr4
+
+import org.antlr.v4.runtime.ANTLRErrorListener
+import org.antlr.v4.runtime.Parser
+import org.antlr.v4.runtime.RecognitionException
+import org.antlr.v4.runtime.Recognizer
+import org.antlr.v4.runtime.atn.ATNConfigSet
+import org.antlr.v4.runtime.dfa.DFA
+import org.antlr.v4.runtime.misc.Nullable
+import org.codehaus.groovy.control.messages.SyntaxErrorMessage
 import org.codehaus.groovy.parser.antlr4.GroovyParser.AnnotationClauseContext
 import org.codehaus.groovy.parser.antlr4.GroovyParser.AnnotationElementContext
 import org.codehaus.groovy.parser.antlr4.GroovyParser.AnnotationParamArrayExpressionContext
@@ -199,6 +208,39 @@ class ASTBuilder {
         CommonTokenStream tokens = new CommonTokenStream(lexer)
 
         def parser = new GroovyParser(tokens)
+        parser.removeErrorListeners()
+        parser.addErrorListener(new ANTLRErrorListener() {
+            @Override
+            void syntaxError(
+                @NotNull Recognizer<?, ?> recognizer,
+                @Nullable Object offendingSymbol, int line, int charPositionInLine,
+                @NotNull String msg, @Nullable RecognitionException e) {
+                sourceUnit.errorCollector.addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine), sourceUnit))
+            }
+
+            @Override
+            void reportAmbiguity(
+                @NotNull Parser recognizer,
+                @NotNull DFA dfa, int startIndex, int stopIndex, boolean exact,
+                @Nullable BitSet ambigAlts, @NotNull ATNConfigSet configs) {
+                log.fine("Ambiguity at $startIndex - $stopIndex")
+            }
+
+            @Override
+            void reportAttemptingFullContext(
+                @NotNull Parser recognizer,
+                @NotNull DFA dfa, int startIndex, int stopIndex,
+                @Nullable BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
+                log.fine("Attempting Full Context at $startIndex - $stopIndex")
+            }
+
+            @Override
+            void reportContextSensitivity(
+                @NotNull Parser recognizer,
+                @NotNull DFA dfa, int startIndex, int stopIndex, int prediction, @NotNull ATNConfigSet configs) {
+                log.fine("Context Sensitivity at $startIndex - $stopIndex")
+            }
+        })
         ParseTree tree = parser.compilationUnit()
         if (log.isLoggable(Level.FINE)) {
             def s = "" << ""
