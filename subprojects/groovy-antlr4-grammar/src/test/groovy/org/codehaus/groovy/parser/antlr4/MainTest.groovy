@@ -108,4 +108,22 @@ class MainTest extends Specification {
         "ClassModifiersInvalid_Issue1_2.groovy" | _
         "ClassModifiersInvalid_Issue2_2.groovy" | _
     }
+
+    @Unroll
+    def "test invalid files #path"() {
+        when:
+            def file = new File('subprojects/groovy-antlr4-grammar/src/test/resources/' + path)
+        then:
+            ! canLoad(file, Configuration.NEW) && ! canLoad(file, Configuration.OLD)
+        where:
+            path | output
+            "Statement_Errors_1.groovy" | _
+            "Statement_Errors_2.groovy" | _
+    }
+
+    boolean canLoad(File file, Configuration config) {
+        def module = new Main(config).process(file)
+        return module != null && ! module.context.errorCollector.hasErrors()
+    }
+
 }

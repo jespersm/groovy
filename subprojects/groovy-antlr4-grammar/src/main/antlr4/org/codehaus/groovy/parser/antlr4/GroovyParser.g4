@@ -7,7 +7,7 @@ options { tokenVocab = GroovyLexer; }
     String currentClassName = null; // Used for correct constructor recognition.
 }
 
-compilationUnit: SHEBANG_COMMENT? (NL*) packageDefinition? (NL | SEMICOLON)* (importStatement | NL)* (NL | SEMICOLON)* (classDeclaration | enumDeclaration | NL)* (statement | NL)* EOF;
+compilationUnit: SHEBANG_COMMENT? (NL*) packageDefinition? (NL | SEMICOLON)* (importStatement | NL)* (NL | SEMICOLON)* (classDeclaration | enumDeclaration | NL)* (NL | SEMICOLON)* ((statement (NL | SEMICOLON)+)* | statement) (NL | SEMICOLON)* EOF;
 
 packageDefinition:
     (annotationClause (NL | annotationClause)*)? KW_PACKAGE (IDENTIFIER (DOT IDENTIFIER)*);
@@ -74,7 +74,9 @@ argumentDeclarationList:
 argumentDeclaration:
     annotationClause* typeDeclaration? IDENTIFIER ('=' expression)? ;
 
-blockStatement: (statement | NL | SEMICOLON)+ ;
+blockStatement:
+    (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
+    | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
 declarationRule: annotationClause* typeDeclaration IDENTIFIER (ASSIGN expression)? ;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
@@ -86,7 +88,6 @@ statement:
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
     | cmdExpressionRule #commandExpressionStatement
-    | expression #expressionStatement
     | KW_FOR LPAREN (expression)? SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
     | KW_FOR LPAREN typeDeclaration? IDENTIFIER KW_IN expression RPAREN NL* statementBlock #forInStatement
     | KW_FOR LPAREN typeDeclaration IDENTIFIER COLON expression RPAREN NL* statementBlock #forColonStatement
@@ -102,6 +103,7 @@ statement:
     | (KW_CONTINUE | KW_BREAK) #controlStatement
     | KW_RETURN expression? #returnStatement
     | KW_THROW expression #throwStatement
+    | expression #expressionStatement
 ;
 
 statementBlock:
