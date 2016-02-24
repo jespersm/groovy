@@ -1,19 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * Derived from Boon all rights granted to Groovy project for this fork.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.json.internal;
 
@@ -57,7 +58,6 @@ public class CharSequenceValue implements Value, CharSequence {
             this.startIndex = 0;
             this.endIndex = this.buffer.length;
             this.chopped = true;
-
         } else {
             this.startIndex = startIndex;
             this.endIndex = endIndex;
@@ -78,7 +78,6 @@ public class CharSequenceValue implements Value, CharSequence {
     }
 
     public <T extends Enum> T toEnum(Class<T> cls) {
-
         switch (type) {
             case STRING:
                 return toEnum(cls, stringValue());
@@ -100,7 +99,6 @@ public class CharSequenceValue implements Value, CharSequence {
     }
 
     public static <T extends Enum> T toEnum(Class<T> cls, int value) {
-
         T[] enumConstants = cls.getEnumConstants();
         for (T e : enumConstants) {
             if (e.ordinal() == value) {
@@ -116,12 +114,10 @@ public class CharSequenceValue implements Value, CharSequence {
     }
 
     private final Object doToValue() {
-
         switch (type) {
             case DOUBLE:
                 return doubleValue();
             case INTEGER:
-
                 if (isInteger(buffer, startIndex, endIndex - startIndex)) {
                     return intValue();
                 } else {
@@ -209,7 +205,6 @@ public class CharSequenceValue implements Value, CharSequence {
     }
 
     public Date dateValue() {
-
         if (type == Type.STRING) {
 
             if (Dates.isISO8601QuickCheck(buffer, startIndex, endIndex)) {
@@ -223,11 +218,9 @@ public class CharSequenceValue implements Value, CharSequence {
                     throw new JsonException("Unable to convert " + stringValue() + " to date ");
                 }
             } else {
-
                 throw new JsonException("Unable to convert " + stringValue() + " to date ");
             }
         } else {
-
             return new Date(Dates.utc(longValue()));
         }
     }
@@ -237,13 +230,11 @@ public class CharSequenceValue implements Value, CharSequence {
         if (buffer[startIndex] == '-') {
             startIndex++;
             sign = -1;
-
         }
         return parseIntFromTo(buffer, startIndex, endIndex) * sign;
     }
 
     public long longValue() {
-
         if (isInteger(buffer, startIndex, endIndex - startIndex)) {
             return parseIntFromTo(buffer, startIndex, endIndex);
         } else {
@@ -268,7 +259,6 @@ public class CharSequenceValue implements Value, CharSequence {
     }
 
     public float floatValue() {
-
         return CharScanner.parseFloat(this.buffer, startIndex, endIndex);
     }
 
@@ -285,4 +275,3 @@ public class CharSequenceValue implements Value, CharSequence {
         return buffer[startIndex];
     }
 }
-

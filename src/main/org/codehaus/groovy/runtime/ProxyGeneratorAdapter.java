@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.runtime;
 
@@ -30,6 +33,7 @@ import org.codehaus.groovy.control.ErrorCollector;
 import org.codehaus.groovy.control.Phases;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.tools.GroovyClass;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
@@ -70,7 +74,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * The generated proxy implements the {@link GroovyObject} interface.
  *
- * Additionaly, this proxy generator supports delegation to another object. In that case, if a method is defined
+ * Additionally, this proxy generator supports delegation to another object. In that case, if a method is defined
  * both in the closure map and the delegate, the version from the map is preferred. This allows overriding methods
  * from delegates with ease.
  *
@@ -234,7 +238,15 @@ public class ProxyGeneratorAdapter extends ClassVisitor implements Opcodes {
     private void collectTraits(final Class clazz, final Set<ClassNode> traits) {
         Annotation annotation = clazz.getAnnotation(Trait.class);
         if (annotation!=null) {
-            traits.add(ClassHelper.make(clazz));
+            ClassNode trait = ClassHelper.make(clazz);
+            traits.add(trait.getPlainNodeReference());
+            LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
+            Traits.collectSelfTypes(trait, selfTypes, true, true);
+            for (ClassNode selfType : selfTypes) {
+                if (Traits.isTrait(selfType)) {
+                    traits.add(selfType.getPlainNodeReference());
+                }
+            }
         }
     }
 
@@ -513,7 +525,10 @@ public class ProxyGeneratorAdapter extends ClassVisitor implements Opcodes {
     }
 
     private String proxyName() {
-        String name = delegateClass!=null?delegateClass.getName():superClass.getName();
+        String name = delegateClass != null ? delegateClass.getName() : superClass.getName();
+        if (name.startsWith("[") && name.endsWith(";")) {
+            name = name.substring(1, name.length() - 1) + "_array";
+        }
         int index = name.lastIndexOf('.');
         if (index == -1) return name + pxyCounter.incrementAndGet() + "_groovyProxy";
         return name.substring(index + 1, name.length()) + pxyCounter.incrementAndGet() + "_groovyProxy";
@@ -529,10 +544,7 @@ public class ProxyGeneratorAdapter extends ClassVisitor implements Opcodes {
             }
         }
         Class parent = clazz.getSuperclass();
-        if (parent !=null) {
-            return isImplemented(parent, name, desc);
-        }
-        return false;
+        return parent != null && isImplemented(parent, name, desc);
     }
 
     @Override
@@ -702,7 +714,7 @@ public class ProxyGeneratorAdapter extends ClassVisitor implements Opcodes {
         Type[] args = Type.getArgumentTypes(desc);
         BytecodeHelper.pushConstant(mv, args.length);
         mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
-        size = 3;
+        size = 6;
         int idx = 1;
         for (int i = 0; i < args.length; i++) {
             Type arg = args[i];
@@ -716,7 +728,7 @@ public class ProxyGeneratorAdapter extends ClassVisitor implements Opcodes {
             } else {
                 mv.visitVarInsn(ALOAD, idx); // load argument i
             }
-            size = Math.max(6, 5+registerLen(arg));
+            size = Math.max(size, 5+registerLen(arg));
             idx += registerLen(arg);
             mv.visitInsn(AASTORE); // store value into array
         }

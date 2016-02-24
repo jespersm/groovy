@@ -1,25 +1,27 @@
 /*
- * Copyright 2008-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.transform
 
 import gls.CompilableTestSupport
 
 /**
- * @author Marcin Grzejszczak
- * @author Paul King
+ * Tests for {@code @Builder} transform.
  */
 class BuilderTransformTest extends CompilableTestSupport {
 
@@ -95,6 +97,36 @@ class BuilderTransformTest extends CompilableTestSupport {
         """
     }
 
+    void testSimpleBuilderSetters() {
+        assertScript """
+            import groovy.transform.builder.*
+            import groovy.transform.*
+
+            @TupleConstructor(useSetters=true)
+            @Builder(builderStrategy=SimpleStrategy, prefix="", useSetters=true)
+            class Person {
+                String name
+                void setName(String name) { this.name = name?.toLowerCase() }
+                Integer age
+                void setAge(Integer age) { this.age = (age ?: 0) * 2 }
+            }
+
+            def person = new Person()
+            person.name("John").age(21)
+            assert person.name == "john"
+            assert person.age == 42
+
+            def p2 = new Person(name: 'Mary', age: 5)
+            assert p2.name == "mary"
+            assert p2.age == 10
+
+            def p3 = new Person(name: 'TOM')
+            p3.age = 15
+            assert p3.name == "tom"
+            assert p3.age == 30
+        """
+    }
+
     void testSimpleBuilderWithCanonicalAndExcludes() {
         assertScript '''
             import groovy.transform.builder.*
@@ -155,6 +187,65 @@ class BuilderTransformTest extends CompilableTestSupport {
             assert person.lastName == "Lewandowski"
             assert person.age == 21
         """
+    }
+
+    void testDefaultBuilderGenerics() {
+        assertScript """
+            import groovy.transform.builder.Builder
+
+            @Builder
+            class CookBook {
+                List<String> recipes
+            }
+
+            def c = CookBook.builder().recipes(['Eggs Benedict', 'Poached Salmon']).build()
+            assert c.recipes == ['Eggs Benedict', 'Poached Salmon']
+        """
+        def message = shouldNotCompile '''
+            import groovy.transform.builder.Builder
+            import groovy.transform.CompileStatic
+
+            @Builder
+            class CookBook {
+                List<String> recipes
+            }
+
+
+            @CompileStatic
+            def methodBadParams() {
+                CookBook.builder().recipes([35, 42]).build()
+            }
+        '''
+        assert message =~ /.*Cannot call.*recipes.*java.util.List\s?<java.lang.String>.*with arguments.*java.util.List\s?<java.lang.Integer>.*/
+    }
+
+    void testInitializerGenerics() {
+        assertScript """
+            import groovy.transform.builder.*
+
+            @Builder(builderStrategy=InitializerStrategy)
+            class CookBook {
+                List<String> recipes
+            }
+
+            def c = new CookBook(CookBook.createInitializer().recipes(['Eggs Benedict', 'Poached Salmon']))
+            assert c.recipes == ['Eggs Benedict', 'Poached Salmon']
+        """
+        def message = shouldNotCompile '''
+            import groovy.transform.builder.*
+
+            @Builder(builderStrategy=InitializerStrategy)
+            class CookBook {
+                List<String> recipes
+            }
+
+
+            @groovy.transform.CompileStatic
+            def methodBadParams() {
+                new CookBook(CookBook.createInitializer().recipes([35, 42]))
+            }
+        '''
+        assert message =~ /.*Cannot call.*recipes.*java.util.List\s?<java.lang.String>.*with arguments.*java.util.List\s?<java.lang.Integer>.*/
     }
 
     void testDefaultBuilderCustomNames() {
@@ -392,10 +483,111 @@ class BuilderTransformTest extends CompilableTestSupport {
 
             @CompileStatic
             def firstLastAge() {
-                assert new Person(Person.createInitializer().firstName("John").lastName("Smith").age(21)).toString() == 'Person(John, Smith, 21)\'
+                assert new Person(Person.createInitializer().firstName("John").lastName("Smith").age(21)).toString() == 'Person(John, Smith, 21)'
             }
             firstLastAge()
         '''
+    }
+
+    void testInitializerStrategyOnConstructorAndMethods() {
+        assertScript '''
+            import groovy.transform.builder.*
+            import groovy.transform.*
+
+            @ToString
+            @Builder(builderStrategy=InitializerStrategy)
+            class Person {
+                String firstName
+                String lastName
+                int age
+
+                @Builder(builderStrategy=InitializerStrategy, builderClassName='FullNameInitializer', builderMethodName='fullNameInitializer')
+                Person(String fullName, int age) {
+                    String[] splitFullName = fullName.split(' ')
+                    firstName = splitFullName?.first()
+                    lastName = splitFullName?.last()
+                    this.age = age
+                }
+
+                @Builder(builderStrategy=InitializerStrategy, builderClassName='NameListInitializer', builderMethodName='listInitializer')
+                Person(List<String> nameParts, Integer age) {
+                    firstName = nameParts[0]
+                    lastName = nameParts[-1]
+                    this.age = age
+                }
+
+                @Builder(builderStrategy=InitializerStrategy, builderClassName='StringInitializer', builderMethodName='stringInitializer')
+                static Person personStringFactory(String allBits) {
+                    String[] bits = allBits.split(',')
+                    new Person(bits[0], bits[1], bits[2].toInteger())
+                }
+            }
+
+            @CompileStatic
+            def test() {
+                assert new Person(Person.createInitializer().firstName('John').lastName('Smith').age(10)).toString() == 'Person(John, Smith, 10)'
+                assert new Person(Person.fullNameInitializer().fullName('John Smith').age(10)).toString() == 'Person(John, Smith, 10)'
+                assert new Person(Person.listInitializer().nameParts(['John', 'Smith']).age(10)).toString() == 'Person(John, Smith, 10)'
+                assert Person.personStringFactory(Person.stringInitializer().allBits("John,Smith,10")).toString() == 'Person(John, Smith, 10)'
+            }
+            test()
+        '''
+    }
+
+    void testInitializerStrategySetters() {
+        assertScript '''
+            import groovy.transform.builder.*
+            import groovy.transform.*
+
+            @Canonical
+            @Builder(builderStrategy=InitializerStrategy, useSetters=true)
+            class Person {
+                String name
+                void setName(String name) { this.name = name?.toUpperCase() }
+            }
+
+            @CompileStatic
+            def make() {
+                assert new Person(Person.createInitializer().name("John")).toString() == 'Person(JOHN)'
+            }
+            make()
+        '''
+    }
+
+    void testBuilderWithPackageName_GROOVY7501() {
+        assertScript '''
+            package alfa.beta
+
+            import groovy.transform.builder.*
+
+            @Builder class PersonDef { }
+            assert PersonDef.builder().class.name == 'alfa.beta.PersonDef$PersonDefBuilder'
+
+            @Builder(builderStrategy=InitializerStrategy) class PersonInit { String foo }
+            assert PersonInit.createInitializer().class.name == 'alfa.beta.PersonInit$PersonInitInitializer'
+        '''
+    }
+
+    void testInitializerStrategyEmptyCases_GROOVY7503() {
+        def message = shouldNotCompile '''
+            import groovy.transform.builder.*
+            @Builder(builderStrategy=InitializerStrategy) class Foo { }
+        '''
+        assert message.contains('at least one property is required for this strategy')
+        message = shouldNotCompile '''
+            import groovy.transform.builder.*
+            @Builder(builderStrategy=InitializerStrategy, excludes='bar') class Foo { String bar }
+        '''
+        assert message.contains('at least one property is required for this strategy')
+        message = shouldNotCompile '''
+            import groovy.transform.builder.*
+            class Foo {
+              @Builder(builderStrategy=InitializerStrategy)
+              Foo() {
+              }
+            }
+        '''
+        assert message.contains('at least one parameter is required for this strategy')
     }
 
 }

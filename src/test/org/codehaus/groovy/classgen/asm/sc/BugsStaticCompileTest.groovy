@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen.asm.sc
 
@@ -256,7 +259,7 @@ class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTest
         }
         A a = new A()
         @ASTTest(phase=INSTRUCTION_SELECTION, value={
-            assert node.getNodeMetaData(INFERRED_TYPE) == int_TYPE
+            assert node.getNodeMetaData(INFERRED_TYPE) == Integer_TYPE
         })
         def x = a?.x
         '''
@@ -269,7 +272,7 @@ class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTest
         }
         A a = new A()
         @ASTTest(phase=INSTRUCTION_SELECTION, value={
-            assert node.getNodeMetaData(INFERRED_TYPE) == long_TYPE
+            assert node.getNodeMetaData(INFERRED_TYPE) == Long_TYPE
         })
         def x = a?.x
         '''
@@ -282,7 +285,7 @@ class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTest
         }
         A a = new A()
         @ASTTest(phase=INSTRUCTION_SELECTION, value={
-            assert node.getNodeMetaData(INFERRED_TYPE) == char_TYPE
+            assert node.getNodeMetaData(INFERRED_TYPE) == Character_TYPE
         })
         def x = a?.x
         assert x == 'a'
@@ -1366,6 +1369,75 @@ println someInt
         } finally {
             assert astTrees['Test$_foo_closure1'][1].contains('INVOKEVIRTUAL org/codehaus/groovy/classgen/asm/sc/Groovy6924Support.setFoo (Ljava/lang/String;)V')
         }
+    }
+
+    // GROOVY-7381
+    void testNonVoidSetterCalls(){
+        assertScript '''
+            class Foo {
+                int num
+                String name
+
+                Foo setNum(int num){
+                    this.num = num
+                    this
+                }
+
+                Foo setName(String name){
+                    this.name = name
+                    this
+                }
+            }
+            Foo foo = new Foo().setNum(1).setName('fluent')
+            assert foo.num == 1
+            assert foo.name == 'fluent'
+        '''
+    }
+
+    // GROOVY-7610
+    void testNullSafeIsCallConditionShouldNotThrowVerifyError() {
+        assertScript '''
+            class A {
+                void ifCondition(Object x, Object y) {
+                    if (x?.is(y))
+                        return
+                }
+
+                void ternaryCondition(Object x, Object y) {
+                    x?.is(y) ? 'foo' : 'bar'
+                }
+            }
+            new A()
+        '''
+    }
+
+    // GROOVY-7631
+    void testPrimitiveNotEqualNullShouldReturnTrue() {
+        assertScript '''
+            assert false != null
+            assert true != null
+            assert (byte) 1 != null
+            assert (short) 1 != null
+            assert 0 != null
+            assert 1 != null
+            assert 1L != null
+            assert 1f != null
+            assert 1d != null
+            assert (char) 1 != null
+        '''
+    }
+
+    // GROOVY-7639
+    void testComparisonOfPrimitiveWithNullSafePrimitivePropertyExpression() {
+        assertScript '''
+            class Foo {
+                int bar
+            }
+            Foo foo = null
+            assert !(foo?.bar == 7)
+            assert !(foo?.bar > 7)
+            assert foo?.bar < 7
+        '''
     }
 }
 

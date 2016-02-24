@@ -1,29 +1,28 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.ast;
 
 import org.codehaus.groovy.GroovyBugError;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
-import org.codehaus.groovy.ast.expr.TupleExpression;
+import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
@@ -147,12 +146,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     private Map<CompilePhase, Map<Class<? extends ASTTransformation>, Set<ASTNode>>> transformInstances;
 
     // use this to synchronize access for the lazy init
-    protected Object lazyInitLock = new Object();
+    protected final Object lazyInitLock = new Object();
 
     // clazz!=null when resolved
     protected Class clazz;
     // only false when this classNode is constructed from a class
-    private boolean lazyInitDone=true;
+    private volatile boolean lazyInitDone=true;
     // not null if if the ClassNode is an array
     private ClassNode componentType = null;
     // if not null this instance is handled as proxy
@@ -252,6 +251,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * needed to avoid having too many objects during compilation
      */
     private void lazyClassInit() {
+        if (lazyInitDone) return;
         synchronized (lazyInitLock) {
             if (redirect!=null) {
                 throw new GroovyBugError("lazyClassInit called on a proxy ClassNode, that must not happen."+
@@ -328,7 +328,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             }
         }
         this.methods = new MapOfLists();
-        this.methodsList = new ArrayList<MethodNode>();
+        this.methodsList = Collections.emptyList();
     }
 
     /**
@@ -342,8 +342,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the list of FieldNode's associated with this ClassNode
      */
     public List<FieldNode> getFields() {
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
         if (redirect!=null) return redirect().getFields();
+        lazyClassInit();
         if (fields == null)
             fields = new LinkedList<FieldNode> ();
         return fields;
@@ -353,8 +353,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the array of interfaces which this ClassNode implements
      */
     public ClassNode[] getInterfaces() {
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
         if (redirect!=null) return redirect().getInterfaces();
+        lazyClassInit();
         return interfaces;
     }
 
@@ -377,8 +377,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the list of methods associated with this ClassNode
      */
     public List<MethodNode> getMethods() {
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
         if (redirect!=null) return redirect().getMethods();
+        lazyClassInit();
         return methodsList;
     }
 
@@ -399,6 +399,7 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         } else {
             return result;
         }
+
     }
 
     public List<MethodNode> getAllDeclaredMethods() {
@@ -478,11 +479,29 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public List<ConstructorNode> getDeclaredConstructors() {
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        final ClassNode r = redirect();
-        if (r.constructors == null)
-            r.constructors = new ArrayList<ConstructorNode> ();
-        return r.constructors;
+        if (redirect != null) return redirect().getDeclaredConstructors();
+        lazyClassInit();
+        if (constructors == null)
+            constructors = new ArrayList<ConstructorNode> ();
+        return constructors;
+    }
+
+    /**
+     * Finds a constructor matching the given parameters in this class.
+     *
+     * @return the constructor matching the given parameters or null
+     */
+    public ConstructorNode getDeclaredConstructor(Parameter[] parameters) {
+        for (ConstructorNode method : getDeclaredConstructors()) {
+            if (parametersEqual(method.getParameters(), parameters)) {
+                return method;
+            }
+        }
+        return null;
+    }
+
+    public void removeConstructor(ConstructorNode node) {
+        redirect().constructors.remove(node);
     }
 
     public ModuleNode getModule() {
@@ -522,6 +541,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
             r.fieldIndex = new HashMap<String,FieldNode> ();
         r.fields.addFirst(node);
         r.fieldIndex.put(node.getName(), node);
+    }
+
+    public Map<String, FieldNode> getFieldIndex() {
+        return fieldIndex;
     }
 
     public void addProperty(PropertyNode node) {
@@ -587,13 +610,20 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public void addMethod(MethodNode node) {
         node.setDeclaringClass(this);
-        redirect().methodsList.add(node);
-        redirect().methods.put(node.getName(), node);
+        ClassNode base = redirect();
+        if (base.methodsList.isEmpty()) {
+            base.methodsList = new ArrayList<MethodNode>();
+        }
+        base.methodsList.add(node);
+        base.methods.put(node.getName(), node);
     }
 
     public void removeMethod(MethodNode node) {
-        redirect().methodsList.remove(node);
-        redirect().methods.remove(node.getName(), node);
+        ClassNode base = redirect();
+        if (!base.methodsList.isEmpty()) {
+            base.methodsList.remove(node);
+        }
+        base.methods.remove(node.getName(), node);
     }
 
     /**
@@ -716,11 +746,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the method matching the given name and parameters or null
      */
     public FieldNode getDeclaredField(String name) {
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        ClassNode r = redirect ();
-        if (r.fieldIndex == null)
-            r.fieldIndex = new HashMap<String,FieldNode> ();
-        return r.fieldIndex.get(name);
+        if (redirect != null) return redirect().getDeclaredField(name);
+
+        lazyClassInit();
+        return fieldIndex == null ? null : fieldIndex.get(name);
     }
 
     /**
@@ -846,8 +875,8 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @see #getMethods(String)
      */
     public List<MethodNode> getDeclaredMethods(String name) {
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
         if (redirect!=null) return redirect().getDeclaredMethods(name);
+        lazyClassInit();
         return methods.getNotNull(name);
     }
 
@@ -978,8 +1007,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public ClassNode getUnresolvedSuperClass(boolean useRedirect) {
         if (!useRedirect) return superClass;
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        return redirect().superClass;
+        if (redirect != null) return redirect().getUnresolvedSuperClass(true);
+        lazyClassInit();
+        return superClass;
     }
 
     public void setUnresolvedSuperClass(ClassNode sn) {
@@ -992,8 +1022,9 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
 
     public ClassNode [] getUnresolvedInterfaces(boolean useRedirect) {
         if (!useRedirect) return interfaces;
-        if (!redirect().lazyInitDone) redirect().lazyClassInit();
-        return redirect().interfaces;
+        if (redirect != null) return redirect().getUnresolvedInterfaces(true);
+        lazyClassInit();
+        return interfaces;
     }
 
     public CompileUnit getCompileUnit() {
@@ -1065,13 +1096,21 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
     }
 
     public MethodNode getGetterMethod(String getterName) {
+        MethodNode getterMethod = null;
         for (MethodNode method : getDeclaredMethods(getterName)) {
             if (getterName.equals(method.getName())
                     && ClassHelper.VOID_TYPE!=method.getReturnType()
                     && method.getParameters().length == 0) {
-                return method;
+                // GROOVY-7363: There can be multiple matches for a getter returning a generic parameter type, due to
+                // the generation of a bridge method. The real getter is really the non-bridge, non-synthetic one as it
+                // has the most specific and exact return type of the two. Picking the bridge method results in loss of
+                // type information, as it down-casts the return type to the lower bound of the generic parameter.
+                if (getterMethod == null || getterMethod.isSynthetic()) {
+                    getterMethod = method;
+                }
             }
         }
+        if (getterMethod != null) return getterMethod;
         ClassNode parent = getSuperClass();
         if (parent!=null) return parent.getGetterMethod(getterName);
         return null;
@@ -1307,8 +1346,10 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         return (getModifiers() & Opcodes.ACC_INTERFACE) > 0;
     }
 
-    public boolean isResolved(){
-        return redirect().clazz!=null || (componentType != null && componentType.isResolved());
+    public boolean isResolved() {
+        if (clazz != null) return true;
+        if (redirect != null) return redirect.isResolved();
+        return componentType != null && componentType.isResolved();
     }
 
     public boolean isArray(){
@@ -1327,13 +1368,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
      * @return the class this classnode relates to. May return null.
      */
     public Class getTypeClass(){
-        Class c = redirect().clazz;
-        if (c!=null) return c;
+        if (clazz != null) return clazz;
+        if (redirect != null) return redirect.getTypeClass();
+
         ClassNode component = redirect().componentType;
         if (component!=null && component.isResolved()){
-            ClassNode cn = component.makeArray();
-            setRedirect(cn);
-            return redirect().clazz;
+            return Array.newInstance(component.getTypeClass(), 0).getClass();
         }
         throw new GroovyBugError("ClassNode#getTypeClass for "+getName()+" is called before the type class is set ");
     }

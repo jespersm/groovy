@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen.asm;
 
@@ -142,6 +145,7 @@ public class StatementWriter {
         mv.visitJumpInsn(GOTO, continueLabel);
         mv.visitLabel(breakLabel);
 
+        compileStack.removeVar(iteratorIdx);
         compileStack.pop();
     }
 
@@ -388,7 +392,7 @@ public class StatementWriter {
         //store exception
         //TODO: maybe define a Throwable and use it here instead of Object
         operandStack.push(ClassHelper.OBJECT_TYPE);
-        int anyExceptionIndex = compileStack.defineTemporaryVariable("exception", true);
+        final int anyExceptionIndex = compileStack.defineTemporaryVariable("exception", true);
 
         finallyStatement.visit(controller.getAcg());
 
@@ -397,6 +401,7 @@ public class StatementWriter {
         mv.visitInsn(ATHROW);
 
         mv.visitLabel(skipCatchAll);
+        compileStack.removeVar(anyExceptionIndex);
     }
     
     private BlockRecorder makeBlockRecorder(final Statement finallyStatement) {
@@ -422,7 +427,7 @@ public class StatementWriter {
         // switch does not have a continue label. use its parent's for continue
         Label breakLabel = controller.getCompileStack().pushSwitch();
 
-        int switchVariableIndex = controller.getCompileStack().defineTemporaryVariable("switch", true);
+        final int switchVariableIndex = controller.getCompileStack().defineTemporaryVariable("switch", true);
 
         List caseStatements = statement.getCaseStatements();
         int caseCount = caseStatements.size();
@@ -441,6 +446,7 @@ public class StatementWriter {
 
         controller.getMethodVisitor().visitLabel(breakLabel);
 
+        controller.getCompileStack().removeVar(switchVariableIndex);
         controller.getCompileStack().pop();   
     }
     
@@ -539,6 +545,7 @@ public class StatementWriter {
         mv.visitInsn(ATHROW);
 
         mv.visitLabel(synchronizedEnd);
+        compileStack.removeVar(index);
     }
 
     public void writeAssert(AssertStatement statement) {
@@ -588,6 +595,7 @@ public class StatementWriter {
             int returnValueIdx = controller.getCompileStack().defineTemporaryVariable("returnValue", returnType, true);
             controller.getCompileStack().applyBlockRecorder();
             operandStack.load(type, returnValueIdx);
+            controller.getCompileStack().removeVar(returnValueIdx);
         }
 
         BytecodeHelper.doReturn(mv, returnType);

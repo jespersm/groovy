@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.antlr;
 
@@ -19,24 +22,67 @@ import antlr.RecognitionException;
 import antlr.TokenStreamException;
 import antlr.TokenStreamRecognitionException;
 import antlr.collections.AST;
-import com.thoughtworks.xstream.XStream;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.antlr.parser.GroovyLexer;
 import org.codehaus.groovy.antlr.parser.GroovyRecognizer;
 import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
-import org.codehaus.groovy.antlr.treewalker.*;
-import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.antlr.treewalker.CompositeVisitor;
+import org.codehaus.groovy.antlr.treewalker.MindMapPrinter;
+import org.codehaus.groovy.antlr.treewalker.NodeAsHTMLPrinter;
+import org.codehaus.groovy.antlr.treewalker.PreOrderTraversal;
+import org.codehaus.groovy.antlr.treewalker.SourceCodeTraversal;
+import org.codehaus.groovy.antlr.treewalker.SourcePrinter;
+import org.codehaus.groovy.antlr.treewalker.Visitor;
+import org.codehaus.groovy.antlr.treewalker.VisitorAdapter;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.ConstructorNode;
+import org.codehaus.groovy.ast.EnumConstantClassNode;
+import org.codehaus.groovy.ast.FieldNode;
+import org.codehaus.groovy.ast.GenericsType;
+import org.codehaus.groovy.ast.ImportNode;
+import org.codehaus.groovy.ast.InnerClassNode;
+import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.MixinNode;
+import org.codehaus.groovy.ast.ModuleNode;
+import org.codehaus.groovy.ast.PackageNode;
+import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.ast.expr.*;
-import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.ast.stmt.AssertStatement;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.BreakStatement;
+import org.codehaus.groovy.ast.stmt.CaseStatement;
+import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.stmt.ContinueStatement;
+import org.codehaus.groovy.ast.stmt.EmptyStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.stmt.IfStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.stmt.SwitchStatement;
+import org.codehaus.groovy.ast.stmt.SynchronizedStatement;
+import org.codehaus.groovy.ast.stmt.ThrowStatement;
+import org.codehaus.groovy.ast.stmt.TryCatchStatement;
+import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.ParserPlugin;
 import org.codehaus.groovy.control.SourceUnit;
-import org.codehaus.groovy.syntax.*;
+import org.codehaus.groovy.control.XStreamUtils;
+import org.codehaus.groovy.syntax.ASTHelper;
+import org.codehaus.groovy.syntax.Numbers;
+import org.codehaus.groovy.syntax.ParserException;
+import org.codehaus.groovy.syntax.Reduction;
+import org.codehaus.groovy.syntax.SyntaxException;
+import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.syntax.Types;
 import org.objectweb.asm.Opcodes;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.security.AccessController;
@@ -100,6 +146,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     private int innerClassCounter = 1;
     private boolean enumConstantBeingDef = false;
     private boolean forStatementBeingDef = false;
+    private boolean annotationBeingDef = false;
     private boolean firstParamIsVarArg = false;
     private boolean firstParam = false;
 
@@ -226,15 +273,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     private void saveAsXML(String name, AST ast) {
-        XStream xstream = new XStream();
-        try {
-            xstream.toXML(ast, new FileWriter(name + ".antlr.xml"));
-            System.out.println("Written AST to " + name + ".antlr.xml");
-        }
-        catch (Exception e) {
-            System.out.println("Couldn't write to " + name + ".antlr.xml");
-            e.printStackTrace();
-        }
+        XStreamUtils.serialize(name+".antlr", ast);
     }
 
     public ModuleNode buildAST(SourceUnit sourceUnit, ClassLoader classLoader, Reduction cst) throws ParserException {
@@ -251,7 +290,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ClassNode scriptClassNode = output.getScriptClassDummy();
             if (scriptClassNode != null) {
                 List<Statement> statements = output.getStatementBlock().getStatements();
-                if (statements.size() > 0) {
+                if (!statements.isEmpty()) {
                     Statement firstStatement = statements.get(0);
                     Statement lastStatement = statements.get(statements.size() - 1);
 
@@ -1222,6 +1261,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
     }
 
     protected AnnotationNode annotation(AST annotationNode) {
+        annotationBeingDef = true;
         AST node = annotationNode.getFirstChild();
         String name = qualifiedName(node);
         AnnotationNode annotatedNode = new AnnotationNode(ClassHelper.make(name));
@@ -1240,6 +1280,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
                 break;
             }
         }
+        annotationBeingDef = false;
         return annotatedNode;
     }
 
@@ -1633,7 +1674,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             node = node.getNextSibling();
         }
 
-        if (finallyStatement instanceof EmptyStatement && catches.size() == 0) {
+        if (finallyStatement instanceof EmptyStatement && catches.isEmpty()) {
             throw new ASTRuntimeException(tryStatementNode, "A try statement must have at least one catch or finally block.");
         }
 
@@ -2292,6 +2333,12 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
         AST rightNode = leftNode.getNextSibling();
         Expression rightExpression = expression(rightNode);
+        // easier to massage here than in the grammar
+        if (rightExpression instanceof SpreadExpression) {
+            ListExpression wrapped = new ListExpression();
+            wrapped.addExpression(rightExpression);
+            rightExpression = wrapped;
+        }
 
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, makeToken(Types.LEFT_SQUARE_BRACKET, bracket), rightExpression);
         configureAST(binaryExpression, indexNode);
@@ -2486,7 +2533,9 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         // if node text is found to be "super"/"this" when a method call is being processed, it is a 
         // call like this(..)/super(..) after the first statement, which shouldn't be allowed. GROOVY-2836
         if (selector.getText().equals("this") || selector.getText().equals("super")) {
-            throw new ASTRuntimeException(elist, "Constructor call must be the first statement in a constructor.");
+            if (!(annotationBeingDef && selector.getText().equals("super"))) {
+                throw new ASTRuntimeException(elist, "Constructor call must be the first statement in a constructor.");
+            }
         }
 
         Expression arguments = arguments(elist);
@@ -2509,7 +2558,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     private void setTypeArgumentsOnMethodCallExpression(MethodCallExpression expression,
                                                         List<GenericsType> typeArgumentList) {
-        if (typeArgumentList != null && typeArgumentList.size() > 0) {
+        if (typeArgumentList != null && !typeArgumentList.isEmpty()) {
             expression.setGenericsTypes(typeArgumentList.toArray(new GenericsType[typeArgumentList.size()]));
         }
     }
@@ -2558,7 +2607,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
         if (arguments instanceof TupleExpression) {
             TupleExpression te = (TupleExpression) arguments;
             List<Expression> expressions = te.getExpressions();
-            if (expressions.size() == 0) return null;
+            if (expressions.isEmpty()) return null;
             Expression last = expressions.remove(expressions.size() - 1);
             if (last instanceof AnonymousInnerClassCarrier) {
                 AnonymousInnerClassCarrier carrier = (AnonymousInnerClassCarrier) last;
@@ -2752,7 +2801,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             case NUM_BIG_INT:
             case NUM_INT:
             case NUM_LONG:
-                ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger("-" + text));
+                ConstantExpression constantLongExpression = new ConstantExpression(Numbers.parseInteger(unaryMinusExpr,"-" + text));
                 configureAST(constantLongExpression, unaryMinusExpr);
                 return constantLongExpression;
 
@@ -2792,7 +2841,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
 
     protected ConstantExpression integerExpression(AST node) {
         String text = node.getText();
-        Object number = Numbers.parseInteger(text);
+        Object number = Numbers.parseInteger(node, text);
         boolean keepPrimitive = number instanceof Integer || number instanceof Long;
         ConstantExpression constantExpression = new ConstantExpression(number, keepPrimitive);
         configureAST(constantExpression, node);
@@ -2962,7 +3011,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             configureAST(bound, boundsNode);
             bounds.add(bound);
         }
-        if (bounds.size() == 0) return null;
+        if (bounds.isEmpty()) return null;
         return (ClassNode[]) bounds.toArray(new ClassNode[bounds.size()]);
     }
 
@@ -2981,7 +3030,7 @@ public class AntlrParserPlugin extends ASTHelper implements ParserPlugin, Groovy
             ret.add(gt);
             typeParameter = typeParameter.getNextSibling();
         }
-        return (GenericsType[]) ret.toArray(new GenericsType[0]);
+        return (GenericsType[]) ret.toArray(new GenericsType[ret.size()]);
     }
 
     protected ClassNode makeType(AST typeNode) {

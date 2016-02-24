@@ -1,21 +1,24 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package groovy.transform.builder;
 
+import groovy.transform.Undefined;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
@@ -87,6 +90,7 @@ import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
  * The {@code @Builder} 'buildMethodName' annotation attribute can be used for configuring the build method's name, default "build".
  *
  * The {@code @Builder} 'builderMethodName' and 'builderClassName' annotation attributes aren't applicable for this strategy.
+ * The {@code @Builder} 'useSetters' annotation attribute is ignored by this strategy which always uses setters.
  *
  * @author Marcin Grzejszczak
  * @author Paul King
@@ -109,7 +113,9 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         }
         List<String> excludes = new ArrayList<String>();
         List<String> includes = new ArrayList<String>();
+        includes.add(Undefined.STRING);
         if (!getIncludeExclude(transform, anno, buildee, excludes, includes)) return;
+        if (includes.size() == 1 && Undefined.isUndefined(includes.get(0))) includes = null;
         if (unsupportedAttribute(transform, anno, "builderClassName")) return;
         if (unsupportedAttribute(transform, anno, "builderMethodName")) return;
         List<PropertyInfo> props;
@@ -118,8 +124,10 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         } else {
             props = getPropertyInfoFromClassNode(buildee, includes, excludes);
         }
-        for (String name : includes) {
-            checkKnownProperty(transform, anno, name, props);
+        if (includes != null) {
+            for (String name : includes) {
+                checkKnownProperty(transform, anno, name, props);
+            }
         }
         for (PropertyInfo prop : props) {
             builder.addField(createFieldCopy(builder, prop));
@@ -155,7 +163,7 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(cNode.getTypeClass());
             for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-                if (AbstractASTTransformation.shouldSkip(descriptor.getName(), excludes, includes)) continue;
+                if (AbstractASTTransformation.shouldSkipUndefinedAware(descriptor.getName(), excludes, includes)) continue;
                 // skip hidden and read-only props
                 if (descriptor.isHidden() || descriptor.getWriteMethod() == null) continue;
                 result.add(new PropertyInfo(descriptor.getName(), ClassHelper.make(descriptor.getPropertyType())));

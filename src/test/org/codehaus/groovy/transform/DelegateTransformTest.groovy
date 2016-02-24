@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.transform
 
@@ -487,6 +490,51 @@ class DelegateTransformTest extends CompilableTestSupport {
         """
     }
 
+    // GROOVY-7243
+    void testInclude() {
+        assertScript '''
+            class Book {
+                String title
+                String author
+
+                String getTitleAndAuthor() {
+                    "${title} : ${author}"
+                }
+
+                String getAuthorAndTitle() {
+                    "${author} : ${title}"
+                }
+            }
+
+            class OwnedBook {
+                String owner
+
+                @Delegate(includes=['author', 'getTitleAndAuthor'])
+                Book book
+            }
+            
+            Book book = new Book(title: 'Ulysses', author: 'James Joyce')
+            OwnedBook ownedBook = new OwnedBook(owner: 'John Smith', book: book)
+
+            ownedBook.author = 'John Smith'
+            assert book.author == 'John Smith'
+
+            assert ownedBook.getTitleAndAuthor() == 'Ulysses : John Smith'
+
+            try {
+                ownedBook.getAuthorAndTitle()
+                assert false, 'Non-included methods should not be delegated'
+            } catch(groovy.lang.MissingMethodException expected) {
+            }
+
+            try {
+                ownedBook.title = 'Finnegans Wake'
+                assert false, 'Non-included properties should not be delegated'
+            } catch(groovy.lang.MissingPropertyException expected) {
+            }
+        '''
+    }
+    
     // GROOVY-6329
     void testIncludeAndExcludeByType() {
         assertScript """
@@ -597,6 +645,55 @@ def foo = new Foo()
 assert foo.dm.x == '123'
 '''
     }
+
+    // GROOVY-7118
+    void testDelegateOfMethodHavingPlaceholder() {
+        assertScript """
+            interface FooInt {
+              public <T extends Throwable> T get(Class<T> clazz) throws Exception
+            }
+
+            class Foo implements FooInt {
+              public <T extends Throwable> T get(Class<T> clazz) throws Exception {
+                clazz.newInstance()
+              }
+            }
+
+            class FooMain {
+                @Delegate Foo foo = new Foo()
+            }
+
+            @groovy.transform.CompileStatic
+            class FooMain2 {
+                @Delegate Foo foo = new Foo()
+            }
+
+            assert new FooMain().get(Exception).class == Exception
+            assert new FooMain2().get(Exception).class == Exception
+
+            import org.codehaus.groovy.transform.Bar
+            class BarMain {
+                @Delegate Bar bar = new Bar()
+            }
+            assert new BarMain().get(Exception).class == Exception
+        """
+    }
+
+    // GROOVY-7261
+    void testShouldWorkWithLazyTransform() {
+        assertScript '''
+            class Foo {
+                private @Delegate @Lazy ArrayList list = ['bar', 'baz']
+                // fragile: $list is an internal implementation detail that may change
+                def getInternalDelegate() { $list }
+            }
+
+            def f = new Foo()
+            assert f.internalDelegate == null
+            assert f.size() == 2
+            assert f.internalDelegate == ['bar', 'baz']
+        '''
+    }
 }
 
 interface DelegateFoo {
@@ -650,6 +747,16 @@ interface SomeOtherInterface4619 extends SomeInterface4619 {}
 class SomeClass4619 {
     @Delegate
     SomeOtherInterface4619 delegate
+}
+
+interface BarInt {
+    public <T extends Throwable> T get(Class<T> clazz) throws Exception
+}
+
+class Bar implements BarInt {
+    public <T extends Throwable> T get(Class<T> clazz) throws Exception {
+        clazz.newInstance()
+    }
 }
 
 // DO NOT MOVE INSIDE THE TEST SCRIPT OR IT WILL NOT TEST

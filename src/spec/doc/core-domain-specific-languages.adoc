@@ -1,9 +1,30 @@
+//////////////////////////////////////////
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+//////////////////////////////////////////
+
 = Domain-Specific Languages
 
 == Command chains
 
 Groovy lets you omit parentheses around the arguments of a
-method call for top-level statements. ``command chain'' feature extends this by allowing us to chain such
+method call for top-level statements. "command chain" feature extends this by allowing us to chain such
 parentheses-free method calls, requiring neither parentheses around arguments, nor dots between the chained calls.
 The general idea is that a call like `a b c d` will actually be equivalent to `a(b).c(d)`. This
 also works with multiple arguments, closure arguments, and even named arguments. Furthermore, such command chains can
@@ -55,7 +76,7 @@ As a second example, consider how you might write a DSL for simplifying
 one of your existing APIs. Maybe you need to put this code in front of
 customers, business analysts or testers who might be not hard-core Java
 developers. We’ll use the `Splitter` from the Google
-http://code.google.com/p/guava-libraries/[Guava libraries] project as it
+https://github.com/google/guava[Guava libraries] project as it
 already has a nice Fluent API. Here is how we might use it out of the
 box:
 
@@ -91,9 +112,158 @@ include::{projectdir}/src/spec/test/CommandChainsTest.groovy[tags=commandchain_i
 -----------------------------------------------------
 
 
-== Operator overloading (TBD)
-== Script base classes (TBD)
-== Adding properties to numbers (TBD)
+== Operator overloading
+
+Various operators in Groovy are mapped onto regular method calls on objects.
+
+This allows you to provide your own Java or Groovy objects which can take advantage of operator overloading. The following table describes the operators supported in Groovy and the methods they map to.
+
+[options="header"]
+|======================
+|Operator | Method 
+| `a + b` | a.plus(b)
+| `a - b` | a.minus(b)
+| `a * b` | a.multiply(b)
+| `a ** b` | a.power(b)
+| `a / b` | a.div(b)
+| `a % b` | a.mod(b)
+| `a \| b` | a.or(b)
+| `a & b` | a.and(b)
+| `a ^ b` | a.xor(b)
+| `pass:[a++]` or `pass:[++a]` | a.next()
+| `a--` or `--a` | a.previous()
+| `a[b]` | a.getAt(b)
+| `a[b] = c` | a.putAt(b, c)
+| `a << b` | a.leftShift(b)
+| `a >> b` | a.rightShift(b)
+| `a >>> b` | a.rightShiftUnsigned(b)
+| `switch(a) { case(b) : }` | b.isCase(a)
+| `if(a)` | a.asBoolean()
+| `~a` | a.bitwiseNegate()
+| `-a` | a.negative()
+| `+a` | a.positive()
+| `a as b` | a.asType(b)
+| `a == b` | a.equals(b)
+| `a != b` | ! a.equals(b)
+| `a pass:[<=>] b` | a.compareTo(b)
+| `a > b` | a.compareTo(b) > 0
+| `a >= b` | a.compareTo(b) >= 0
+| `a < b` | a.compareTo(b) < 0
+| `a \<= b` | a.compareTo(b) \<= 0
+|======================
+
+== Script base classes
+=== The Script class
+Groovy scripts are always compiled to classes. For example, a script as simple as:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=simple_script,indent=0]
+----
+
+is compiled to a class extending the abstract gapi:groovy.lang.Script[] class. This class contains a single abstract
+method called _run_. When a script is compiled, then its body will become the _run_ method, while the other methods
+found in the script are found in the implementing class. The `Script` class provides base support for integration
+with your application through the `Binding` object, as illustrated in this example:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=integ_binding,indent=0]
+----
+<1> a binding is used to share data between the script and the calling class
+<2> a `GroovyShell` can be used with this binding
+<3> input variables are set from the calling class inside the binding
+<4> then the script is evaluated
+<5> and the `z` variable has been "exported" into the binding
+
+This is a very practical way to share data between the caller and the script, however it may be insufficient or not
+practical in some cases. For that purpose, Groovy allows you to set your own base script class. A base script class
+has to extend gapi:groovy.lang.Script[] and be a single abstract method type:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=baseclass_def,indent=0]
+----
+
+Then the custom script base class can be declared in the compiler configuration, for example:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=use_custom_conf,indent=0]
+----
+<1> create a custom compiler configuration
+<2> set the base script class to our custom base script class
+<3> then create a `GroovyShell` using that configuration
+<4> the script will then extend the base script class, giving direct access to the `name` property and `greet` method
+
+=== The @BaseScript annotation
+
+As an alternative, it is also possible to use the `@BaseScript` annotation directly into a script:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=use_basescript,indent=0]
+----
+
+where `@BaseScript` should annotate a variable which type is the class of the base script. Alternatively, you can set
+the base script class as a member of the `@BaseScript` annotation itself:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=use_basescript_alt,indent=0]
+----
+
+=== Alternate abstract method
+
+We have seen that the base script class is a single abstract method type that needs to implement the `run` method. The
+`run` method is executed by the script engine automatically. In some circumstances it may be interesting to have a base
+class which implements the `run` method, but provides an alternative abstract method to be used for the script body.
+For example, the base script `run` method might perform some initialization before the `run` method is executed. This
+is possible by doing this:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=custom_run_method,indent=0]
+----
+<1> the base script class should define one (and only one) abstract method
+<2> the `run` method can be overridden and perform a task before executing the script body
+<3> `run` calls the abstract `scriptBody` method which will delegate to the user script
+<4> then it can return something else than the value from the script
+
+If you execute this code:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=custom_run_eval,indent=0]
+----
+
+Then you will see that the script is executed, but the result of the evaluation is `1` as returned by the `run`
+method of the base class. It is even clearer if you use `parse` instead of `evaluate`, because it would allow you to
+execute the `run` method several times on the same script instance:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/BaseScriptSpecTest.groovy[tags=custom_run_parse,indent=0]
+----
+
+== Adding properties to numbers
+
+In Groovy number types are considered equal to any other types. As such, it is possible to enhance numbers by adding
+properties or methods to them. This can be very handy when dealing with measurable quantities for example. Details about
+how existing classes can be enhanced in Groovy are found in the link:core-metaprogramming.html#_extension_modules[extension
+modules] section or the link:core-metaprogramming.html#categories[categories] section.
+
+An illustration of this can be found in Groovy using the `TimeCategory`:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/metaprogramming/CategoryTest.groovy[tags=time_category,indent=0]
+----
+<1> using the `TimeCategory`, a property `minute` is added to the `Integer` class
+<2> similarily, the `months` method returns a `groovy.time.DatumDependentDuration` which can be used in calculus
+
+Categories are lexically bound, making them a great fit for internal DSLs.
+
 [[section-delegatesto]]
 == @DelegatesTo
 
@@ -207,7 +377,7 @@ include::{projectdir}/src/spec/test/DelegatesToSpecTest.groovy[tags=email_method
 What we’ve done here is telling the compiler (or the IDE) that when the
 method will be called with a closure, the delegate of this closure will
 be set to an object of type `email`. But there is still a problem: the
-defaut delegation strategy is not the one which is used in our method.
+default delegation strategy is not the one which is used in our method.
 So we will give more information and tell the compiler (or the IDE) that
 the delegation strategy is also changed:
 
@@ -308,7 +478,7 @@ with `@DelegatesTo`. However, to make the IDE aware of the delegate
 type, or the *type checker* aware of it, we need to add `@DelegatesTo`.
 And in this case, it will now that the `Greeter` variable is of
 type `Greeter`, so it will not report errors on the _sayHello_
-method *even if the exec method doesn’t explicitely define the target as
+method *even if the exec method doesn’t explicitly define the target as
 of type Greeter*. This is a very powerful feature, because it prevents
 you from writing multiple versions of the same `exec` method for
 different receiver types!
@@ -386,6 +556,49 @@ the example above, that means that the delegate type is resolved against `List<T
 
 NOTE: We're using a `genericTypeIndex` instead of a placeholder (`T`) because of JVM limitations.
 
+==== Delegating to an arbitrary type
+
+It is possible that none of the options above can represent the type you want to delegate to. For example, let's define
+a mapper class which is parametrized with an object and defines a map method which returns an object of another type:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/DelegatesToSpecTest.groovy[tags=delegatestotype_mapper,indent=0]
+----
+<1> The mapper class takes two generic type arguments: the source type and the target type
+<2> The source object is stored in a final field
+<3> The `map` method asks to convert the source object to a target object
+
+As you can see, the method signature from `map` does not give any information about what object will
+be manipulated by the closure. Reading the method body, we know that it will be the `value` which is
+of type `T`, but `T` is not found in the method signature, so we are facing a case where none of the
+available options for `@DelegatesTo` is suitable. For example, if we try to statically compile this code:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/DelegatesToSpecTest.groovy[tags=delegatestotype_mapper_test,indent=0]
+----
+
+Then the compiler will fail with:
+
+----
+Static type checking] - Cannot find matching method TestScript0#length()
+----
+
+In that case, you can use the `type` member of the `@DelegatesTo` annotation to reference `T` as a type token:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/DelegatesToSpecTest.groovy[tags=delegatestotype_mapper_fixed,indent=0]
+----
+<1> The `@DelegatesTo` annotation references a generic type which is not found in the method signature
+
+Note that you are not limited to generic type tokens. The `type` member can be used to represent complex types, such
+as `List<T>` or `Map<T,List<U>>`. The reason why you should use that in last resort is that the type is only checked
+when the type checker finds usage of `@DelegatesTo`, not when the annotated method itself is compiled. This means that
+type safety is only ensured at the call site. Additionally, compilation will be slower (though probably unnoticeable for
+most cases).
+
 [[compilation-customizers]]
 == Compilation customizers
 === Introduction
@@ -437,7 +650,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
 include::{projectdir}/src/spec/test/CustomizersTest.groovy[tags=import_cz,indent=0]
 -----------------------------------------------------------------------------------------------------
 
-A detailed description of all shortcuts can be found in gapi::org.codehaus.groovy.control.customizers.ImportCustomizer
+A detailed description of all shortcuts can be found in gapi:org.codehaus.groovy.control.customizers.ImportCustomizer[]
 
 === AST transformation customizer
 
@@ -488,7 +701,7 @@ give it a `ClosureExpression`, like in the following example:
 include::{projectdir}/src/spec/test/CustomizersTest.groovy[tags=ast_cz_closure,indent=0]
 --------------------------------------------------------------------------------------------------------------
 
-For a complete list of options, please refer to gapi::org.codehaus.groovy.control.customizers.ASTTransformationCustomizer
+For a complete list of options, please refer to gapi:org.codehaus.groovy.control.customizers.ASTTransformationCustomizer[]
 
 === Secure AST customizer
 
@@ -527,7 +740,7 @@ import static org.codehaus.groovy.syntax.Types.* <1>
 
 include::{projectdir}/src/spec/test/CustomizersTest.groovy[tags=secure_cz,indent=0]
 -------------------------------------------------------------------------------------
-<1> use for token types from gapi::org.codehaus.groovy.syntax.Types
+<1> use for token types from gapi:org.codehaus.groovy.syntax.Types[]
 <2> you can use class literals here
 
 If what the secure AST customizer provides out of the box isn’t enough
@@ -563,8 +776,8 @@ include::{projectdir}/src/spec/test/CustomizersTest.groovy[tags=secure_cz_custom
 ----
 <1> will fail compilation
 
-Statements can be checked using gapi::org.codehaus.groovy.control.customizers.SecureASTCustomizer.StatementChecker
-Expressions can be checked using gapi::org.codehaus.groovy.control.customizers.SecureASTCustomizer.ExpressionChecker
+Statements can be checked using gapi:org.codehaus.groovy.control.customizers.SecureASTCustomizer.StatementChecker[]
+Expressions can be checked using gapi:org.codehaus.groovy.control.customizers.SecureASTCustomizer.ExpressionChecker[]
 
 === Source aware customizer
 
@@ -783,25 +996,225 @@ exposed in the script. Then, compile your files using the following command line
 groovyc -configscript src/conf/config.groovy src/main/groovy/MyClass.groovy
 ---------------------------------------------------------------------------
 
-We strongly recommand you to separate configuration files from classes,
+We strongly recommend you to separate configuration files from classes,
 hence why we suggest using the `src/main` and `src/conf` directories above.
 
-=== AST transformations (TBD)
-== Custom type checking extensions (TBD)
-== Builders (TBD)
-=== Creating a builder (TBD)
-==== BuilderSupport (TBD)
-==== FactoryBuilderSupport (TBD)
-=== Existing builders (TBD)
-==== MarkupBuilder (TBD) - assigned to JNorthr 1July14
-==== StreamingMarkupBuilder (TBD)
-==== SaxBuilder (TBD)
-==== StaxBuilder (TBD)
-==== DomBuilder (TBD)
-==== NodeBuilder (TBD)
-==== JsonBuilder (TBD)
-==== StreamingJsonBuilder (TBD)
-==== SwingBuilder (TBD)
-==== AntBuilder (TBD)
-==== CliBuilder (TBD)
-==== ObjectGraphBuilder (TBD)
+=== AST transformations
+
+If:
+
+* runtime metaprogramming doesn't allow you do do what you want
+* you need to improve the performance of the execution of your DSLs
+* you want to leverage the same syntax as Groovy but with different semantics
+* you want to improve support for type checking in your DSLs
+
+Then AST transformations are the way to go. Unlike the techniques used so far, AST transformations are meant to
+change or generate code before it is compiled to bytecode. AST transformations are capable of adding new methods at
+compile time for example, or totally changing the body of a method based on your needs. They are a very powerful tool
+but also come at the price of not being easy to write. For more information about AST transformations, please take
+a look at the http://docs.groovy-lang.org/latest/html/documentation/index.html#_compile_time_metaprogramming[compile-time
+metaprogramming] section of this manual.
+
+== Custom type checking extensions
+
+It may be interesting, in some circumstances, to provide feedback about wrong code to the user as soon as possible,
+that is to say when the DSL script is compiled, rather than having to wait for the execution of the script. However,
+this is not often possible with dynamic code. Groovy actually provides a practical answer to this known as
+link:type-checking-extensions.html[type checking extensions].
+
+== Builders
+
+(TBD)
+
+=== Creating a builder
+
+(TBD)
+
+==== BuilderSupport
+
+(TBD)
+
+==== FactoryBuilderSupport
+
+(TBD)
+
+=== Existing builders
+
+(TBD)
+
+==== MarkupBuilder
+
+See <<_markupbuilder,Creating Xml - MarkupBuilder>>.
+
+==== StreamingMarkupBuilder
+
+See <<_streamingmarkupbuilder,Creating Xml - StreamingMarkupBuilder>>.
+
+include::{projectdir}/subprojects/groovy-xml/{specfolder}/sax-builder.adoc[leveloffset=+3]
+
+include::{projectdir}/subprojects/groovy-xml/{specfolder}/stax-builder.adoc[leveloffset=+3]
+
+include::{projectdir}/subprojects/groovy-xml/{specfolder}/dom-builder.adoc[leveloffset=+3]
+
+==== NodeBuilder
+
+`NodeBuilder` is used for creating nested trees of gapi:groovy.util.Node[Node] objects for handling arbitrary data. 
+To create a simple user list you use a `NodeBuilder` like this:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/NodeBuilderTest.groovy[tags=node_builder_example,indent=0]
+----
+
+Now you can process the data further, e.g. by using <<gpath_expressions,GPath expressions>>: 
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/NodeBuilderTest.groovy[tags=node_builder_gpath_assert,indent=0]
+----
+
+include::{projectdir}/subprojects/groovy-json/{specfolder}/json-builder.adoc[leveloffset=+3]
+
+include::{projectdir}/subprojects/groovy-json/{specfolder}/streaming-jason-builder.adoc[leveloffset=+3]
+
+include::{projectdir}/subprojects/groovy-swing/{specfolder}/swing-builder.adoc[leveloffset=+3]
+
+include::{projectdir}/subprojects/groovy-ant/{specfolder}/ant-builder.adoc[leveloffset=+3]
+
+==== CliBuilder
+
+(TBD)
+
+
+==== ObjectGraphBuilder
+
+`ObjectGraphBuilder` is a builder for an arbitrary graph of beans that
+follow the JavaBean convention. It is in particular useful for creating test data.
+
+Let's start with a list of classes that belong to your domain:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=domain_classes,indent=0]
+----
+
+Then using `ObjectGraphBuilder` building a `Company` with three employees is as
+easy as:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=builder_example,indent=0]
+----
+<1> creates a new object graph builder
+<2> sets the classloader where the classes will be resolved
+<3> sets the base package name for classes to be resolved
+<4> creates a `Company` instance
+<5> with 3 `Employee` instances
+<6> each of them having a distinct `Address`
+
+Behind the scenes, the object graph builder:
+
+* will try to match a node name into a `Class`, using a default `ClassNameResolver` strategy that requires a package name
+* then will create an instance of the appropriate class using a default `NewInstanceResolver` strategy that calls a no-arg constructor
+* resolves the parent/child relationship for nested nodes, involving two other strategies:
+** `RelationNameResolver` will yield the name of the child property in the parent, and the name of the parent property
+in the child (if any, in this case, `Employee` has a parent property aptly named `company`)
+** `ChildPropertySetter` will insert the child into the parent taking into account if the child belongs to a `Collection`
+ or not (in this case `employees` should be a list of `Employee` instances in `Company`).
+
+All 4 strategies have a default implementation that work as expected if
+the code follows the usual conventions for writing JavaBeans. In case any of your beans or objects do not follow the convention
+you may plug your own implementation of each strategy. For example imagine that you need to build a class which is
+immutable:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=immutable_class,indent=0]
+----
+
+Then if you try to create a `Person` with the builder:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=immutable_fail_runtime,indent=0]
+----
+
+It will fail at runtime with:
+
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=expected_error_immutable,indent=0]
+----
+
+Fixing this can be done by changing the new instance strategy:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=newinstanceresolver,indent=0]
+----
+
+`ObjectGraphBuilder` supports ids per node, meaning
+that you can store a reference to a node in the builder. This is
+useful when multiple objects reference the same instance. Because a
+property named `id` may be of business meaning in some domain models
+`ObjectGraphBuilder` has a strategy named `IdentifierResolver` that you
+may configure to change the default name value. The same may
+happen with the property used for referencing a previously saved
+instance, a strategy named `ReferenceResolver` will yield the
+appropriate value (default is `refId'):
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/ObjectGraphBuilderTest.groovy[tags=test_id,indent=0]
+----
+<1> an address can be created with an `id`
+<2> an employee can reference the address directly with its id
+<3> or use the `refId` attribute corresponding to the `id` of the corresponding address
+
+Its worth mentioning that you cannot modify the properties of a
+referenced bean.
+
+==== JmxBuilder
+
+See <<jmx_jmxbuilder,Working with JMX - JmxBuilder>> for details.
+
+==== FileTreeBuilder
+
+gapi:groovy.util.FileTreeBuilder[FileTreeBuilder] is a builder for generating a file directory structure from a specification. For example, to create the following tree:
+
+---------
+ src/
+  |--- main
+  |     |--- groovy
+  |            |--- Foo.groovy
+  |--- test
+        |--- groovy
+               |--- FooTest.groovy
+---------
+ 
+You can use a `FileTreeBuilder` like this:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/FileTreeBuilderTest.groovy[tags=example,indent=0]
+----
+
+To check that everything worked as expected we use the following `assert`s:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/FileTreeBuilderTest.groovy[tags=example_assert,indent=0]
+----
+
+`FileTreeBuilder` also supports a shorthand syntax:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/FileTreeBuilderTest.groovy[tags=shorthand_syntax,indent=0]
+----
+
+This produces the same directory structure as above, as shown by these `assert`s:
+
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/builder/FileTreeBuilderTest.groovy[tags=shorthand_syntax_assert,indent=0]
+----

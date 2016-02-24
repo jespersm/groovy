@@ -1,19 +1,21 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 class ClassDesignASTTransformsTest extends GroovyTestCase {
 
     void testDelegateTransformation() {
@@ -332,7 +334,7 @@ import groovy.transform.Memoized
 // tag::memoized_long_computation[]
 long longComputation(int seed) {
     // slow computation
-    Thread.sleep(1000*seed)
+    Thread.sleep(100*seed)
     System.nanoTime()
 }
 // end::memoized_long_computation[]
@@ -350,13 +352,13 @@ import groovy.transform.Memoized
 @Memoized
 long longComputation(int seed) {
     // slow computation
-    Thread.sleep(1000*seed)
+    Thread.sleep(100*seed)
     System.nanoTime()
 }
 
-def x = longComputation(1) // returns after 1 second
+def x = longComputation(1) // returns after 100 milliseconds
 def y = longComputation(1) // returns immediatly
-def z = longComputation(2) // returns after 2 seconds
+def z = longComputation(2) // returns after 200 milliseconds
 assert x==y
 assert x!=z
 // end::memoized_long_computation_cached[]

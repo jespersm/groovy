@@ -1,19 +1,21 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package org.codehaus.groovy.runtime.metaclass;
 
 import groovy.lang.*;
@@ -57,15 +59,29 @@ public final class ClosureMetaClass extends MetaClassImpl {
     private MethodChooser chooser;
     private volatile boolean attributeInitDone = false;
 
-    private static final MetaClassImpl CLOSURE_METACLASS;
+    private static MetaClassImpl CLOSURE_METACLASS;
     private static MetaClassImpl classMetaClass;
     private static final Object[] EMPTY_ARGUMENTS = {};
     private static final String CLOSURE_CALL_METHOD = "call";
     private static final String CLOSURE_DO_CALL_METHOD = "doCall";
 
     static {
-        CLOSURE_METACLASS = new MetaClassImpl(Closure.class);
-        CLOSURE_METACLASS.initialize();
+        resetCachedMetaClasses();
+    }
+
+    public static void resetCachedMetaClasses() {
+        MetaClassImpl temp = new MetaClassImpl(Closure.class);
+        temp.initialize();
+        synchronized (ClosureMetaClass.class) {
+            CLOSURE_METACLASS = temp;
+        }
+        if (classMetaClass!=null) {
+            temp = new MetaClassImpl(Class.class);
+            temp.initialize();
+            synchronized (ClosureMetaClass.class) {
+                classMetaClass = temp;
+            }
+        }
     }
 
     private static synchronized MetaClass getStaticMetaClass() {

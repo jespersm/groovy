@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.tools.javac;
 
@@ -28,9 +31,12 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.classgen.FinalVariableAnalyzer;
 import org.codehaus.groovy.classgen.Verifier;
 import org.codehaus.groovy.control.ResolveVisitor;
+import org.codehaus.groovy.runtime.InvokerHelper;
 import org.codehaus.groovy.tools.Utilities;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.objectweb.asm.Opcodes;
 
 import java.io.File;
@@ -137,6 +143,11 @@ public class JavaStubGenerator {
                     node.getObjectInitializerStatements().addAll(savedStatements);
                 }
 
+                @Override
+                protected FinalVariableAnalyzer.VariableNotFinalCallback getFinalVariablesCallback() {
+                    return null;
+                }
+
                 public void addCovariantMethods(ClassNode cn) {}
                 protected void addTimeStamp(ClassNode node) {}
                 protected void addInitialization(ClassNode node) {}
@@ -187,16 +198,21 @@ public class JavaStubGenerator {
                     // not required for stub generation
                 }
             };
+            int origNumConstructors = classNode.getDeclaredConstructors().size();
             verifier.visitClass(classNode);
+            // undo unwanted side-effect of verifier
+            if (origNumConstructors == 0 && classNode.getDeclaredConstructors().size() == 1) {
+                classNode.getDeclaredConstructors().clear();
+            }
             currentModule = classNode.getModule();
 
-            boolean isInterface = classNode.isInterface();
-            boolean isEnum = (classNode.getModifiers() & Opcodes.ACC_ENUM) != 0;
+            boolean isInterface = isInterfaceOrTrait(classNode);
+            boolean isEnum = classNode.isEnum();
             boolean isAnnotationDefinition = classNode.isAnnotationDefinition();
             printAnnotations(out, classNode);
             printModifiers(out, classNode.getModifiers()
                     & ~(isInterface ? Opcodes.ACC_ABSTRACT : 0)
-                    & ~(isEnum ? Opcodes.ACC_FINAL : 0));
+                    & ~(isEnum ? Opcodes.ACC_FINAL | Opcodes.ACC_ABSTRACT : 0));
 
             if (isInterface) {
                 if (isAnnotationDefinition) {
@@ -279,6 +295,45 @@ public class JavaStubGenerator {
             }
             printMethod(out, classNode, method);
         }
+
+        for (ClassNode node : classNode.getAllInterfaces()) {
+            if (Traits.isTrait(node)) {
+                List<MethodNode> traitMethods = node.getMethods();
+                for (MethodNode traitMethod : traitMethods) {
+                    MethodNode method = classNode.getMethod(traitMethod.getName(), traitMethod.getParameters());
+                    if (method == null) {
+                        for (MethodNode methodNode : propertyMethods) {
+                            if (methodNode.getName().equals(traitMethod.getName())) {
+                                boolean sameParams = sameParameterTypes(methodNode);
+                                if (sameParams) {
+                                    method = methodNode;
+                                    break;
+                                }
+                            }
+                        }
+                        if (method==null) {
+                            printMethod(out, classNode, traitMethod);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private static boolean sameParameterTypes(final MethodNode methodNode) {
+        Parameter[] a = methodNode.getParameters();
+        Parameter[] b = methodNode.getParameters();
+        boolean sameParams = a.length == b.length;
+        if (sameParams) {
+            for (int i = 0; i < a.length; i++) {
+                if (!a[i].getType().equals(b[i].getType())) {
+                    sameParams = false;
+                    break;
+                }
+            }
+        }
+        return sameParams;
     }
 
     private void printConstructors(PrintWriter out, ClassNode classNode) {
@@ -293,7 +348,7 @@ public class JavaStubGenerator {
     }
 
     private void printFields(PrintWriter out, ClassNode classNode) {
-        boolean isInterface = classNode.isInterface();
+        boolean isInterface = isInterfaceOrTrait(classNode);
         List<FieldNode> fields = classNode.getFields();
         if (fields == null) return;
         List<FieldNode> enumFields = new ArrayList<FieldNode>(fields.size());
@@ -313,7 +368,7 @@ public class JavaStubGenerator {
     }
 
     private void printEnumFields(PrintWriter out, List<FieldNode> fields) {
-        if (fields.size() != 0) {
+        if (!fields.isEmpty()) {
             boolean first = true;
             for (FieldNode field : fields) {
                 if (!first) {
@@ -387,7 +442,7 @@ public class JavaStubGenerator {
 
         BlockStatement block = (BlockStatement) code;
         List stats = block.getStatements();
-        if (stats == null || stats.size() == 0)
+        if (stats == null || stats.isEmpty())
             return null;
 
         Statement stat = (Statement) stats.get(0);
@@ -549,7 +604,13 @@ public class JavaStubGenerator {
         if (methodNode.isSynthetic() && methodNode.getName().equals("$getStaticMetaClass")) return;
 
         printAnnotations(out, methodNode);
-        if (!clazz.isInterface()) printModifiers(out, methodNode.getModifiers());
+        if (!isInterfaceOrTrait(clazz)) {
+            int modifiers = methodNode.getModifiers();
+            if (isDefaultTraitImpl(methodNode)) {
+                modifiers ^= Opcodes.ACC_ABSTRACT;
+            }
+            printModifiers(out, modifiers & ~(clazz.isEnum() ? Opcodes.ACC_ABSTRACT : 0));
+        }
 
         printGenericsBounds(out, methodNode.getGenericsTypes());
         out.print(" ");
@@ -570,7 +631,9 @@ public class JavaStubGenerator {
             printType(out, exception);
         }
 
-        if ((methodNode.getModifiers() & Opcodes.ACC_ABSTRACT) != 0) {
+        if (Traits.isTrait(clazz)) {
+            out.println(";");
+        } else if (isAbstract(methodNode) && !clazz.isEnum()) {
             if (clazz.isAnnotationDefinition() && methodNode.hasAnnotationDefault()) {
                 Statement fs = methodNode.getFirstStatement();
                 if (fs instanceof ExpressionStatement) {
@@ -601,6 +664,20 @@ public class JavaStubGenerator {
             printReturn(out, retType);
             out.println("}");
         }
+    }
+
+    private boolean isAbstract(final MethodNode methodNode) {
+        if (isDefaultTraitImpl(methodNode)) {
+            return false;
+        }
+        if ((methodNode.getModifiers() & Opcodes.ACC_ABSTRACT) != 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isDefaultTraitImpl(final MethodNode methodNode) {
+        return Traits.isTrait(methodNode.getDeclaringClass()) && Traits.hasDefaultImplementation(methodNode);
     }
 
     private void printValue(PrintWriter out, Expression re, boolean assumeClass) {
@@ -802,9 +879,15 @@ public class JavaStubGenerator {
                 val = constValue.toString();
             else
                 val = "\"" + escapeSpecialChars(constValue.toString()) + "\"";
-        } else if (memberValue instanceof PropertyExpression || memberValue instanceof VariableExpression) {
+        } else if (memberValue instanceof PropertyExpression) {
             // assume must be static class field or enum value or class that Java can resolve
             val = ((Expression) memberValue).getText();
+        } else if (memberValue instanceof VariableExpression) {
+            val = ((Expression) memberValue).getText();
+            //check for an alias
+            ImportNode alias = currentModule.getStaticImports().get(val);
+            if (alias != null)
+                val = alias.getClassName() + "." + alias.getFieldName();
         } else if (memberValue instanceof ClosureExpression) {
             // annotation closure; replaced with this specific class literal to cover the
             // case where annotation type uses Class<? extends Closure> for the closure's type
@@ -853,6 +936,15 @@ public class JavaStubGenerator {
 
         imports.addAll(Arrays.asList(ResolveVisitor.DEFAULT_IMPORTS));
 
+        for (Map.Entry<String, ImportNode> entry : moduleNode.getStaticImports().entrySet()) {
+            if (entry.getKey().equals(entry.getValue().getFieldName()))
+                imports.add("static "+entry.getValue().getType().getName()+"."+entry.getKey());
+        }
+
+        for (Map.Entry<String, ImportNode> entry : moduleNode.getStaticStarImports().entrySet()) {
+            imports.add("static "+entry.getValue().getType().getName()+".");
+        }
+
         for (String imp : imports) {
             String s = new StringBuilder()
                     .append("import ")
@@ -872,6 +964,11 @@ public class JavaStubGenerator {
     }
 
     private static String escapeSpecialChars(String value) {
-        return value.replace("\n", "\\n").replace("\r", "\\r").replace("\"", "\\\"");
+        return InvokerHelper.escapeBackslashes(value).replace("\"", "\\\"");
+
+    }
+
+    private static boolean isInterfaceOrTrait(ClassNode cn) {
+        return cn.isInterface() || Traits.isTrait(cn);
     }
 }

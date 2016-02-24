@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy
 
@@ -33,6 +36,18 @@ import org.codehaus.groovy.util.StringUtil
  * @author Yu Kobayashi
  */
 class GroovyMethodsTest extends GroovyTestCase {
+    
+    void testAbs() {
+        def absoluteNumberOne = 1
+        def negativeDouble = -1d
+        def negativeFloat = -1f
+        def negativeLong = -1l
+        
+        assert absoluteNumberOne == negativeDouble.abs()   
+        assert absoluteNumberOne == negativeFloat.abs()   
+        assert absoluteNumberOne == negativeLong.abs()   
+    }
+    
     void testCollect() {
         assert [2, 4, 6].collect {it * 2} == [4, 8, 12]
         def answer = [2, 4, 6].collect(new Vector()) {it * 2}
@@ -676,13 +691,13 @@ class GroovyMethodsTest extends GroovyTestCase {
         def interruptor = new groovy.TestInterruptor(Thread.currentThread())
         new Thread(interruptor).start()
         long start = System.currentTimeMillis()
-        long sleeptime = 1000
+        long sleeptime = 3000
         sleep(sleeptime) {
             log += it.toString()
             false // continue sleeping
         }
         long slept = System.currentTimeMillis() - start
-        short allowedError = 20 // ms
+        short allowedError = 60 // ms
         assert slept + allowedError >= sleeptime, "should have slept for at least $sleeptime ms but only slept for $slept ms"
         assertEquals 'java.lang.InterruptedException: sleep interrupted', log.toString()
     }
@@ -1456,6 +1471,13 @@ class GroovyMethodsTest extends GroovyTestCase {
         }
     }
 
+    void testCollectEntriesWithArray() {
+        def cityList = '1 San Francisco,2 Cupertino'
+        def cityMap = cityList.split(',').
+                collectEntries{ it.split(' ', 2) }
+        assert cityMap == ['1': 'San Francisco', '2': 'Cupertino']
+    }
+
     void testListTakeWhile() {
         def data = [
             new ArrayList( [ 1, 3, 2 ] ),
@@ -1493,10 +1515,9 @@ class GroovyMethodsTest extends GroovyTestCase {
                      new StringBuffer( 'groovy' ),
                      new StringBuilder( 'groovy' ) ]
         data.each {
-            // Need toString() as CharBuffer.subSequence returns a java.nio.StringCharBuffer
-            assert it.takeWhile{ it == '' }.toString() == ''
-            assert it.takeWhile{ it != 'v' }.toString() == 'groo'
-            assert it.takeWhile{ it }.toString() == 'groovy'
+            assert it.takeWhile{ it == '' } == ''
+            assert it.takeWhile{ it != 'v' } == 'groo'
+            assert it.takeWhile{ it } == 'groovy'
         }
     }
 

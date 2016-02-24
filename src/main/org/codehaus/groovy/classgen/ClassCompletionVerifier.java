@@ -1,17 +1,27 @@
-/*******************************************************************************
- * Copyright (c) 2004 IBM Corporation and others.
- * All rights reserved.   The initial API is made available under the terms of
- * the Common Public License v1.0 which is available at:
- * http://www.eclipse.org/legal/cpl-v10.html
- * Subsequent modifications are made available under the Apache 2.0 license.
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Contributors:
- * IBM - Initial API and implementation
- * Groovy community - subsequent modifications
- ******************************************************************************/
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
 package org.codehaus.groovy.classgen;
 
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -25,9 +35,11 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.MetaClassHelper;
 import org.codehaus.groovy.syntax.Types;
+import org.codehaus.groovy.transform.trait.Traits;
 
 import static java.lang.reflect.Modifier.*;
 import static org.objectweb.asm.Opcodes.*;
@@ -61,13 +73,49 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             checkMethodsForWeakerAccess(node);
             checkMethodsForOverridingFinal(node);
             checkNoAbstractMethodsNonabstractClass(node);
+            checkClassExtendsAllSelfTypes(node);
+            checkNoStaticMethodWithSameSignatureAsNonStatic(node);
             checkGenericsUsage(node, node.getUnresolvedInterfaces());
             checkGenericsUsage(node, node.getUnresolvedSuperClass());
         }
         super.visitClass(node);
         currentClass = oldClass;
     }
-    
+
+    private void checkNoStaticMethodWithSameSignatureAsNonStatic(final ClassNode node) {
+        Map<String, MethodNode> result = new HashMap<String, MethodNode>();
+        // add in unimplemented abstract methods from the interfaces
+        for (ClassNode iface : node.getInterfaces()) {
+            Map<String, MethodNode> ifaceMethodsMap = iface.getDeclaredMethodsMap();
+            for (String methSig : ifaceMethodsMap.keySet()) {
+                if (!result.containsKey(methSig)) {
+                    MethodNode methNode = ifaceMethodsMap.get(methSig);
+                    result.put(methSig, methNode);
+                }
+            }
+        }
+        for (MethodNode methodNode : node.getMethods()) {
+            MethodNode mn = result.get(methodNode.getTypeDescriptor());
+            if (mn!=null && methodNode.isStatic() && !methodNode.isStaticConstructor()) {
+                ClassNode declaringClass = mn.getDeclaringClass();
+                ClassNode cn = declaringClass.getOuterClass();
+                if (cn==null && declaringClass.isResolved()) {
+                    // in case of a precompiled class, the outerclass is unknown
+                    Class typeClass = declaringClass.getTypeClass();
+                    typeClass = typeClass.getEnclosingClass();
+                    if (typeClass!=null) {
+                        cn = ClassHelper.make(typeClass);
+                    }
+                }
+                if (cn==null || !Traits.isTrait(cn)) {
+                    addError("Method '" + mn.getName() + "' is already defined in " + getDescription(node) + ". You cannot have " +
+                            "both a static and a non static method with the same signature", methodNode);
+                }
+            }
+            result.put(methodNode.getTypeDescriptor(), methodNode);
+        }
+    }
+
     private void checkInterfaceMethodVisibility(ClassNode node) {
         if (!node.isInterface()) return;
         for (MethodNode method : node.getMethods()) {
@@ -84,9 +132,42 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         List<MethodNode> abstractMethods = node.getAbstractMethods();
         if (abstractMethods == null) return;
         for (MethodNode method : abstractMethods) {
-            addError("Can't have an abstract method in a non-abstract class." +
-                    " The " + getDescription(node) + " must be declared abstract or" +
-                    " the " + getDescription(method) + " must be implemented.", node);
+            MethodNode sameArgsMethod = node.getMethod(method.getName(), method.getParameters());
+            if (sameArgsMethod==null || method.getReturnType().equals(sameArgsMethod.getReturnType())) {
+                addError("Can't have an abstract method in a non-abstract class." +
+                        " The " + getDescription(node) + " must be declared abstract or" +
+                        " the " + getDescription(method) + " must be implemented.", node);
+            } else {
+                addError("Abstract "+getDescription(method)+" is not implemented but a " +
+                                "method of the same name but different return type is defined: "+
+                                (sameArgsMethod.isStatic()?"static ":"")+
+                                getDescription(sameArgsMethod), method
+                );
+            }
+        }
+    }
+
+    private void checkClassExtendsAllSelfTypes(ClassNode node) {
+        int modifiers = node.getModifiers();
+        if (!isInterface(modifiers)) {
+            for (ClassNode anInterface : GeneralUtils.getInterfacesAndSuperInterfaces(node)) {
+                if (Traits.isTrait(anInterface)) {
+                    LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
+                    for (ClassNode type : Traits.collectSelfTypes(anInterface, selfTypes, true, false)) {
+                        if (type.isInterface() && !node.implementsInterface(type)) {
+                            addError(getDescription(node)
+                                    + " implements " + getDescription(anInterface)
+                                    + " but does not implement self type " + getDescription(type),
+                                    anInterface);
+                        } else if (!type.isInterface() && !node.isDerivedFrom(type)) {
+                            addError(getDescription(node)
+                                            + " implements " + getDescription(anInterface)
+                                            + " but does not extend self type " + getDescription(type),
+                                    anInterface);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -127,7 +208,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     private String getDescription(ClassNode node) {
-        return (node.isInterface() ? "interface" : "class") + " '" + node.getName() + "'";
+        return (node.isInterface() ? (Traits.isTrait(node)?"trait":"interface") : "class") + " '" + node.getName() + "'";
     }
 
     private String getDescription(MethodNode node) {

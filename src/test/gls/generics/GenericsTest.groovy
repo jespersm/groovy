@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2010 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package gls.generics
 
@@ -435,5 +438,13 @@ import java.util.concurrent.atomic.AtomicInteger
                 }
             }
         '''
+    }
+
+    public void "test method with generic return type defined at class level"() {
+        // class Bar should compile successfully
+
+        // the classes it references should be available as class files to check for ASM resolving
+        //  so they're defined in compiled GenericsTestData and not loaded from text in the test
+        createClassInfo 'class Bar extends gls.generics.GenericsTestData.Abstract<String> {}'
     }
 }

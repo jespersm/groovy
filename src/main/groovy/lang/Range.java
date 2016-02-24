@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2008 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.lang;
 
@@ -20,13 +23,16 @@ import java.util.List;
 /**
  * A Range represents the list of all items obtained by starting from a
  * <code>from</code> value and calling <code>next()</code> successively
- * until you reach the <code>to</code> value. For a reverse range,
- * the list is obtained by starting at the <code>to</code> value and
- * successively calling <code>previous()</code> until the <code>from</code>
- * value is reached.
+ * until another call to <code>next()</code> would be higher than the <code>to</code> value.
+ * For a reverse range, the list is obtained by starting at the <code>to</code> value and
+ * successively calling <code>previous()</code> until another call to
+ * <code>previous()</code> would be lower than the <code>from</code>value.
+ *
+ * This means in odd cases the second boundary may not be contained in the range,
+ * and a..b may produce a different set of elements than (b..a).reversed().
+ * E.g.  1..2.5 == [1, 2]; but 2.5..1 == [2.5, 1.5]
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision$
  */
 public interface Range<T extends Comparable> extends List<T> {
     /**
@@ -54,6 +60,12 @@ public interface Range<T extends Comparable> extends List<T> {
     /**
      * Indicates whether an object is greater than or equal to the <code>from</code>
      * value for the range and less than or equal to the <code>to</code> value.
+     *
+     * This may be true even for values not contained in the range.
+     *
+     * Example:   from = 1.5 , to = 3, next() increments by 1
+     * containsWithinBounds(2) == true
+     * contains(2) == false
      *
      * @param o the object to check against the boundaries of the range
      * @return <code>true</code> if the object is between the from and to values

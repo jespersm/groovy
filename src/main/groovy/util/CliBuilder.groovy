@@ -1,23 +1,31 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package groovy.util
 
-import org.apache.commons.cli.*
-import org.codehaus.groovy.cli.GroovyPosixParser
+import org.apache.commons.cli.CommandLine
+import org.apache.commons.cli.CommandLineParser
+import org.apache.commons.cli.DefaultParser
+import org.apache.commons.cli.GnuParser
+import org.apache.commons.cli.HelpFormatter
+import org.apache.commons.cli.Option
+import org.apache.commons.cli.Options
+import org.apache.commons.cli.ParseException
 import org.codehaus.groovy.runtime.InvokerHelper
 
 /**
@@ -46,9 +54,9 @@ import org.codehaus.groovy.runtime.InvokerHelper
  * option exists with value 'alt' and provided that none of 'a', 'l' or 't'
  * takes an argument (in fact the last one is allowed to take an argument).
  * The bursting behavior can be turned off by using an
- * alternate underlying parser. The simplest way to achieve this is by setting
- * the posix property on the CliBuilder to false, i.e. include
- * <code>posix: false</code> in the constructor call.
+ * alternate underlying parser. The simplest way to achieve this is by using
+ * the deprecated GnuParser from Commons CLI with the parser property on the CliBuilder,
+ * i.e. include <code>parser: new GnuParser()</code> in the constructor call.
  * <p>
  * Another example (partial emulation of arg processing for 'ant' command line):
  * <pre>
@@ -122,8 +130,8 @@ import org.codehaus.groovy.runtime.InvokerHelper
  * import org.apache.commons.cli.*
  * ... as before ...
  * cli << new Option('q', false, 'If used as the first parameter disables .curlrc')
- * cli << OptionBuilder.withLongOpt('url').hasArg().withArgName('URL').
- *                      withDescription('Set URL to work with').create()
+ * cli << Option.builder().longOpt('url').hasArg().argName('URL').
+ *                      desc('Set URL to work with').build()
  * ...
  * </pre>
  *
@@ -222,7 +230,7 @@ class CliBuilder {
     /**
      * Allows customisation of the usage message width.
      */
-    int width = formatter.defaultWidth
+    int width = HelpFormatter.DEFAULT_WIDTH
 
     /**
      * Not normally accessed directly but full access to underlying options if needed.
@@ -257,7 +265,7 @@ class CliBuilder {
     OptionAccessor parse(args) {
         if (expandArgumentFiles) args = expandArgumentFiles(args)
         if (!parser) {
-            parser = posix == null ? new GroovyPosixParser() : posix == true ? new PosixParser() : new GnuParser()
+            parser = posix != null && posix == false ? new GnuParser() : new DefaultParser()
         }
         try {
             return new OptionAccessor(parser.parse(options, args as String[], stopAtNonOption))
@@ -272,7 +280,7 @@ class CliBuilder {
      * Print the usage message with writer (default: System.out) and formatter (default: HelpFormatter)
      */
     void usage() {
-        formatter.printHelp(writer, width, usage, header, options, formatter.defaultLeftPad, formatter.defaultDescPad, footer)
+        formatter.printHelp(writer, width, usage, header, options, HelpFormatter.DEFAULT_LEFT_PAD, HelpFormatter.DEFAULT_DESC_PAD, footer)
         writer.flush()
     }
 
@@ -284,7 +292,7 @@ class CliBuilder {
     Option option(shortname, Map details, info) {
         Option option
         if (shortname == '_') {
-            option = OptionBuilder.withDescription(info).withLongOpt(details.longOpt).create()
+            option = Option.builder().desc(info).longOpt(details.longOpt).build()
             details.remove('longOpt')
         } else {
             option = new Option(shortname, info)

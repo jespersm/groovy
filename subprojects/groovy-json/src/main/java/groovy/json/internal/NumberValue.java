@@ -1,21 +1,24 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * Derived from Boon all rights granted to Groovy project for this fork.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.json.internal;
+
+import groovy.json.JsonException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -51,7 +54,6 @@ public class NumberValue extends java.lang.Number implements Value {
 
         try {
             if (chop) {
-
                 this.buffer = ArrayUtils.copyRange(buffer, startIndex, endIndex);
                 this.startIndex = 0;
                 this.endIndex = this.buffer.length;
@@ -62,9 +64,7 @@ public class NumberValue extends java.lang.Number implements Value {
                 this.buffer = buffer;
             }
         } catch (Exception ex) {
-            Exceptions.handle(sputs("exception", ex, "start", startIndex, "end", endIndex),
-                    ex);
-
+            Exceptions.handle(sputs("exception", ex, "start", startIndex, "end", endIndex), ex);
         }
     }
 
@@ -81,12 +81,10 @@ public class NumberValue extends java.lang.Number implements Value {
     }
 
     public <T extends Enum> T toEnum(Class<T> cls) {
-
         return toEnum(cls, intValue());
     }
 
     public static <T extends Enum> T toEnum(Class<T> cls, int value) {
-
         T[] enumConstants = cls.getEnumConstants();
         for (T e : enumConstants) {
             if (e.ordinal() == value) {
@@ -102,12 +100,10 @@ public class NumberValue extends java.lang.Number implements Value {
     }
 
     private final Object doToValue() {
-
         switch (type) {
             case DOUBLE:
                 return bigDecimalValue();
             case INTEGER:
-
                 int sign = 1;
                 boolean negative = false;
                 if (buffer[startIndex] == '-') {
@@ -152,7 +148,11 @@ public class NumberValue extends java.lang.Number implements Value {
     }
 
     public BigDecimal bigDecimalValue() {
-        return new BigDecimal(buffer, startIndex, endIndex - startIndex);
+        try {
+            return new BigDecimal(buffer, startIndex, endIndex - startIndex);
+        } catch (NumberFormatException e) {
+            throw new JsonException("unable to parse " + new String(buffer, startIndex, endIndex - startIndex), e);
+        }
     }
 
     public BigInteger bigIntegerValue() {
@@ -176,13 +176,11 @@ public class NumberValue extends java.lang.Number implements Value {
         if (buffer[startIndex] == '-') {
             startIndex++;
             sign = -1;
-
         }
         return parseIntFromTo(buffer, startIndex, endIndex) * sign;
     }
 
     public long longValue() {
-
         if (isInteger(buffer, startIndex, endIndex - startIndex)) {
             return parseIntFromTo(buffer, startIndex, endIndex);
         } else {
@@ -235,6 +233,4 @@ public class NumberValue extends java.lang.Number implements Value {
     public char charValue() {
         return buffer[startIndex];
     }
-
 }
-

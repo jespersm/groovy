@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen.asm;
 
@@ -44,38 +47,32 @@ public class BinaryExpressionMultiTypeDispatcher extends BinaryExpressionHelper 
     
     private static class BinaryCharExpressionHelper extends BinaryIntExpressionHelper {
         public BinaryCharExpressionHelper(WriterController wc) {
-            super(wc);
+            super(wc, charArraySet, charArrayGet);
         }
         private static final MethodCaller 
             charArrayGet = MethodCaller.newStatic(BytecodeInterface8.class, "cArrayGet"),
             charArraySet = MethodCaller.newStatic(BytecodeInterface8.class, "cArraySet");
-        @Override protected MethodCaller getArrayGetCaller() { return charArrayGet; }
         @Override protected ClassNode getArrayGetResultType() { return ClassHelper.char_TYPE; }
-        @Override protected MethodCaller getArraySetCaller() { return charArraySet; }    
     }
     
     private static class BinaryByteExpressionHelper extends BinaryIntExpressionHelper {
         public BinaryByteExpressionHelper(WriterController wc) {
-            super(wc);
+            super(wc, byteArraySet, byteArrayGet);
         }
         private static final MethodCaller 
             byteArrayGet = MethodCaller.newStatic(BytecodeInterface8.class, "bArrayGet"),
             byteArraySet = MethodCaller.newStatic(BytecodeInterface8.class, "bArraySet");
-        @Override protected MethodCaller getArrayGetCaller() { return byteArrayGet; }
         @Override protected ClassNode getArrayGetResultType() { return ClassHelper.byte_TYPE; }
-        @Override protected MethodCaller getArraySetCaller() { return byteArraySet; }    
     }
     
     private static class BinaryShortExpressionHelper extends BinaryIntExpressionHelper {
         public BinaryShortExpressionHelper(WriterController wc) {
-            super(wc);
+            super(wc, shortArraySet, shortArrayGet);
         }
         private static final MethodCaller 
             shortArrayGet = MethodCaller.newStatic(BytecodeInterface8.class, "sArrayGet"),
             shortArraySet = MethodCaller.newStatic(BytecodeInterface8.class, "sArraySet");
-        @Override protected MethodCaller getArrayGetCaller() { return shortArrayGet; }
         @Override protected ClassNode getArrayGetResultType() { return ClassHelper.short_TYPE; }
-        @Override protected MethodCaller getArraySetCaller() { return shortArraySet; }    
     }
     
     protected BinaryExpressionWriter[] binExpWriter = initializeDelegateHelpers();

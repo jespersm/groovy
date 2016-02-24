@@ -1,19 +1,21 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 class CodeGenerationASTTransformsTest extends GroovyTestCase {
 
     // specification tests for the @ToString AST transformation
@@ -128,6 +130,27 @@ assert p.toString() == 'Person(Jack, Nicholson, Id(1))'
         assertScript '''
 import groovy.transform.ToString
 
+// tag::tostring_example_includeSuperProperties[]
+
+class Person {
+    String name
+}
+
+@ToString(includeSuperProperties = true, includeNames = true)
+class BandMember extends Person {
+    String bandName
+}
+
+def bono = new BandMember(name:'Bono', bandName: 'U2').toString()
+
+assert bono.toString() == 'BandMember(bandName:U2, name:Bono)'
+// end::tostring_example_includeSuperProperties[]
+
+'''
+
+        assertScript '''
+import groovy.transform.ToString
+
 // tag::tostring_example_ignoreNulls[]
 @ToString(ignoreNulls=true)
 class Person {
@@ -175,6 +198,22 @@ assert p.toString() == 'acme.Person(Jack, Nicholson)'
 
 '''
 
+        assertScript '''package acme
+import groovy.transform.ToString
+
+// tag::tostring_example_allProperties[]
+@ToString(includeNames=true)
+class Person {
+    String firstName
+    String getLastName() { 'Nicholson' }
+}
+
+def p = new Person(firstName: 'Jack')
+assert p.toString() == 'acme.Person(firstName:Jack, lastName:Nicholson)'
+// end::tostring_example_allProperties[]
+
+'''
+
     }
 
 
@@ -182,6 +221,7 @@ assert p.toString() == 'acme.Person(Jack, Nicholson)'
         assertScript '''
 // tag::equalshashcode[]
 import groovy.transform.EqualsAndHashCode
+
 @EqualsAndHashCode
 class Person {
     String firstName
@@ -200,6 +240,7 @@ assert p1.hashCode() == p2.hashCode()
         assertScript '''
 // tag::equalshashcode_example_excludes[]
 import groovy.transform.EqualsAndHashCode
+
 @EqualsAndHashCode(excludes=['firstName'])
 class Person {
     String firstName
@@ -218,6 +259,7 @@ assert p1.hashCode() == p2.hashCode()
         assertScript '''
 // tag::equalshashcode_example_includes[]
 import groovy.transform.EqualsAndHashCode
+
 @EqualsAndHashCode(includes=['lastName'])
 class Person {
     String firstName
@@ -475,6 +517,143 @@ assert p1.toString() == 'Jack Nicholson: null'
 assert p2.toString() == 'Jack Nicholson: actor'
 // end::tupleconstructor_example_callSuper[]
 '''
+
+        assertScript '''
+// tag::tupleconstructor_example_force[]
+import groovy.transform.*
+
+@ToString @TupleConstructor(force=true)
+final class Person {
+    String name
+    // explicit constructor would normally disable tuple constructor
+    Person(String first, String last) { this("$first $last") }
+}
+
+assert new Person('john smith').toString() == 'Person(john smith)'
+assert new Person('john', 'smith').toString() == 'Person(john smith)'
+// end::tupleconstructor_example_force[]
+'''
+
+        assertScript '''
+// tag::tupleconstructor_example_useSetters[]
+import groovy.transform.*
+
+@ToString @TupleConstructor(useSetters=true)
+final class Foo {
+    String bar
+    void setBar(String bar) {
+        this.bar = bar?.toUpperCase() // null-safe
+    }
+}
+
+assert new Foo('cat').toString() == 'Foo(CAT)'
+assert new Foo(bar: 'cat').toString() == 'Foo(CAT)'
+// end::tupleconstructor_example_useSetters[]
+'''
+
+        assertScript '''
+// default/control
+import groovy.transform.*
+
+@ToString
+@TupleConstructor
+class Athlete {
+  String name
+  String sport
+  int age
+}
+
+assert new Athlete('Roger', 'Tennis', 33).toString() == 'Athlete(Roger, Tennis, 33)'
+assert Athlete.constructors.size() == 4
+
+// tag::tupleconstructor_example_defaults_false[]
+@ToString
+@TupleConstructor(defaults=false)
+class Musician {
+  String name
+  String instrument
+  int born
+}
+
+assert new Musician('Jimi', 'Guitar', 1942).toString() == 'Musician(Jimi, Guitar, 1942)'
+assert Musician.constructors.size() == 1
+// end::tupleconstructor_example_defaults_false[]
+'''
+
+        assertScript '''
+import groovy.transform.*
+// tag::tupleconstructor_example_defaults_multiple[]
+class Named {
+  String name
+}
+
+@ToString(includeSuperProperties=true, ignoreNulls=true, includeNames=true, includeFields=true)
+@TupleConstructor(force=true, defaults=false)
+@TupleConstructor(force=true, defaults=false, includeFields=true)
+@TupleConstructor(force=true, defaults=false, includeSuperProperties=true)
+class Book extends Named {
+  Integer published
+  private Boolean fiction
+  Book() {}
+}
+
+assert new Book("Regina", 2015).toString() == 'Book(published:2015, name:Regina)'
+assert new Book(2015, false).toString() == 'Book(published:2015, fiction:false)'
+assert new Book(2015).toString() == 'Book(published:2015)'
+assert new Book().toString() == 'Book()'
+assert Book.constructors.size() == 4
+// end::tupleconstructor_example_defaults_multiple[]
+'''
+
+        assertScript '''
+import groovy.transform.*
+// tag::tupleconstructor_example_defaults_multipleIncludes[]
+@ToString(includeSuperProperties=true, ignoreNulls=true, includeNames=true, includeFields=true)
+@TupleConstructor(force=true, defaults=false, includes='name,year')
+@TupleConstructor(force=true, defaults=false, includes='year,fiction')
+@TupleConstructor(force=true, defaults=false, includes='name,fiction')
+class Book {
+    String name
+    Integer year
+    Boolean fiction
+}
+
+assert new Book("Regina", 2015).toString() == 'Book(name:Regina, year:2015)'
+assert new Book(2015, false).toString() == 'Book(year:2015, fiction:false)'
+assert new Book("Regina", false).toString() == 'Book(name:Regina, fiction:false)'
+assert Book.constructors.size() == 3
+// end::tupleconstructor_example_defaults_multipleIncludes[]
+'''
+    }
+
+    void testMapConstructor() {
+        assertScript '''
+// tag::mapconstructor_simple[]
+import groovy.transform.*
+
+@ToString
+@MapConstructor
+class Person {
+    String firstName
+    String lastName
+}
+
+def p1 = new Person(firstName: 'Jack', lastName: 'Nicholson')
+assert p1.toString() == 'Person(Jack, Nicholson)'
+// end::mapconstructor_simple[]
+        '''
+/*
+// tag::mapconstructor_equiv[]
+public Person(Map args) {
+    if (args.containsKey('firstName')) {
+        this.firstName = args.get('firstName')
+    }
+    if (args.containsKey('lastName')) {
+        this.lastName = args.get('lastName')
+    }
+}
+// end::mapconstructor_equiv[]
+*/
     }
 
     void testCanonical() {
@@ -508,34 +687,37 @@ class Person {
     String lastName
 }
 def p1 = new Person(firstName: 'Jack', lastName: 'Nicholson')
-assert p1.toString() == 'Person(Jack)' // Effect of @ToString
+assert p1.toString() == 'Person(Jack)' // Effect of @ToString(excludes=['lastName'])
 
-def p2 = new Person('Jack') // Effect of @TupleConstructor
+def p2 = new Person('Jack') // Effect of @TupleConstructor(excludes=['lastName'])
 assert p2.toString() == 'Person(Jack)'
 
-assert p1==p2 // Effect of @EqualsAndHashCode
-assert p1.hashCode()==p2.hashCode() // Effect of @EqualsAndHashCode
+assert p1==p2 // Effect of @EqualsAndHashCode(excludes=['lastName'])
+assert p1.hashCode()==p2.hashCode() // Effect of @EqualsAndHashCode(excludes=['lastName'])
 // end::canonical_example_excludes[]
 '''
 
         assertScript '''
-// tag::canonical_example_includes[]
-import groovy.transform.Canonical
+// tag::canonical_explicit_tostring[]
+import groovy.transform.*
 
-@Canonical(includes=['firstName'])
+@Canonical(excludes=['lastName'], ignoreNulls=true)
+@ToString(excludes=['firstName'])
 class Person {
     String firstName
     String lastName
 }
 def p1 = new Person(firstName: 'Jack', lastName: 'Nicholson')
-assert p1.toString() == 'Person(Jack)' // Effect of @ToString
+assert p1.toString() == 'Person(Nicholson)'  // Effect of @ToString(excludes=['firstName'], ignoreNulls=true)
 
-def p2 = new Person('Jack') // Effect of @TupleConstructor
-assert p2.toString() == 'Person(Jack)'
+def p2 = new Person('Jack')  // Effect of @TupleConstructor(excludes=['lastName'])
+assert p2.firstName == 'Jack'
+assert p2.lastName == null
+assert p2.toString() == 'Person()'  // Effect of @ToString(excludes=['firstName'], ignoreNulls=true)
 
-assert p1==p2 // Effect of @EqualsAndHashCode
-assert p1.hashCode()==p2.hashCode() // Effect of @EqualsAndHashCode
-// end::canonical_example_includes[]
+assert p1 == p2  // Effect of @EqualsAndHashCode(excludes=['lastName'])
+assert p1.hashCode() == p2.hashCode()  // Effect of @EqualsAndHashCode(excludes=['lastName'])
+// end::canonical_explicit_tostring[]
 '''
     }
 
@@ -556,6 +738,42 @@ new CustomException(new RuntimeException())
 // Java 7 only
 // new CustomException("A custom message", new RuntimeException(), false, true)
 // end::inheritconstructors_simple[]
+'''
+        assertScript '''
+import groovy.transform.InheritConstructors
+import java.lang.annotation.*
+// tag::inheritconstructors_constructor_annotations[]
+@Retention(RetentionPolicy.RUNTIME)
+@Target([ElementType.CONSTRUCTOR])
+public @interface ConsAnno {}
+
+class Base {
+  @ConsAnno Base() {}
+}
+
+@InheritConstructors(constructorAnnotations=true)
+class Child extends Base {}
+
+assert Child.constructors[0].annotations[0].annotationType().name == 'ConsAnno'
+// end::inheritconstructors_constructor_annotations[]
+'''
+        assertScript '''
+import groovy.transform.InheritConstructors
+import java.lang.annotation.*
+// tag::inheritconstructors_parameter_annotations[]
+@Retention(RetentionPolicy.RUNTIME)
+@Target([ElementType.PARAMETER])
+public @interface ParamAnno {}
+
+class Base {
+  Base(@ParamAnno String name) {}
+}
+
+@InheritConstructors(parameterAnnotations=true)
+class Child extends Base {}
+
+assert Child.constructors[0].parameterAnnotations[0][0].annotationType().name == 'ParamAnno'
+// end::inheritconstructors_parameter_annotations[]
 '''
     }
 

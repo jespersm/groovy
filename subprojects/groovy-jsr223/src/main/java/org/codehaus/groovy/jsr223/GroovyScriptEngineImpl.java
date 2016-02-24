@@ -1,41 +1,48 @@
 /*
- * Original source;
- * Copyright 2006 Sun Microsystems, Inc. All rights reserved.
- * Use is subject to license terms.
+ * The initial contribution was derived from the reference implementation
+ * developed by Sun in consultation with the Groovy community. The reference
+ * implementation had the following license header:
  *
- * Redistribution and use in source and binary forms, with or without modification, are 
- * permitted provided that the following conditions are met: Redistributions of source code 
- * must retain the above copyright notice, this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of 
- * conditions and the following disclaimer in the documentation and/or other materials 
- * provided with the distribution. Neither the name of the Sun Microsystems nor the names of 
- * is contributors may be used to endorse or promote products derived from this software 
- * without specific prior written permission. 
-
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
- * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY 
- * AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER 
- * OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON 
- * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
- * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ *  Copyright 2006 Sun Microsystems, Inc. All rights reserved.
+ *  Use is subject to license terms.
  *
- * Subsequent changes:
- * Copyright 2006-2012 the original author or authors.
+ *  Redistribution and use in source and binary forms, with or without modification, are
+ *  permitted provided that the following conditions are met: Redistributions of source code
+ *  must retain the above copyright notice, this list of conditions and the following disclaimer.
+ *  Redistributions in binary form must reproduce the above copyright notice, this list of
+ *  conditions and the following disclaimer in the documentation and/or other materials
+ *  provided with the distribution. Neither the name of the Sun Microsystems nor the names of
+ *  is contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS
+ *  OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ *  AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+ *  OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ *  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ *  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ *  OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Subsequent modifications by the Groovy community have been done under the Apache License v2:
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.jsr223;
 
@@ -79,15 +86,16 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-/*
- * @author Mike Grogan
- * @author A. Sundararajan
+/**
+ * JSR-223 Engine implementation.
+ *
+ * @author Adapted from original by Mike Grogan
+ * @author Adapted from original by A. Sundararajan
  * @author Jim White
  * @author Guillaume Laforge
  * @author Jochen Theodorou
  */
-public class GroovyScriptEngineImpl
-        extends AbstractScriptEngine implements Compilable, Invocable {
+public class GroovyScriptEngineImpl extends AbstractScriptEngine implements Compilable, Invocable {
 
     private static boolean debug = false;
 
@@ -127,7 +135,7 @@ public class GroovyScriptEngineImpl
         try {
             String val = (String) ctx.getAttribute("#jsr223.groovy.engine.keep.globals", ScriptContext.ENGINE_SCOPE);
             ReferenceBundle bundle = ReferenceBundle.getHardBundle();
-            if (val!=null && val.length()>0) {
+            if (val != null && val.length() > 0) {
                 if (val.equalsIgnoreCase("soft")) {
                     bundle = ReferenceBundle.getSoftBundle();
                 } else if (val.equalsIgnoreCase("weak")) {
@@ -224,8 +232,8 @@ public class GroovyScriptEngineImpl
             // enable autoFlush because otherwise it might not get done!
             final Writer writer = ctx.getWriter();
             ctx.setAttribute("out", (writer instanceof PrintWriter) ?
-                    writer :
-                    new PrintWriter(writer, true),
+                            writer :
+                            new PrintWriter(writer, true),
                     ScriptContext.ENGINE_SCOPE);
 
 // Not going to do this after all (at least for now).
@@ -290,8 +298,7 @@ public class GroovyScriptEngineImpl
                 return scriptClass;
             } else {
                 // it's a script
-                Script scriptObject = (Script) scriptClass.newInstance();
-                scriptObject.setBinding(binding);
+                Script scriptObject = InvokerHelper.createScript(scriptClass, binding);
 
                 // save all current closures into global closures map
                 Method[] methods = scriptClass.getMethods();

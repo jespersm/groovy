@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.runtime;
 
@@ -30,6 +33,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -270,7 +274,7 @@ public class InvokerHelper {
             return Byte.valueOf((byte) -number.byteValue());
         }
         if (value instanceof ArrayList) {
-            // value is an list.
+            // value is a list.
             List newlist = new ArrayList();
             Iterator it = ((ArrayList) value).iterator();
             for (; it.hasNext();) {
@@ -406,29 +410,42 @@ public class InvokerHelper {
         return invokeMethod(script, "run", EMPTY_ARGS);
     }
 
+    static class NullScript extends Script {
+        public NullScript() { this(new Binding()); }
+        public NullScript(Binding context) { super(context); }
+        public Object run() { return null; }
+    }
+
     public static Script createScript(Class scriptClass, Binding context) {
-        Script script = null;
-        // for empty scripts
+        Script script;
+
         if (scriptClass == null) {
-            script = new Script() {
-                public Object run() {
-                    return null;
-                }
-            };
+            script = new NullScript(context);
         } else {
             try {
-                final GroovyObject object = (GroovyObject) scriptClass.newInstance();
-                if (object instanceof Script) {
-                    script = (Script) object;
+                if (Script.class.isAssignableFrom(scriptClass)) {
+                    try {
+                        Constructor constructor = scriptClass.getConstructor(Binding.class);
+                        script = (Script) constructor.newInstance(context);
+                    } catch (NoSuchMethodException e) {
+                        // Fallback for non-standard "Script" classes.
+                        script = (Script) scriptClass.newInstance();
+                        script.setBinding(context);
+                    }
                 } else {
+                    final GroovyObject object = (GroovyObject) scriptClass.newInstance();
                     // it could just be a class, so let's wrap it in a Script
                     // wrapper; though the bindings will be ignored
-                    script = new Script() {
+                    script = new Script(context) {
                         public Object run() {
-                            Object args = getBinding().getVariables().get("args");
                             Object argsToPass = EMPTY_MAIN_ARGS;
-                            if (args != null && args instanceof String[]) {
-                                argsToPass = args;
+                            try {
+                                Object args = getProperty("args");
+                                if (args instanceof String[]) {
+                                    argsToPass = args;
+                                }
+                            } catch (MissingPropertyException e) {
+                                // They'll get empty args since none exist in the context.
                             }
                             object.invokeMethod("main", argsToPass);
                             return null;
@@ -449,7 +466,6 @@ public class InvokerHelper {
                                 + scriptClass + ". Reason: " + e, e);
             }
         }
-        script.setBinding(context);
         return script;
     }
 
@@ -600,12 +616,8 @@ public class InvokerHelper {
         }
         if (arguments instanceof String) {
             if (verbose) {
-                String arg = ((String) arguments).replaceAll("\\n", "\\\\n");    // line feed
-                arg = arg.replaceAll("\\r", "\\\\r");      // carriage return
-                arg = arg.replaceAll("\\t", "\\\\t");      // tab
-                arg = arg.replaceAll("\\f", "\\\\f");      // form feed
-                arg = arg.replaceAll("'", "\\\\'");    // single quotation mark
-                arg = arg.replaceAll("\\\\", "\\\\");      // backslash
+                String arg = escapeBackslashes((String) arguments)
+                        .replaceAll("'", "\\\\'");    // single quotation mark
                 return "\'" + arg + "\'";
             } else {
                 return (String) arguments;
@@ -614,6 +626,16 @@ public class InvokerHelper {
         // TODO: For GROOVY-2599 do we need something like below but it breaks other things
 //        return (String) invokeMethod(arguments, "toString", EMPTY_ARGS);
         return arguments.toString();
+    }
+
+    public static String escapeBackslashes(String orig) {
+        // must replace backslashes first, as the other replacements add backslashes not to be escaped
+        return orig
+                .replace("\\", "\\\\")           // backslash
+                .replace("\n", "\\n")            // line feed
+                .replaceAll("\\r", "\\\\r")      // carriage return
+                .replaceAll("\\t", "\\\\t")      // tab
+                .replaceAll("\\f", "\\\\f");     // form feed
     }
 
     private static String formatMap(Map map, boolean verbose, int maxSize) {
@@ -833,7 +855,7 @@ public class InvokerHelper {
             return StringGroovyMethods.bitwiseNegate(value.toString());
         }
         if (value instanceof ArrayList) {
-            // value is an list.
+            // value is a list.
             List newlist = new ArrayList();
             Iterator it = ((ArrayList) value).iterator();
             for (; it.hasNext();) {

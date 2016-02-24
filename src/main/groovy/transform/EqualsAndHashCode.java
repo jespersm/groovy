@@ -1,17 +1,20 @@
 /*
- * Copyright 2008-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.transform;
 
@@ -210,8 +213,11 @@ public @interface EqualsAndHashCode {
      * List of field and/or property names to include within the equals and hashCode calculations.
      * Must not be used if 'excludes' is used. For convenience, a String with comma separated names
      * can be used in addition to an array (using Groovy's literal list notation) of String values.
+     * The default value is a special marker value indicating that no includes are defined; all fields
+     * and/or properties are included if 'includes' remains undefined and 'excludes' is explicitly or
+     * implicitly an empty list.
      */
-    String[] includes() default {};
+    String[] includes() default {Undefined.STRING};
 
     /**
      * Whether to cache hashCode calculations. You should only set this to true if

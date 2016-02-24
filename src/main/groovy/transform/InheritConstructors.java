@@ -1,19 +1,21 @@
 /*
- * Copyright 2008-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package groovy.transform;
 
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
@@ -25,6 +27,8 @@ import java.lang.annotation.Target;
 
 /**
  * Class annotation to make constructors from a super class available in a sub class.
+ * Should be used with care with other annotations which create constructors - see "Known
+ * Limitations" for more details.
  * <p>
  * {@code @InheritConstructors} saves you typing some boilerplate code.
  * <p>
@@ -94,13 +98,19 @@ import java.lang.annotation.Target;
  *     }
  * }
  * </pre>
- *
- * <em>Advanced note:</em>If you create Groovy constructors with optional
+ * Known Limitations:
+ * <ul>
+ * <li>This AST transform creates (potentially) numerous constructors.
+ * You should take care to avoid constructors with duplicate signatures if you are defining your own constructors or
+ * combining with other AST transforms which create constructors (e.g. {@code @TupleConstructor});
+ * the order in which the particular transforms are processed becomes important in that case.</li>
+ * <li>If you create Groovy constructors with optional
  * arguments this leads to multiple constructors created in the byte code.
  * The expansion to multiple constructors occurs in a later phase to
  * this AST transformation. This means that you can't override (i.e. not
  * inherit) the constructors with signatures that Groovy adds later.
- * If you get it wrong you will get a compile-time error about the duplication.
+ * If you get it wrong you will get a compile-time error about the duplication.</li>
+ * </ul>
  *
  * @author Paul King
  * @since 1.7.3
@@ -110,4 +120,19 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @GroovyASTTransformationClass("org.codehaus.groovy.transform.InheritConstructorsASTTransformation")
 public @interface InheritConstructors {
+    /**
+     * Whether to carry over annotations on the copied constructors.
+     * Currently Closure annotation members are not supported.
+     *
+     * @return true if copied constructor should keep constructor annotations
+     */
+    boolean constructorAnnotations() default false;
+
+    /**
+     * Whether to carry over parameter annotations on the copied constructors.
+     * Currently Closure annotation members are not supported.
+     *
+     * @return true if copied constructor should keep parameter annotations
+     */
+    boolean parameterAnnotations() default false;
 }

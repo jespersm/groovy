@@ -1,19 +1,20 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * Derived from Boon all rights granted to Groovy project for this fork.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.json.internal;
 
@@ -29,6 +30,7 @@ import java.math.BigInteger;
  * @author Rick Hightower
  */
 public class CharBuf extends Writer implements CharSequence {
+
     protected int capacity = 16;
     protected int location = 0;
 
@@ -81,14 +83,12 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public void write(char[] cbuf, int off, int len) {
-
         if (off == 0 && cbuf.length == len) {
             this.add(cbuf);
         } else {
             char[] buffer = ArrayUtils.copyRange(cbuf, off, off + len);
             this.add(buffer);
         }
-
     }
 
     public void flush() throws IOException {
@@ -112,7 +112,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf add(int i) {
-
         add(Integer.toString(i));
         return this;
     }
@@ -138,7 +137,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf addInt(Integer key) {
-
         if (icache == null) {
             icache = new SimpleCache<Integer, char[]>(20, CacheType.LRU);
         }
@@ -163,31 +161,26 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf addBoolean(boolean b) {
-
         add(Boolean.toString(b));
         return this;
     }
 
     public final CharBuf add(byte i) {
-
         add(Byte.toString(i));
         return this;
     }
 
     public final CharBuf addByte(byte i) {
-
         addInt(i);
         return this;
     }
 
     public final CharBuf add(short i) {
-
         add(Short.toString(i));
         return this;
     }
 
     public final CharBuf addShort(short i) {
-
         addInt(i);
         return this;
     }
@@ -210,7 +203,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf addDouble(Double key) {
-
         if (dcache == null) {
             dcache = new SimpleCache<Double, char[]>(20, CacheType.LRU);
         }
@@ -239,7 +231,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf addFloat(Float key) {
-
         if (fcache == null) {
             fcache = new SimpleCache<Float, char[]>(20, CacheType.LRU);
         }
@@ -272,7 +263,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf addChar(final char ch) {
-
         int _location = location;
         char[] _buffer = buffer;
         int _capacity = capacity;
@@ -280,7 +270,6 @@ public class CharBuf extends Writer implements CharSequence {
         if (1 + _location > _capacity) {
             _buffer = Chr.grow(_buffer);
             _capacity = _buffer.length;
-
         }
 
         _buffer[_location] = ch;
@@ -327,7 +316,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public final CharBuf addQuoted(char[] chars) {
-
         int _location = location;
         char[] _buffer = buffer;
         int _capacity = capacity;
@@ -355,7 +343,6 @@ public class CharBuf extends Writer implements CharSequence {
     public final CharBuf addJsonEscapedString(String jsonString) {
         char[] charArray = FastStringUtils.toCharArray(jsonString);
         return addJsonEscapedString(charArray);
-
     }
 
     private static boolean hasAnyJSONControlOrUnicodeChars(int c) {
@@ -375,7 +362,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     private static boolean hasAnyJSONControlChars(final char[] charArray) {
-
         int index = 0;
         char c;
         while (true) {
@@ -385,7 +371,6 @@ public class CharBuf extends Writer implements CharSequence {
             }
             if (++index >= charArray.length) return false;
         }
-
     }
 
     public final CharBuf addJsonEscapedString(final char[] charArray) {
@@ -402,7 +387,6 @@ public class CharBuf extends Writer implements CharSequence {
     final byte[] charTo = new byte[2];
 
     private final CharBuf doAddJsonEscapedString(char[] charArray) {
-
         char[] _buffer = buffer;
         int _location = this.location;
 
@@ -414,7 +398,6 @@ public class CharBuf extends Writer implements CharSequence {
 
         int sizeNeeded = (ensureThisMuch) + _location;
         if (sizeNeeded > capacity) {
-
             int growBy = (_buffer.length * 2) < sizeNeeded ? sizeNeeded : (_buffer.length * 2);
             _buffer = Chr.grow(buffer, growBy);
             capacity = _buffer.length;
@@ -425,11 +408,9 @@ public class CharBuf extends Writer implements CharSequence {
 
         int index = 0;
         while (true) {
-
             char c = charArray[index];
 
             if (hasAnyJSONControlOrUnicodeChars(c)) {
-
                    /* We are covering our bet with a safety net.
                       otherwise we would have to have 5x buffer
                       allocated for control chars */
@@ -482,14 +463,12 @@ public class CharBuf extends Writer implements CharSequence {
                         _buffer[_location] = 'r';
                         _location++;
                         break;
-
                     case '\t':
                         _buffer[_location] = '\\';
                         _location++;
                         _buffer[_location] = 't';
                         _location++;
                         break;
-
                     default:
                         _buffer[_location] = '\\';
                         _location++;
@@ -504,7 +483,6 @@ public class CharBuf extends Writer implements CharSequence {
                             for (int b : _encoded) {
                                 _buffer[_location] = (char) b;
                                 _location++;
-
                             }
                         } else {
                             Byt.charTo(_charTo, c);
@@ -516,19 +494,14 @@ public class CharBuf extends Writer implements CharSequence {
                                     _location++;
                                 }
                             }
-
                         }
-
                 }
             } else {
-
                 _buffer[_location] = c;
                 _location++;
-
             }
 
             if (++index >= charArray.length) break;
-
         }
         _buffer[_location] = '"';
         _location++;
@@ -543,36 +516,16 @@ public class CharBuf extends Writer implements CharSequence {
         return addJsonFieldName(FastStringUtils.toCharArray(str));
     }
 
+    private static final char[] EMPTY_STRING_CHARS = Chr.array('"', '"');
+
     public final CharBuf addJsonFieldName(char[] chars) {
-        int _location = location;
-        char[] _buffer = buffer;
-        int _capacity = capacity;
-
-        try {
-
-            int sizeNeeded = chars.length + 3 + _location;
-            if (sizeNeeded > _capacity) {
-                _buffer = Chr.grow(_buffer, sizeNeeded * 2);
-                _capacity = _buffer.length;
-            }
-            _buffer[_location] = '"';
-            _location++;
-
-            arraycopy(chars, 0, _buffer, _location, chars.length);
-
-            _location += (chars.length);
-            _buffer[_location] = '"';
-            _location++;
-            _buffer[_location] = ':';
-            _location++;
-
-            location = _location;
-            buffer = _buffer;
-            capacity = _capacity;
-            return this;
-        } catch (Exception ex) {
-            return Exceptions.handle(CharBuf.class, Exceptions.sputs(toDebugString(), new String(chars), "_location", _location), ex);
+        if (chars.length > 0) {
+            addJsonEscapedString(chars);
+        } else {
+            addChars(EMPTY_STRING_CHARS);
         }
+        addChar(':');
+        return this;
     }
 
     public final CharBuf addQuoted(String str) {
@@ -607,13 +560,10 @@ public class CharBuf extends Writer implements CharSequence {
 
     private static final void sysstemarraycopy(final char[] src, final int srcPos, final char[] dest, final int destPos, final int length) {
         System.arraycopy(src, srcPos, dest, destPos, length);
-
     }
 
     private static final void arraycopy(final char[] src, final int srcPos, final char[] dest, final int destPos, final int length) {
-
         sysstemarraycopy(src, srcPos, dest, destPos, length);
-
     }
 
     public CharBuf add(byte[] bytes, int start, int end) {
@@ -663,7 +613,6 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public String toStringAndRecycle() {
-
         String str = new String(buffer, 0, location);
         location = 0;
         return str;
@@ -715,13 +664,11 @@ public class CharBuf extends Writer implements CharSequence {
     }
 
     public Number toIntegerWrapper() {
-
         if (CharScanner.isInteger(buffer, 0, location)) {
             return intValue();
         } else {
             return longValue();
         }
-
     }
 
     static final char[] nullChars = "null".toCharArray();
@@ -751,7 +698,6 @@ public class CharBuf extends Writer implements CharSequence {
         add(chars);
 
         return this;
-
     }
 
     private Cache<BigInteger, char[]> bigICache;
@@ -771,19 +717,16 @@ public class CharBuf extends Writer implements CharSequence {
         add(chars);
 
         return this;
-
     }
 
     private Cache<Long, char[]> lcache;
 
     public final CharBuf addLong(long l) {
-
         addLong(Long.valueOf(l));
         return this;
     }
 
     public final CharBuf addLong(Long key) {
-
         if (lcache == null) {
             lcache = new SimpleCache<Long, char[]>(20, CacheType.LRU);
         }
@@ -856,7 +799,6 @@ public class CharBuf extends Writer implements CharSequence {
                             break;
 
                         case 'u':
-
                             if (index + 4 < to) {
                                 String hex = new String(chars, index + 1, 4);
                                 char unicode = (char) Integer.parseInt(hex, 16);
@@ -864,6 +806,7 @@ public class CharBuf extends Writer implements CharSequence {
                                 index += 4;
                             }
                             break;
+
                         default:
                             throw new JsonException("Unable to decode string");
                     }
@@ -877,9 +820,7 @@ public class CharBuf extends Writer implements CharSequence {
         this.location = location;
 
         return this;
-
     }
-
 }
 
 

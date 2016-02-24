@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.runtime.typehandling;
 
@@ -30,6 +33,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.text.MessageFormat;
 import java.util.*;
 
 /**
@@ -38,10 +42,11 @@ import java.util.*;
  * @author Guillaume Laforge
  */
 public class DefaultTypeTransformation {
-    
+
     protected static final Object[] EMPTY_ARGUMENTS = {};
     protected static final BigInteger ONE_NEG = new BigInteger("-1");
-    
+    private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
+
     //  --------------------------------------------------------
     //                  unboxing methods
     //  --------------------------------------------------------       
@@ -266,40 +271,48 @@ public class DefaultTypeTransformation {
         if (Number.class.isAssignableFrom(type)) {
             Number n = castToNumber(object, type);
             if (type == Byte.class) {
-                return new Byte(n.byteValue());
-            } else if (type == Character.class) {
-                return new Character((char) n.intValue());
-            } else if (type == Short.class) {
-                return new Short(n.shortValue());
-            } else if (type == Integer.class) {
-                return Integer.valueOf(n.intValue());
-            } else if (type == Long.class) {
-                return new Long(n.longValue());
-            } else if (type == Float.class) {
-                return new Float(n.floatValue());
-            } else if (type == Double.class) {
-                Double answer = new Double(n.doubleValue());
+                return n.byteValue();
+            }
+            if (type == Character.class) {
+                return (char) n.intValue();
+            }
+            if (type == Short.class) {
+                return n.shortValue();
+            }
+            if (type == Integer.class) {
+                return n.intValue();
+            }
+            if (type == Long.class) {
+                return n.longValue();
+            }
+            if (type == Float.class) {
+                return n.floatValue();
+            }
+            if (type == Double.class) {
+                Double answer = n.doubleValue();
                 //throw a runtime exception if conversion would be out-of-range for the type.
-                if (!(n instanceof Double) && (answer.doubleValue() == Double.NEGATIVE_INFINITY
-                        || answer.doubleValue() == Double.POSITIVE_INFINITY)) {
+                if (!(n instanceof Double) && (answer == Double.NEGATIVE_INFINITY
+                        || answer == Double.POSITIVE_INFINITY)) {
                     throw new GroovyRuntimeException("Automatic coercion of " + n.getClass().getName()
                             + " value " + n + " to double failed.  Value is out of range.");
                 }
                 return answer;
-            } else if (type == BigDecimal.class) {
+            }
+            if (type == BigDecimal.class) {
                 if (n instanceof Float || n instanceof Double) {
                     return new BigDecimal(n.doubleValue());
                 }
                 return new BigDecimal(n.toString());
-            } else if (type == BigInteger.class) {
+            }
+            if (type == BigInteger.class) {
                 if (object instanceof Float || object instanceof Double) {
                     BigDecimal bd = new BigDecimal(n.doubleValue());
                     return bd.toBigInteger();
-                } else if (object instanceof BigDecimal) {
-                    return ((BigDecimal) object).toBigInteger();
-                } else {
-                    return new BigInteger(n.toString());
                 }
+                if (object instanceof BigDecimal) {
+                    return ((BigDecimal) object).toBigInteger();
+                }
+                return new BigInteger(n.toString());
             }
         }
 
@@ -437,11 +450,8 @@ public class DefaultTypeTransformation {
             method.call(adapter);
             return adapter.asList();
         }
-        else if (value instanceof String) {
-            return StringGroovyMethods.toList((String) value);
-        }
-        else if (value instanceof GString) {
-            return StringGroovyMethods.toList(value.toString());
+        else if (value instanceof String || value instanceof GString) {
+            return StringGroovyMethods.toList((CharSequence) value);
         }
         else if (value instanceof File) {
             try {
@@ -452,7 +462,7 @@ public class DefaultTypeTransformation {
             }
         }
         else if (value instanceof Class && ((Class)value).isEnum()) {
-            Object[] values = (Object[])InvokerHelper.invokeMethod(value, "values", new Object[0]);
+            Object[] values = (Object[])InvokerHelper.invokeMethod(value, "values", EMPTY_OBJECT_ARRAY);
             return Arrays.asList(values);
         }
         else {
@@ -542,11 +552,11 @@ public class DefaultTypeTransformation {
         }
         if (left instanceof Comparable) {
             if (left instanceof Number) {
-                if (isValidCharacterString(right)) {
-                    return DefaultGroovyMethods.compareTo((Number) left, ShortTypeHandling.castToChar(right));
-                }
                 if (right instanceof Character || right instanceof Number) {
                     return DefaultGroovyMethods.compareTo((Number) left, castToNumber(right));
+                }
+                if (isValidCharacterString(right)) {
+                    return DefaultGroovyMethods.compareTo((Number) left, ShortTypeHandling.castToChar(right));
                 }
             }
             else if (left instanceof Character) {
@@ -579,13 +589,18 @@ public class DefaultTypeTransformation {
         if (equalityCheckOnly) {
             return -1; // anything other than 0
         }
-        throw new GroovyRuntimeException("Cannot compare " + left.getClass().getName() + " with value '" +
-                left + "' and " + right.getClass().getName() + " with value '" + right + "'");
+        throw new GroovyRuntimeException(
+                MessageFormat.format("Cannot compare {0} with value ''{1}'' and {2} with value ''{3}''",
+                        left.getClass().getName(),
+                        left,
+                        right.getClass().getName(),
+                        right));
     }
 
     public static boolean compareEqual(Object left, Object right) {
         if (left == right) return true;
-        if (left == null || right == null) return false;
+        if (left == null) return right instanceof NullObject;
+        if (right == null) return left instanceof NullObject;
         if (left instanceof Comparable) {
             return compareToWithEqualityCheck(left, right, true) == 0;
         }
@@ -851,6 +866,19 @@ public class DefaultTypeTransformation {
         } else {
             return ((Character) value);
         }
+    }
+
+    public static Object castToVargsArray(Object[] origin, int firstVargsPos, Class<?> arrayType) {
+        Class<?> componentType = arrayType.getComponentType();
+        if (firstVargsPos>= origin.length) return Array.newInstance(componentType, 0);
+        int length = origin.length-firstVargsPos;
+        if (length==1 && arrayType.isInstance(origin[firstVargsPos])) return origin[firstVargsPos];
+        Object newArray = Array.newInstance(componentType, length);
+        for (int i=0; i<length; i++) {
+            Object convertedValue = castToType(origin[firstVargsPos+i],componentType);
+            Array.set(newArray, i, convertedValue);
+        }
+        return newArray;
     }
 
 }

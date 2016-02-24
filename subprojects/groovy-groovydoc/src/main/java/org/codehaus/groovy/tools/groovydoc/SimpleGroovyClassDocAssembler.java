@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.tools.groovydoc;
 
@@ -263,6 +266,68 @@ public class SimpleGroovyClassDocAssembler extends VisitorAdapter implements Gro
         }
     }
 
+    private void processPropertiesFromGetterSetter(SimpleGroovyMethodDoc currentMethodDoc) {
+        String methodName = currentMethodDoc.name();
+        int len = methodName.length();
+        String prefix = null;
+        String propName = null;
+        if (len > 3 && methodName.startsWith("get")) {
+            prefix = "get";
+            propName = methodName.substring(3);
+        } else if (len > 3 && methodName.startsWith("set")) {
+            prefix = "set";
+            propName = methodName.substring(3);
+        } else if (len > 2 && methodName.startsWith("is")) {
+            prefix = "is";
+            propName = methodName.substring(2);
+        } else {
+            // Not a (get/set/is) method that contains a property name
+            return;
+        }
+
+        SimpleGroovyClassDoc classDoc = getCurrentClassDoc();
+        // TODO: not sure why but groovy.ui.view.BasicContentPane#buildOutputArea classDoc is null
+        if (classDoc == null) {
+            return;
+        }
+        GroovyMethodDoc methods[] = classDoc.methods();
+
+        //find expected method name
+        String expectedMethodName = null;
+        if ("set".equals(prefix) && (currentMethodDoc.parameters().length >= 1 && !currentMethodDoc.parameters()[0].typeName().equals("boolean"))) {
+            expectedMethodName = "get" + propName;
+        } else if ("get".equals(prefix) && !currentMethodDoc.returnType().typeName().equals("boolean")) {
+            expectedMethodName = "set" + propName;
+        } else if ("is".equals(prefix)) {
+            expectedMethodName = "set" + propName;
+        } else {
+            expectedMethodName = "is" + propName;
+        }
+
+        for (GroovyMethodDoc methodDoc : methods) {
+            if (methodDoc.name().equals(expectedMethodName)) {
+
+                //extract the field name
+                String fieldName = propName.substring(0, 1).toLowerCase() + propName.substring(1);
+                SimpleGroovyFieldDoc currentFieldDoc = new SimpleGroovyFieldDoc(fieldName, classDoc);
+
+                //find the type of the field; if it's a setter, need to get the type of the params
+                if(expectedMethodName.startsWith("set") && methodDoc.parameters().length >= 1) {
+                    String typeName = methodDoc.parameters()[0].typeName();
+                    currentFieldDoc.setType(new SimpleGroovyType(typeName));
+                } else {
+                    //if it's not setter, get the type info of the return type of the get* method
+                    currentFieldDoc.setType(methodDoc.returnType());
+                }
+
+                if (methodDoc.isPublic() && currentMethodDoc.isPublic()) {
+                    classDoc.addProperty(currentFieldDoc);
+                    break;
+                }
+            }
+        }
+    }
+
     private SimpleGroovyMethodDoc createMethod(GroovySourceAST t, SimpleGroovyClassDoc currentClassDoc) {
         String methodName = getIdentFor(t);
         SimpleGroovyMethodDoc currentMethodDoc = new SimpleGroovyMethodDoc(methodName, currentClassDoc);
@@ -271,6 +336,7 @@ public class SimpleGroovyClassDocAssembler extends VisitorAdapter implements Gro
         currentMethodDoc.setReturnType(new SimpleGroovyType(getTypeOrDefault(t)));
         addParametersTo(t, currentMethodDoc);
         processAnnotations(t, currentMethodDoc);
+        processPropertiesFromGetterSetter(currentMethodDoc);
         return currentMethodDoc;
     }
 
@@ -549,8 +615,13 @@ public class SimpleGroovyClassDocAssembler extends VisitorAdapter implements Gro
                 currentModifier = currentModifier.getNextSibling();
             }
             if (!hasNonPublicVisibility && isGroovy && !(memberOrClass instanceof GroovyFieldDoc)) {
-                // in groovy methods and classes are assumed public, unless informed otherwise
-                memberOrClass.setPublic(true);
+                // in groovy, methods and classes are assumed public, unless informed otherwise
+                if (isPackageScope(modifiers)) {
+                    memberOrClass.setPackagePrivate(true);
+                    hasNonPublicVisibility = true;
+                } else {
+                    memberOrClass.setPublic(true);
+                }
             } else if (!hasNonPublicVisibility && !hasPublicVisibility && !isGroovy) {
                 if (insideInterface(memberOrClass) || insideAnnotationDef(memberOrClass)) {
                     memberOrClass.setPublic(true);
@@ -558,9 +629,15 @@ public class SimpleGroovyClassDocAssembler extends VisitorAdapter implements Gro
                     memberOrClass.setPackagePrivate(true);
                 }
             }
+            if (memberOrClass instanceof GroovyFieldDoc && isGroovy && !hasNonPublicVisibility & !hasPublicVisibility) {
+                if (isPackageScope(modifiers)) {
+                    memberOrClass.setPackagePrivate(true);
+                    hasNonPublicVisibility = true;
+                }
+            }
             if (memberOrClass instanceof GroovyFieldDoc && !hasNonPublicVisibility && !hasPublicVisibility && isGroovy) return true;
         } else if (isGroovy && !(memberOrClass instanceof GroovyFieldDoc)) {
-            // in groovy methods and classes are assumed public, unless informed otherwise
+            // in groovy, methods and classes are assumed public, unless informed otherwise
             memberOrClass.setPublic(true);
         } else if (!isGroovy) {
             if (insideInterface(memberOrClass) || insideAnnotationDef(memberOrClass)) {
@@ -570,6 +647,20 @@ public class SimpleGroovyClassDocAssembler extends VisitorAdapter implements Gro
             }
         }
         return memberOrClass instanceof GroovyFieldDoc && isGroovy && !hasNonPublicVisibility & !hasPublicVisibility;
+    }
+
+    private boolean isPackageScope(GroovySourceAST modifiers) {
+        List<String> names = getAnnotationNames(modifiers);
+        return names.contains("groovy/transform/PackageScope") || names.contains("PackageScope");
+    }
+
+    private List<String> getAnnotationNames(GroovySourceAST modifiers) {
+        List<String> annotationNames = new ArrayList<String>();
+        List<GroovySourceAST> annotations = modifiers.childrenOfType(ANNOTATION);
+        for (GroovySourceAST annotation : annotations) {
+            annotationNames.add(buildName((GroovySourceAST) annotation.getFirstChild()));
+        }
+        return annotationNames;
     }
 
     private boolean insideInterface(SimpleGroovyAbstractableElementDoc memberOrClass) {

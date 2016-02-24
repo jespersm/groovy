@@ -1,19 +1,21 @@
 /*
- * Copyright 2003-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
-
 package org.codehaus.groovy.control;
 
 import org.codehaus.groovy.control.customizers.CompilationCustomizer;
@@ -37,6 +39,9 @@ public class CompilerConfiguration {
 
     private static final String JDK5_CLASSNAME_CHECK = "java.lang.annotation.Annotation";
 
+    /** This (<code>"indy"</code>) is the Optimization Option value for enabling <code>invokedynamic</code> complilation. */
+    public static final String INVOKEDYNAMIC = "indy";
+
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4. **/
     public static final String JDK4 = "1.4";
     /** This (<code>"1.5"</code>) is the value for targetBytecode to compile for a JDK 1.5. **/
@@ -54,7 +59,8 @@ public class CompilerConfiguration {
     /** This (<code>"1.4"</code>) is the value for targetBytecode to compile for a JDK 1.4 JVM. **/
     public static final String PRE_JDK5 = JDK4;
 
-    private static final String[] ALLOWED_JDKS = { JDK4, JDK5, JDK6, JDK7, JDK8 };
+    /** An array of the valid targetBytecode values **/
+    public static final String[] ALLOWED_JDKS = { JDK4, JDK5, JDK6, JDK7, JDK8 };
 
     // Just call getVMVersion() once.
     public static final String currentJVMVersion = getVMVersion();
@@ -104,6 +110,11 @@ public class CompilerConfiguration {
      * If true, debugging code should be activated
      */
     private boolean debug;
+
+    /**
+     * If true, generates metadata for reflection on method parameters
+     */
+    private boolean parameters = false;
 
     /**
      * The number of non-fatal errors to allow before bailing
@@ -182,47 +193,17 @@ public class CompilerConfiguration {
         setClasspath("");
         setVerbose(false);
         setDebug(false);
+        setParameters(safeGetSystemProperty("groovy.parameters") != null);
         setTolerance(10);
         setScriptBaseClass(null);
         setRecompileGroovySource(false);
         setMinimumRecompilationInterval(100);
-        // Target bytecode
-        String targetByteCode = null;
-        try {
-            targetByteCode = System.getProperty("groovy.target.bytecode", targetByteCode);
-        } catch (Exception e) {
-            // IGNORE
-        }
-        if(targetByteCode != null) {
-            setTargetBytecode(targetByteCode);
-        } else {
-            setTargetBytecode(getVMVersion());
-        }
-        String tmpDefaultScriptExtension = null;
-        try {
-            tmpDefaultScriptExtension = System.getProperty("groovy.default.scriptExtension");
-        } catch (Exception e) {
-            // IGNORE
-        }
-        if(tmpDefaultScriptExtension != null) {
-            setDefaultScriptExtension(tmpDefaultScriptExtension);
-        } else {
-            setDefaultScriptExtension(".groovy");
-        }
+        setTargetBytecode(safeGetSystemProperty("groovy.target.bytecode", getVMVersion()));
+        setDefaultScriptExtension(safeGetSystemProperty("groovy.default.scriptExtension", ".groovy"));
 
-        //
         // Source file encoding
-        String encoding = null;
-        try {
-            encoding = System.getProperty("file.encoding", "US-ASCII");
-        } catch (Exception e) {
-            // IGNORE
-        }
-        try {
-            encoding = System.getProperty("groovy.source.encoding", encoding);
-        } catch (Exception e) {
-            // IGNORE
-        }
+        String encoding = safeGetSystemProperty("file.encoding", "US-ASCII");
+        encoding = safeGetSystemProperty("groovy.source.encoding", encoding);
         setSourceEncoding(encoding);
 
         try {
@@ -231,13 +212,9 @@ public class CompilerConfiguration {
             // IGNORE
         }
 
-        try {
-            String target = System.getProperty("groovy.target.directory");
-            if (target != null) {
-                setTargetDirectory(target);
-            }
-        } catch (Exception e) {
-            // IGNORE
+        String target = safeGetSystemProperty("groovy.target.directory");
+        if (target != null) {
+            setTargetDirectory(target);
         }
 
         boolean indy = false;
@@ -246,12 +223,12 @@ public class CompilerConfiguration {
         } catch (Exception e) {
             // IGNORE
         }
-        if (DEFAULT!=null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get("indy"))) {
+        if (DEFAULT!=null && Boolean.TRUE.equals(DEFAULT.getOptimizationOptions().get(INVOKEDYNAMIC))) {
             indy = true;
         }
         Map options = new HashMap<String,Boolean>(3);
         if (indy) {
-            options.put("indy", Boolean.TRUE);
+            options.put(INVOKEDYNAMIC, Boolean.TRUE);
         }
         setOptimizationOptions(options);
 
@@ -260,6 +237,45 @@ public class CompilerConfiguration {
         } catch (Exception e) {
             // IGNORE
         }
+    }
+
+    /**
+     * Retrieves a System property, or null if any of the following exceptions occur.
+     * <ul>
+     *     <li>SecurityException - if a security manager exists and its checkPropertyAccess method doesn't allow access to the specified system property.</li>
+     *     <li>NullPointerException - if key is null.</li>
+     *     <li>IllegalArgumentException - if key is empty.</li>
+     * </ul>
+     * @param key the name of the system property.
+     * @return value of the system property or null
+     */
+    private String safeGetSystemProperty(String key){
+        return safeGetSystemProperty(key, null);
+    }
+
+    /**
+     * Retrieves a System property, or null if any of the following exceptions occur (Warning: Exception messages are
+     * suppressed).
+     * <ul>
+     *     <li>SecurityException - if a security manager exists and its checkPropertyAccess method doesn't allow access to the specified system property.</li>
+     *     <li>NullPointerException - if key is null.</li>
+     *     <li>IllegalArgumentException - if key is empty.</li>
+     * </ul>
+     * @param key the name of the system property.
+     * @param def a default value.
+     * @return  value of the system property or null
+     */
+    private String safeGetSystemProperty(String key, String def){
+        try {
+            return System.getProperty(key, def);
+        } catch (SecurityException t){
+            // suppress exception
+        } catch (NullPointerException t){
+            // suppress exception
+        } catch (IllegalArgumentException t){
+            // suppress exception
+        }
+        return def;
     }
 
     /**
@@ -285,6 +301,7 @@ public class CompilerConfiguration {
         setClasspathList(new LinkedList<String>(configuration.getClasspath()));
         setVerbose(configuration.getVerbose());
         setDebug(configuration.getDebug());
+        setParameters(configuration.getParameters());
         setTolerance(configuration.getTolerance());
         setScriptBaseClass(configuration.getScriptBaseClass());
         setRecompileGroovySource(configuration.getRecompileGroovySource());
@@ -388,8 +405,8 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Method to configure a this CompilerConfiguration by using Properties.
-     * For a list of available properties look at {link {@link #CompilerConfiguration(Properties)}.
+     * Method to configure a CompilerConfiguration by using Properties.
+     * For a list of available properties look at {@link #CompilerConfiguration(Properties)}.
      * @param configuration The properties to get flag values from.
      */
     public void configure(Properties configuration) throws ConfigurationException {
@@ -460,6 +477,11 @@ public class CompilerConfiguration {
         if (text != null && text.equalsIgnoreCase("true")) setDebug(true);
 
         //
+        // Parameters
+        //
+        setParameters(configuration.getProperty("groovy.parameters") != null);
+
+        //
         // Tolerance
         // 
         numeric = 10;
@@ -509,7 +531,7 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Gets the currently configured warning level.  See WarningMessage
+     * Gets the currently configured warning level. See {@link WarningMessage}
      * for level details.
      */
     public int getWarningLevel() {
@@ -517,7 +539,7 @@ public class CompilerConfiguration {
     }
 
     /**
-     * Sets the warning level.  See WarningMessage for level details.
+     * Sets the warning level. See {@link WarningMessage} for level details.
      */
     public void setWarningLevel(int level) {
         if (level < WarningMessage.NONE || level > WarningMessage.PARANOIA) {
@@ -635,10 +657,24 @@ public class CompilerConfiguration {
     }
 
     /**
+     * Returns true if parameter metadata generation has been enabled.
+     */
+    public boolean getParameters() {
+        return this.parameters;
+    }
+
+    /**
      * Turns debugging operation on or off.
      */
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+
+    /**
+     * Turns parameter metadata generation on or off.
+     */
+    public void setParameters(boolean parameters) {
+        this.parameters = parameters;
     }
 
     /**

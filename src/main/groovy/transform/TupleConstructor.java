@@ -1,17 +1,20 @@
 /*
- * Copyright 2008-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.transform;
 
@@ -24,6 +27,8 @@ import java.lang.annotation.Target;
 
 /**
  * Class annotation used to assist in the creation of tuple constructors in classes.
+ * Should be used with care with other annotations which create constructors - see "Known
+ * Limitations" for more details.
  * <p>
  * It allows you to write classes in this shortened form:
  * <pre>
@@ -51,17 +56,25 @@ import java.lang.annotation.Target;
  * by the fields of the class (if {@code includeFields} is set). Within each grouping the order
  * is as attributes appear within the respective class.
  * <p>
- * Limitations:
+ * Known Limitations:
  * <ul>
+ * <li>This AST transform might become a no-op if you are defining your own constructors or
+ * combining with other AST transforms which create constructors (e.g. {@code @InheritConstructors});
+ * the order in which the particular transforms are processed becomes important in that case.
+ * See the {@code force} attribute for further details about customizing this behavior.</li>
+ * <li>This AST transform normally uses default parameter values which creates multiple constructors under
+ * the covers. You should use with care if you are defining your own constructors or
+ * combining with other AST transforms which create constructors (e.g. {@code @InheritConstructors});
+ * the order in which the particular transforms are processed becomes important in that case.
+ * See the {@code defaults} attribute for further details about customizing this behavior.</li>
  * <li>Groovy's normal map-style naming conventions will not be available if the first property (or field)
  * has type {@code LinkedHashMap} or if there is a single Map, AbstractMap or HashMap property (or field)</li>
  * </ul>
  *
- * @author Paul King
  * @since 1.8.0
  */
 @java.lang.annotation.Documented
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE})
 @GroovyASTTransformationClass("org.codehaus.groovy.transform.TupleConstructorASTTransformation")
 public @interface TupleConstructor {
@@ -76,8 +89,11 @@ public @interface TupleConstructor {
      * List of field and/or property names to include within the constructor.
      * Must not be used if 'excludes' is used. For convenience, a String with comma separated names
      * can be used in addition to an array (using Groovy's literal list notation) of String values.
+     * The default value is a special marker value indicating that no includes are defined;
+     * all fields are included if includes remains undefined and excludes is explicitly or implicitly
+     * an empty list.
      */
-    String[] includes() default {};
+    String[] includes() default {Undefined.STRING};
 
     /**
      * Include fields in the constructor.
@@ -111,4 +127,31 @@ public @interface TupleConstructor {
      * whether existing constructors exist. It is up to you to avoid creating duplicate constructors.
      */
     boolean force() default false;
+
+    /**
+     * Used to set whether default value processing is enabled (the default) or disabled.
+     *
+     * By default, every constructor parameter is given a default value. This value will
+     * be Java's default for primitive types (zero or false) and null for Objects, unless
+     * an initial value is given when declaring the property or field. A consequence of
+     * this design is that you can leave off parameters from the right if the default
+     * value will suffice. As far as Java interoperability is concerned, Groovy will
+     * create additional constructors under the covers representing the constructors
+     * with parameters left off, all the way from the constructor with all arguments
+     * to the no-arg constructor.
+     *
+     * However, when set to false, default values are not allowed for properties and fields.
+     * Only the constructor containing all arguments will be provided.
+     * In particular, a no-arg constructor won't be provided and since this is currently
+     * used by Groovy when using named-arguments, the named-argument style won't be available.
+     */
+    boolean defaults() default true;
+
+    /**
+     * By default, properties are set directly using their respective field.
+     * By setting {@code useSetters=true} then a writable property will be set using its setter.
+     * If turning on this flag we recommend that setters that might be called are
+     * made null-safe wrt the parameter.
+     */
+    boolean useSetters() default false;
 }

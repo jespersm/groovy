@@ -1,17 +1,20 @@
 /*
- * Copyright 2008-2013 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.transform
 
@@ -122,20 +125,6 @@ class ImmutableTransformTest extends GroovyShellTestCase {
         }
 
         assert cls == 'Dolly'
-    }
-
-    void testImmutableCantAlsoBeMutable() {
-        def msg = shouldFail(RuntimeException) {
-            assertScript """
-                import groovy.transform.*
-                @Immutable
-                @Canonical
-                class Foo {
-                    String bar
-                }
-            """
-        }
-        assert msg.contains("@Canonical class 'Foo' can't also be @Immutable")
     }
 
     void testImmutableListProp() {
@@ -544,7 +533,7 @@ class ImmutableTransformTest extends GroovyShellTestCase {
             // ok, not really immutable but deem it such for the purpose of this test
             @groovy.transform.Canonical class Address { String street }
 
-            assert new Person(first: 'John', last: 'Doe', address: ['Street']).toString() == 'Person(John, Doe, Address(Street))\'
+            assert new Person(first: 'John', last: 'Doe', address: ['Street']).toString() == 'Person(John, Doe, Address(Street))'
         '''
     }
 
@@ -607,7 +596,7 @@ class ImmutableTransformTest extends GroovyShellTestCase {
             }
             '''
         }
-        assert msg.contains('@Immutable processor doesn\'t know how to handle field \'name\' of type \'java.lang.Object or def\'')
+        assert msg.contains("@Immutable processor doesn't know how to handle field 'name' of type 'java.lang.Object or def'")
     }
 
     // GROOVY-6192
@@ -912,5 +901,46 @@ class ImmutableTransformTest extends GroovyShellTestCase {
         def result = tim.copyWith( 2 )
         assert result.size() == 2
         assert result.first == [ 'tim', 'tim' ]
+    }
+
+    // GROOVY-7227
+    void testKnownImmutablesWithInvalidPropertyNameResultsInError() {
+        def message = shouldFail {
+            evaluate """
+               import groovy.transform.Immutable
+               @Immutable(knownImmutables=['sirName'])
+               class Person {
+                   String surName
+               }
+               new Person(surName: "Doe")
+           """
+        }
+        assert message.contains("Error during @Immutable processing: 'knownImmutables' property 'sirName' does not exist.")
+    }
+
+    // GROOVY-7162
+    void testImmutableWithSuperClass() {
+        assertScript '''
+            import groovy.transform.*
+
+            @EqualsAndHashCode
+            class Person {
+                String name
+            }
+
+            @Immutable
+            @TupleConstructor(includeSuperProperties=true)
+            @EqualsAndHashCode(callSuper=true)
+            @ToString(includeNames=true, includeSuperProperties=true)
+            class Athlete extends Person {
+                String sport
+            }
+
+            def d1 = new Athlete('Michael Jordan', 'BasketBall')
+            def d2 = new Athlete(name: 'Roger Federer', sport: 'Tennis')
+            assert d1 != d2
+            assert d1.toString() == 'Athlete(sport:BasketBall, name:Michael Jordan)'
+            assert d2.toString() == 'Athlete(sport:Tennis, name:Roger Federer)'
+        '''
     }
 }

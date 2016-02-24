@@ -1,20 +1,24 @@
 /*
- * Copyright 2008-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package groovy.lang;
 
+import groovy.transform.Undefined;
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
 
 import java.lang.annotation.ElementType;
@@ -161,7 +165,8 @@ public @interface Delegate {
 
     /**
      * List of method and/or property names to exclude when delegating.
-     * Must not be used if 'includes' is used. For convenience, a String with comma separated names
+     * Only one of 'includes', 'includeTypes', 'excludes' or 'excludeTypes' should be used.
+     * For convenience, a String with comma separated names
      * can be used in addition to an array (using Groovy's literal list notation) of String values.
      * If interfaces is true (the default), you will need to manually supply any methods excluded
      * from delegation that are required for the interface.
@@ -181,20 +186,24 @@ public @interface Delegate {
 
     /**
      * List of method and/or property names to include when delegating.
-     * Must not be used if 'excludes' is used. For convenience, a String with comma separated names
+     * Only one of 'includes', 'includeTypes', 'excludes' or 'excludeTypes' should be used.
+     * For convenience, a String with comma separated names
      * can be used in addition to an array (using Groovy's literal list notation) of String values.
+     * The default value is a special marker value indicating that no includes are defined; all fields
+     * are included if 'includes' remains undefined and 'excludes' is explicitly or implicitly an empty list.
      * If interfaces is true (the default), you will need to manually supply any methods not included
      * via delegation that are required for the interface.
      * @since 2.2.0
      */
-    String[] includes() default {};
+    String[] includes() default {Undefined.STRING};
 
     /**
-     * List of interfaces containing method signatures to exclude when delegating.
-     * Only one of 'includes', 'includeTypes', 'excludes', 'excludeTypes' should be used.
+     * List of interfaces containing method signatures to include when delegating.
+     * Only one of 'includes', 'includeTypes', 'excludes' or 'excludeTypes' should be used.
+     * The default value is a special marker value indicating that no includeTypes are defined.
      * If interfaces is true (the default), you will need to manually supply any methods excluded
      * from delegation that are required for the interface.
      * @since 2.3.0
      */
-    Class[] includeTypes() default {};
+    Class[] includeTypes() default {Undefined.CLASS.class};
 }

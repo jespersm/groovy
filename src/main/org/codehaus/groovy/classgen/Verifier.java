@@ -1,17 +1,20 @@
 /*
- * Copyright 2003-2014 the original author or authors.
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
  */
 package org.codehaus.groovy.classgen;
 
@@ -34,6 +37,7 @@ import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.GenericsUtils;
 import org.codehaus.groovy.classgen.asm.BytecodeHelper;
 import org.codehaus.groovy.classgen.asm.MopWriter;
 import org.codehaus.groovy.classgen.asm.OptimizingStatementWriter.ClassNodeSkip;
@@ -43,6 +47,7 @@ import org.codehaus.groovy.syntax.RuntimeParserException;
 import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.reflection.ClassInfo;
+import org.codehaus.groovy.transform.trait.Traits;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -69,13 +74,13 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
  * bytecode generation occurs.
  *
  * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @version $Revision$
  */
 public class Verifier implements GroovyClassVisitor, Opcodes {
 
     public static final String STATIC_METACLASS_BOOL = "__$stMC";
     public static final String SWAP_INIT = "__$swapInit";
     public static final String INITIAL_EXPRESSION = "INITIAL_EXPRESSION";
+    public static final String DEFAULT_PARAMETER_GENERATED = "DEFAULT_PARAMETER_GENERATED";
 
     // NOTE: timeStamp constants shouldn't belong to Verifier but kept here
     // for binary compatibility
@@ -101,6 +106,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     public ClassNode getClassNode() {
         return classNode;
+    }
+
+    protected void setClassNode(ClassNode classNode) {
+        this.classNode = classNode;
     }
 
     public MethodNode getMethodNode() {
@@ -152,7 +161,8 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     public void visitClass(final ClassNode node) {
         this.classNode = node;
 
-        if ((classNode.getModifiers() & Opcodes.ACC_INTERFACE) > 0) {
+        if (Traits.isTrait(node) // maybe possible to have this true in joint compilation mode
+                || ((classNode.getModifiers() & Opcodes.ACC_INTERFACE) > 0)) {
             //interfaces have no constructors, but this code expects one,
             //so create a dummy and don't add it to the class node
             ConstructorNode dummy = new ConstructorNode(0, null);
@@ -196,6 +206,36 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         node.visitContents(this);
         checkForDuplicateMethods(node);
         addCovariantMethods(node);
+
+        checkFinalVariables(node);
+    }
+
+    private void checkFinalVariables(ClassNode node) {
+        FinalVariableAnalyzer analyzer = new FinalVariableAnalyzer(null, getFinalVariablesCallback());
+        analyzer.visitClass(node);
+
+    }
+
+    protected FinalVariableAnalyzer.VariableNotFinalCallback getFinalVariablesCallback() {
+        return new FinalVariableAnalyzer.VariableNotFinalCallback() {
+            @Override
+            public void variableNotFinal(Variable var, Expression bexp) {
+                if (var instanceof VariableExpression) {
+                    var = ((VariableExpression) var).getAccessedVariable();
+                }
+                if (var instanceof VariableExpression && Modifier.isFinal(var.getModifiers())) {
+                    throw new RuntimeParserException("The variable ["+var.getName()+"] is declared final but is reassigned",bexp);
+                }
+                if (var instanceof Parameter && Modifier.isFinal(var.getModifiers())) {
+                    throw new RuntimeParserException("The parameter ["+var.getName()+"] is declared final but is reassigned",bexp);
+                }
+            }
+
+            @Override
+            public void variableNotAlwaysInitialized(final VariableExpression var) {
+                throw new RuntimeParserException("The variable ["+var.getName()+"] may be uninitialized", var);
+            }
+        };
     }
 
     private void checkForDuplicateMethods(ClassNode cn) {
@@ -770,6 +810,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                 }
                 addPropertyMethod(newMethod);
                 newMethod.setGenericsTypes(method.getGenericsTypes());
+                newMethod.putNodeMetaData(DEFAULT_PARAMETER_GENERATED, true);
             }
         });
     }
@@ -919,9 +960,11 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             }
         }
 
-        for (FieldNode fn : node.getFields()) {
-            addFieldInitialization(statements, staticStatements, fn, isEnum,
-                    initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
+        if (!Traits.isTrait(node)) {
+            for (FieldNode fn : node.getFields()) {
+                addFieldInitialization(statements, staticStatements, fn, isEnum,
+                        initStmtsAfterEnumValuesInit, explicitStaticPropsInEnum);
+            }
         }
 
         statements.addAll(node.getObjectInitializerStatements());
@@ -1101,6 +1144,17 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
     }
 
+    public static Long getTimestampFromFieldName(String fieldName) {
+        if (fieldName.startsWith(__TIMESTAMP__)) {
+            try {
+                return Long.decode(fieldName.substring(__TIMESTAMP__.length()));
+            } catch (NumberFormatException e) {
+                return Long.MAX_VALUE;
+            }
+        }
+        return null;
+    }
+
     public static long getTimestamp(Class clazz) {
         if (clazz.getClassLoader() instanceof GroovyClassLoader.InnerLoader) {
             GroovyClassLoader.InnerLoader innerLoader = (GroovyClassLoader.InnerLoader) clazz.getClassLoader();
@@ -1110,13 +1164,9 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         final Field[] fields = clazz.getFields();
         for (int i = 0; i != fields.length; ++i) {
             if (Modifier.isStatic(fields[i].getModifiers())) {
-                final String name = fields[i].getName();
-                if (name.startsWith(__TIMESTAMP__)) {
-                    try {
-                        return Long.decode(name.substring(__TIMESTAMP__.length())).longValue();
-                    } catch (NumberFormatException e) {
-                        return Long.MAX_VALUE;
-                    }
+                Long timestamp = getTimestampFromFieldName(fields[i].getName());
+                if (timestamp != null) {
+                    return timestamp;
                 }
             }
         }
@@ -1160,7 +1210,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         addCovariantMethods(classNode, declaredMethods, abstractMethods, methodsToAdd, genericsSpec);
 
         Map<String, MethodNode> declaredMethodsMap = new HashMap<String, MethodNode>();
-        if (methodsToAdd.size() > 0) {
+        if (!methodsToAdd.isEmpty()) {
             for (MethodNode mn : declaredMethods) {
                 declaredMethodsMap.put(mn.getTypeDescriptor(), mn);
             }
@@ -1201,14 +1251,14 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             for (Object declaredMethod : declaredMethods) {
                 MethodNode method = (MethodNode) declaredMethod;
                 if (method.isStatic()) continue;
-                storeMissingCovariantMethods(classMethods, method, methodsToAdd, genericsSpec);
+                storeMissingCovariantMethods(classMethods, method, methodsToAdd, genericsSpec, false);
             }
             // super class causing bridge methods for abstract methods in original class
             if (!abstractMethods.isEmpty()) {
                 for (Object classMethod : classMethods) {
                     MethodNode method = (MethodNode) classMethod;
                     if (method.isStatic()) continue;
-                    storeMissingCovariantMethods(abstractMethods.values(), method, methodsToAdd, Collections.EMPTY_MAP);
+                    storeMissingCovariantMethods(abstractMethods.values(), method, methodsToAdd, Collections.EMPTY_MAP, true);
                 }
             }
 
@@ -1222,22 +1272,26 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             for (Object declaredMethod : declaredMethods) {
                 MethodNode method = (MethodNode) declaredMethod;
                 if (method.isStatic()) continue;
-                storeMissingCovariantMethods(interfacesMethods, method, methodsToAdd, genericsSpec);
+                storeMissingCovariantMethods(interfacesMethods, method, methodsToAdd, genericsSpec, false);
             }
             addCovariantMethods(anInterface, declaredMethods, abstractMethods, methodsToAdd, genericsSpec);
         }
 
     }
 
-    private MethodNode getCovariantImplementation(final MethodNode oldMethod, final MethodNode overridingMethod, Map genericsSpec) {
+    private MethodNode getCovariantImplementation(final MethodNode oldMethod, final MethodNode overridingMethod, Map genericsSpec, boolean ignoreError) {
         // method name
         if (!oldMethod.getName().equals(overridingMethod.getName())) return null;
         if ((overridingMethod.getModifiers() & ACC_BRIDGE) != 0) return null;
+        if (oldMethod.isPrivate()) return null;
 
         // parameters
         boolean normalEqualParameters = equalParametersNormal(overridingMethod, oldMethod);
         boolean genericEqualParameters = equalParametersWithGenerics(overridingMethod, oldMethod, genericsSpec);
         if (!normalEqualParameters && !genericEqualParameters) return null;
+
+        //correct to method level generics for the overriding method
+        genericsSpec = GenericsUtils.addMethodGenerics(overridingMethod, genericsSpec);
 
         // return type
         ClassNode mr = overridingMethod.getReturnType();
@@ -1246,6 +1300,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
 
         ClassNode testmr = correctToGenericsSpec(genericsSpec, omr);
         if (!isAssignable(mr, testmr)) {
+            if (ignoreError) return null;
             throw new RuntimeParserException(
                     "The return type of " +
                             overridingMethod.getTypeDescriptor() +
@@ -1363,10 +1418,10 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
         return type.getPlainNodeReference();
     }
 
-    private void storeMissingCovariantMethods(Collection methods, MethodNode method, Map methodsToAdd, Map genericsSpec) {
+    private void storeMissingCovariantMethods(Collection methods, MethodNode method, Map methodsToAdd, Map genericsSpec, boolean ignoreError) {
         for (Object method1 : methods) {
             MethodNode toOverride = (MethodNode) method1;
-            MethodNode bridgeMethod = getCovariantImplementation(toOverride, method, genericsSpec);
+            MethodNode bridgeMethod = getCovariantImplementation(toOverride, method, genericsSpec, ignoreError);
             if (bridgeMethod == null) continue;
             methodsToAdd.put(bridgeMethod.getTypeDescriptor(), bridgeMethod);
             return;
@@ -1399,7 +1454,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
     }
 
     private boolean moveOptimizedConstantsInitialization(final ClassNode node) {
-        if (node.isInterface()) return false;
+        if (node.isInterface() && !Traits.isTrait(node)) return false;
 
         final int mods = Opcodes.ACC_STATIC|Opcodes.ACC_SYNTHETIC| Opcodes.ACC_PUBLIC;
         String name = SWAP_INIT;
@@ -1413,6 +1468,7 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
             final FieldExpression fe = new FieldExpression(fn);
             if (fn.getType().equals(ClassHelper.REFERENCE_TYPE)) fe.setUseReferenceDirectly(true);
             ConstantExpression init = (ConstantExpression) fn.getInitialExpression();
+            init = new ConstantExpression(init.getValue(), true);
             ExpressionStatement statement =
                     new ExpressionStatement(
                             new BinaryExpression(
@@ -1420,7 +1476,6 @@ public class Verifier implements GroovyClassVisitor, Opcodes {
                                     Token.newSymbol(Types.EQUAL, fn.getLineNumber(), fn.getColumnNumber()),
                                     init));
             fn.setInitialValueExpression(null);
-            init.setConstantName(null);
             methodCode.addStatement(statement);
             swapInitRequired = true;
         }
