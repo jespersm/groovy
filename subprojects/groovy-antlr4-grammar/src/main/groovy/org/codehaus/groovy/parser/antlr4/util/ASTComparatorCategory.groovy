@@ -139,7 +139,7 @@ class ASTComparatorCategory {
 
             def name = p.name
             lastName = "$name :::: ${ a.getClass() } ${ a.hashCode() }"
-            !(name in ignore) && a."$name" != b."$name"
+            !(name in ignore) && name != 'nodeMetaData' && a."$name" != b."$name"
         }
 
         if (difference)
