@@ -22,9 +22,9 @@ configurations {
 
 dependencies {
 	testCompile project(':groovy-test')
-	testCompile ('org.spockframework:spock-core:0.7-groovy-2.0') {
-		exclude module: 'groovy-all'
-	}
+    testCompile("org.spockframework:spock-core:$spockVersion") {
+        exclude module: 'groovy-all'
+    }
 }
 
 // add the generated source files to the list of java sources
