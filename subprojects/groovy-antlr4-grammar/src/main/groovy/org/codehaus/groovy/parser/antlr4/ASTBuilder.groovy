@@ -212,7 +212,7 @@ class ASTBuilder {
                 @NotNull Recognizer<?, ?> recognizer,
                 @Nullable Object offendingSymbol, int line, int charPositionInLine,
                 @NotNull String msg, @Nullable RecognitionException e) {
-                sourceUnit.errorCollector.addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine), sourceUnit))
+                sourceUnit.errorCollector.addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine+1), sourceUnit))
             }
 
             @Override
