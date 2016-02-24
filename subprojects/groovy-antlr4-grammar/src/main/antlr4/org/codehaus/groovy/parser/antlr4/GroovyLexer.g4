@@ -164,6 +164,7 @@ ELVIS: '?:' ;
 SAFE_DOT: '?.' ;
 STAR_DOT: '*.' ;
 ATTR_DOT: '.@' ;
+MEMBER_POINTER: '.&' ;
 LTE: '<=' ;
 GTE: '>=' ;
 CLOSURE_ARG_SEPARATOR: '->' ;
@@ -232,4 +233,4 @@ IGNORE_NEWLINE : '\r'? '\n' { topBrace == Brace.ROUND || topBrace == Brace.SQUAR
 // Match both UNIX and Windows newlines
 NL: '\r'? '\n';
 
-IDENTIFIER: [A-Za-z_$][A-Za-z0-9_$]*;
+IDENTIFIER: [A-Za-z_$][A-Za-z0-9_$]*; // TODO: That's wrong, should be *A* *LOT* of Unicode "letter"-codepoints, too.

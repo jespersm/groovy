@@ -150,7 +150,7 @@ expression:
     | LBRACK (expression (COMMA expression)*)?RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) )RBRACK #mapConstructor
     | expression (DOT | SAFE_DOT | STAR_DOT) IDENTIFIER LPAREN argumentList? RPAREN #methodCallExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT) IDENTIFIER #fieldAccessExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) IDENTIFIER #fieldAccessExpression
     | pathExpression (LPAREN argumentList? RPAREN)? closureExpressionRule* #callExpression
     | LPAREN expression RPAREN #parenthesisExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression

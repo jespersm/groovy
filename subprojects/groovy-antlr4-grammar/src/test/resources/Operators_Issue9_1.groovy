@@ -53,7 +53,7 @@ class A {
         5*.properties
         5?.properties
         5.@properties
-
+        5.&method1
 
         5 =~ 'pattern'
         5 ==~ 'pattern'

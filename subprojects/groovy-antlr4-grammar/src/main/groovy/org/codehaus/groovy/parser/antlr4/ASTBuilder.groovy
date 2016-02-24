@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.Recognizer
 import org.antlr.v4.runtime.atn.ATNConfigSet
 import org.antlr.v4.runtime.dfa.DFA
 import org.antlr.v4.runtime.misc.Nullable
+import org.codehaus.groovy.ast.expr.MethodPointerExpression
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage
 import org.codehaus.groovy.parser.antlr4.GroovyParser.AnnotationClauseContext
 import org.codehaus.groovy.parser.antlr4.GroovyParser.AnnotationElementContext
@@ -871,13 +872,15 @@ class ASTBuilder {
         def left = parseExpression(ctx.expression())
         def right = new ConstantExpression(text)
         def node
-        if (op.text == '.@')
+        if (op.text == '.@') {
             node = new AttributeExpression(left, right)
-        else {
+        } else if (op.text == '.&') {
+            node = new MethodPointerExpression(left, right)
+        } else {
             node = new PropertyExpression(left, right, ctx.getChild(1).text in ['?.', '*.'])
+            node.spreadSafe = op.text == '*.'
         }
         setupNodeLocation(node, ctx)
-        node.spreadSafe = op.text == '*.'
         node
     }
 
