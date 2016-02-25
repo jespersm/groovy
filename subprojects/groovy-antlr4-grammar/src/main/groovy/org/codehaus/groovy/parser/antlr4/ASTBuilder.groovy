@@ -868,20 +868,31 @@ class ASTBuilder {
     @SuppressWarnings("GroovyUnusedDeclaration")
     Expression parseExpression(FieldAccessExpressionContext ctx) {
         def op = ctx.getChild(1) as TerminalNode
-        def text = ctx.IDENTIFIER().text
         def left = parseExpression(ctx.expression())
-        def right = new ConstantExpression(text)
+        def methodIdentifier = ctx.IDENTIFIER()
+        def right = methodIdentifier ? new ConstantExpression(methodIdentifier.text) : (
+            ctx.STRING() ? parseConstantStringToken(ctx.STRING().symbol) : parseExpression(ctx.gstring())
+        )
         def node
-        if (op.text == '.@') {
-            node = new AttributeExpression(left, right)
-        } else if (op.text == '.&') {
-            node = new MethodPointerExpression(left, right)
-        } else {
-            node = new PropertyExpression(left, right, ctx.getChild(1).text in ['?.', '*.'])
-            node.spreadSafe = op.text == '*.'
+        switch (op.text) {
+            case '.@':
+                node = new AttributeExpression(left, right)
+                break
+            case '.&':
+                node = new MethodPointerExpression(left, right)
+                break
+            case '?.':
+                node = new PropertyExpression(left, right, true)
+                break
+            case '*.':
+                node = new PropertyExpression(left, right, true /* For backwards compatibility! */)
+                node.spreadSafe = true
+                break
+            default:
+                node = new PropertyExpression(left, right, false)
+                break
         }
         setupNodeLocation(node, ctx)
-        node
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
@@ -937,8 +948,7 @@ class ASTBuilder {
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
-    parseConstantString(ParserRuleContext ctx) {
-        def text = ctx.text
+    cleanConstantStringLiteral(String text) {
         def isSlashy = text.startsWith('/')
 
         //Remove start and end quotes.
@@ -952,8 +962,19 @@ class ASTBuilder {
             text = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(text))
         else
             text = text.replace($/\//$, '/')
+        new ConstantExpression(text, true)
+    }
 
-        setupNodeLocation(new ConstantExpression(text, true), ctx)
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    parseConstantString(ParserRuleContext ctx) {
+        def text = ctx.text
+        setupNodeLocation(cleanConstantStringLiteral(text), ctx)
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    parseConstantStringToken(org.antlr.v4.runtime.Token token) {
+        def text = token.text
+        setupNodeLocation(cleanConstantStringLiteral(text), token)
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
@@ -1065,7 +1086,10 @@ class ASTBuilder {
 
     @SuppressWarnings("GroovyUnusedDeclaration")
     MethodCallExpression parseExpression(MethodCallExpressionContext ctx) {
-        def method = new ConstantExpression(ctx.IDENTIFIER().text)
+        def methodIdentifier = ctx.IDENTIFIER()
+        def method = methodIdentifier ? new ConstantExpression(methodIdentifier.text) : (
+            ctx.STRING() ? parseConstantStringToken(ctx.STRING().symbol) : parseExpression(ctx.gstring())
+        )
         Expression argumentListExpression = createArgumentList(ctx.argumentList())
         def expression = new MethodCallExpression(parseExpression(ctx.expression()), method, argumentListExpression)
         expression.implicitThis = false

@@ -61,4 +61,41 @@ class A {
         // ?:
         // assignment and it's variations +=
     }
+
+    def $testMethodCall() {
+        a.method1()
+        a."$method3"()
+        a."method2"()
+        a.'$method4'()
+
+        a?.method1()
+        a?."$method3"()
+        a?."method2"()
+        a?.'$method4'()
+
+        a*.method1()
+        a*."$method3"()
+        a*."method2"()
+        a*.'$method4'()
+    }
+
+    def testMemberAccess() {
+        5.'properties'
+        5*.'properties'
+        5?.'properties'
+        5.@'properties'
+        5.&'method1'
+
+        5."properties"
+        5*."properties"
+        5?."properties"
+        5.@"properties"
+        5.&"method1"
+
+        5."$properties"
+        5*."$properties"
+        5?."$properties"
+        5.@"$properties"
+        5.&"$method1"
+    }
 }

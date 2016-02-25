@@ -6,6 +6,7 @@ import org.codehaus.groovy.ast.GenericsType
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.IfStatement
 import org.codehaus.groovy.control.ErrorCollector
+import org.codehaus.groovy.parser.antlr4.util.ASTWriter
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -21,10 +22,14 @@ class MainTest extends Specification {
         config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
 
         expect:
+        moduleNodeNew
+        moduleNodeOld
         ASTComparatorCategory.apply(config) {
             assert moduleNodeOld == moduleNodeOld2
         }
-
+        and:
+        ASTWriter.astToString(moduleNodeNew) == ASTWriter.astToString(moduleNodeOld2)
+        and:
         ASTComparatorCategory.apply(config) {
             assert moduleNodeNew == moduleNodeOld, "Fail in $path"
         }

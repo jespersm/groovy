@@ -680,6 +680,9 @@ class ASTWriter implements GroovyCodeVisitor, GroovyClassVisitor {
                 print '?'
             }
             print '.'
+            if (expression instanceof AttributeExpression) {
+                print '&'
+            }
             if (expression?.property instanceof ConstantExpression) {
                 visitConstantExpression(expression?.property, true)
             } else {
