@@ -58,8 +58,6 @@ class A {
         5 =~ 'pattern'
         5 ==~ 'pattern'
 
-        // ?:
-        // assignment and it's variations +=
     }
 
     def $testMethodCall() {
@@ -91,6 +89,20 @@ class A {
         5?."properties"
         5.@"properties"
         5.&"method1"
+
+        left >>>= 16
+        left >>= 8
+        left <<= 2
+        sum += sup
+        cantlive -= you
+        times *= me
+
+        def a = { slash /= nstore }
+
+        your |= me
+        here %= sometimes
+        water ^= oil
+        this &= that
 
         5."$properties"
         5*."$properties"
