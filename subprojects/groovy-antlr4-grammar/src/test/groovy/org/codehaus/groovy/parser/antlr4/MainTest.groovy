@@ -69,6 +69,7 @@ class MainTest extends Specification {
         "MethodCall_Issue15_1.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "New_Issue47_1.groovy" | _
         "Operators_Issue9_1.groovy" | _
+        "Binary_and_Unary_Operators.groovy" | _
         "ParenthesisExpression_Issue24_1.groovy" | _
         "Script_Issue50_1.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Statements_Issue17_1.groovy" | addIgnore([IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)

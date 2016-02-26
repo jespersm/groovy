@@ -87,7 +87,6 @@ statement:
     declarationRule #declarationStatement
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
-    | cmdExpressionRule #commandExpressionStatement
     | KW_FOR LPAREN (expression)? SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
     | KW_FOR LPAREN typeDeclaration? IDENTIFIER KW_IN expression RPAREN NL* statementBlock #forInStatement
     | KW_FOR LPAREN typeDeclaration IDENTIFIER COLON expression RPAREN NL* statementBlock #forColonStatement
@@ -104,6 +103,7 @@ statement:
     | KW_RETURN expression? #returnStatement
     | KW_THROW expression #throwStatement
     | expression #expressionStatement
+    | cmdExpressionRule #commandExpressionStatement
 ;
 
 statementBlock:
@@ -155,7 +155,7 @@ expression:
     | LPAREN expression RPAREN #parenthesisExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
     | (NOT | BNOT) expression #unaryExpression
-//  | (PLUS | MINUS) expression #unaryExpression // FIXME: return unary minus and plus expressions.
+    | (PLUS | MINUS) expression #unaryExpression
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression POWER expression #binaryExpression
     | expression (MULT | DIV | MOD) expression #binaryExpression
