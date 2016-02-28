@@ -28,5 +28,9 @@ dependencies {
 
 task console(type: JavaExec, dependsOn:classes) {
     main = 'groovy.ui.Console'
+    // TODO: This hack is to enable the new Antlr4-based parser in the Console -- remove once the default changes
+    if (rootProject.hasProperty('useAntlr4')) {
+        jvmArgs += ["-Dgroovy.antlr4=true"]
+    }
     classpath = sourceSets.main.runtimeClasspath
 }
