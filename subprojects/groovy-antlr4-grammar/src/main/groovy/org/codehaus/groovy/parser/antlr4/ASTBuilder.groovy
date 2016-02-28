@@ -816,18 +816,37 @@ class ASTBuilder {
         setupNodeLocation(new ElvisOperatorExpression(baseExpr, falseExpr), ctx)
     }
 
+    protected Expression unaryMinusExpression(ExpressionContext ctx) {
+        // if we are a number literal then let's just parse it
+        // as the negation operator on MIN_INT causes rounding to a long
+        if (ctx instanceof ConstantDecimalExpressionContext) {
+            return parseDecimal('-' + ((ConstantDecimalExpressionContext)ctx).DECIMAL().text, ctx)
+        } else if (ctx instanceof ConstantIntegerExpressionContext) {
+            return parseInteger('-' + ((ConstantIntegerExpressionContext)ctx).INTEGER().text, ctx)
+        } else {
+            return new UnaryMinusExpression(parseExpression(ctx));
+        }
+    }
+
+    protected Expression unaryPlusExpression(ExpressionContext ctx) {
+        if (ctx instanceof ConstantDecimalExpressionContext || ctx instanceof ConstantIntegerExpressionContext) {
+            return parseExpression(ctx);
+        } else {
+            return new UnaryPlusExpression(parseExpression(ctx));
+        }
+    }
+
     @SuppressWarnings("GroovyUnusedDeclaration")
     Expression parseExpression(UnaryExpressionContext ctx) {
         def node = null
         def op = ctx.getChild(0) as TerminalNode
         switch (op.text) {
-            case '-' : node = new UnaryMinusExpression(parseExpression(ctx.expression())); break
-            case '+' : node = new UnaryPlusExpression(parseExpression(ctx.expression())); break
+            case '-' : node = unaryMinusExpression(ctx.expression()); break
+            case '+' : node = unaryPlusExpression(ctx.expression()); break
             case '!' : node = new NotExpression(parseExpression(ctx.expression())); break
             case '~' : node = new BitwiseNegationExpression(parseExpression(ctx.expression())); break
             default: assert false, "There is no $op.text handler."; break
         }
-
         node.columnNumber = op.symbol.charPositionInLine + 1
         node.lineNumber = op.symbol.line
         node.lastLineNumber = op.symbol.line
