@@ -154,6 +154,7 @@ KW_CATCH: 'catch' ;
 KW_FINALLY: 'finally' ;
 KW_THROW: 'throw' ;
 KW_THROWS: 'throws' ;
+KW_ASSERT: 'assert' ;
 
 RUSHIFT_ASSIGN: '>>>=' ;
 RSHIFT_ASSIGN: '>>=' ;

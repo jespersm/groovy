@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.Nullable;
 import org.codehaus.groovy.ast.expr.*;
+import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
 import org.codehaus.groovy.parser.antlr4.util.StringUtil;
 import groovy.lang.Closure;
@@ -32,21 +33,6 @@ import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.PropertyNode;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.BreakStatement;
-import org.codehaus.groovy.ast.stmt.CaseStatement;
-import org.codehaus.groovy.ast.stmt.CatchStatement;
-import org.codehaus.groovy.ast.stmt.ContinueStatement;
-import org.codehaus.groovy.ast.stmt.EmptyStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ForStatement;
-import org.codehaus.groovy.ast.stmt.IfStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.stmt.SwitchStatement;
-import org.codehaus.groovy.ast.stmt.ThrowStatement;
-import org.codehaus.groovy.ast.stmt.TryCatchStatement;
-import org.codehaus.groovy.ast.stmt.WhileStatement;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
@@ -482,6 +468,8 @@ import java.util.logging.Logger;
             return parseStatement((GroovyParser.CommandExpressionStatementContext)ctx);
         if (ctx instanceof GroovyParser.NewInstanceStatementContext)
             return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
+        if (ctx instanceof GroovyParser.AssertStatementContext)
+            return parseStatement((GroovyParser.AssertStatementContext)ctx);
 
         throw new RuntimeException("Unsupported statement type! " + ctx.getText());
     }
@@ -601,6 +589,24 @@ import java.util.logging.Logger;
         return setupNodeLocation(new ReturnStatement(asBoolean(expression)
                                                      ? parseExpression(expression)
                                                      : EmptyExpression.INSTANCE), ctx);
+    }
+
+
+    @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.AssertStatementContext ctx) {
+        Expression conditionExpression = parseExpression(ctx.expression(0));
+        BooleanExpression booleanConditionExpression =
+            conditionExpression instanceof BooleanExpression
+                ?
+                    (BooleanExpression)conditionExpression
+                :
+                    new BooleanExpression(conditionExpression);
+
+        if (ctx.expression().size() == 1) {
+            return setupNodeLocation(new AssertStatement(booleanConditionExpression), ctx);
+        } else {
+            Expression errorMessage = parseExpression(ctx.expression(1));
+            return setupNodeLocation(new AssertStatement(booleanConditionExpression, errorMessage), ctx);
+        }
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.ThrowStatementContext ctx) {

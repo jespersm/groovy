@@ -77,6 +77,7 @@ class MainTest extends Specification {
         "TernaryAndElvis_Issue57.groovy" | _
         "TestClass1.groovy" | _
         "ThrowDeclarations_Issue_28_1.groovy" | _
+        "Assert_Statements.groovy" | _
     }
 
     def addIgnore(Class aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
