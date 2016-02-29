@@ -51,6 +51,9 @@ import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.collect;
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.multiply;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.codehaus.groovy.syntax.Numbers;
 import org.codehaus.groovy.syntax.SyntaxException;
@@ -83,15 +86,10 @@ import java.util.logging.Logger;
 
         if (log.isLoggable(Level.FINE)) {
             final GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
-            log.fine(DefaultGroovyMethods.multiply("=", 60) + "\n" + text + "\n" + DefaultGroovyMethods.multiply("=", 60));
-            log.fine("\nLexer TOKENS:\n\t" + DefaultGroovyMethods.join(DefaultGroovyMethods.collect(lexer.getAllTokens(), new Closure<String>(this, this) {
+            log.fine(multiply("=", 60) + "\n" + text + "\n" + multiply("=", 60));
+            log.fine("\nLexer TOKENS:\n\t" + DefaultGroovyMethods.join(collect(lexer.getAllTokens(), new Closure<String>(this, this) {
                 public String doCall(Token it) { return String.valueOf(it.getLine()) + ", " + String.valueOf(it.getStartIndex()) + ":" + String.valueOf(it.getStopIndex()) + " " + GroovyLexer.tokenNames[it.getType()] + " " + it.getText(); }
-
-                public String doCall() {
-                    return doCall(null);
-                }
-
-            }), "\n\t") + DefaultGroovyMethods.multiply("=", 60));
+            }), "\n\t") + multiply("=", 60));
         }
 
 
@@ -132,23 +130,29 @@ import java.util.logging.Logger;
 
         ParseTree tree = parser.compilationUnit();
         if (log.isLoggable(Level.FINE)) {
-            final StringBuffer s = DefaultGroovyMethods.leftShift("", "");
+            final StringBuffer s = new StringBuffer();
             new ParseTreeWalker().walk(new ParseTreeListener() {
                 @Override public void visitTerminal(@NotNull TerminalNode node) {
-                    DefaultGroovyMethods.leftShift(DefaultGroovyMethods.leftShift(s, (DefaultGroovyMethods.multiply(".\t", indent) + String.valueOf(node))), "\n");
+                    s.append(multiply(".\t", indent));
+                    s.append(String.valueOf(node));
+                    s.append("\n");
                 }
 
                 @Override public void visitErrorNode(@NotNull ErrorNode node) {
                 }
 
                 @Override public void enterEveryRule(@NotNull final ParserRuleContext ctx) {
-                    DefaultGroovyMethods.leftShift(DefaultGroovyMethods.leftShift(s, (DefaultGroovyMethods.multiply(".\t", indent) + GroovyParser.ruleNames[ctx.getRuleIndex()] + ": {")), "\n");
+                    s.append(multiply(".\t", indent));
+                    s.append(GroovyParser.ruleNames[ctx.getRuleIndex()] + ": {");
+                    s.append("\n");
                     indent = indent++;
                 }
 
                 @Override public void exitEveryRule(@NotNull ParserRuleContext ctx) {
                     indent = indent--;
-                    DefaultGroovyMethods.leftShift(DefaultGroovyMethods.leftShift(s, (DefaultGroovyMethods.multiply(".\t", indent) + "}")), "\n");
+                    s.append(multiply(".\t", indent));
+                    s.append("}");
+                    s.append("\n");
                 }
 
                 public int getIndent() {
@@ -162,7 +166,7 @@ import java.util.logging.Logger;
                 private int indent;
             }, tree);
 
-            log.fine((DefaultGroovyMethods.multiply("=", 60)) + "\n" + String.valueOf(s) + "\n" + (DefaultGroovyMethods.multiply("=", 60)));
+            log.fine((multiply("=", 60)) + "\n" + String.valueOf(s) + "\n" + (multiply("=", 60)));
         }
 
 
@@ -178,21 +182,11 @@ import java.util.logging.Logger;
                         parsePackageDefinition((GroovyParser.PackageDefinitionContext)it);
                     return null;
                 }
-
-                public ClassNode doCall() {
-                    return doCall(null);
-                }
-
             });
-            DefaultGroovyMethods.collect(((GroovyParser.CompilationUnitContext)tree).statement(), new Closure<Object>(this, this) {
+            collect(((GroovyParser.CompilationUnitContext)tree).statement(), new Closure<Object>(this, this) {
                 public void doCall(GroovyParser.StatementContext it) {
                     moduleNode.addStatement(parseStatement(it));
                 }
-
-                public void doCall() {
-                    doCall(null);
-                }
-
             });
         } catch (CompilationFailedException ignored) {
             // Compilation failed.
@@ -221,14 +215,9 @@ import java.util.logging.Logger;
     }
 
     public void parseEnumDeclaration(@NotNull GroovyParser.EnumDeclarationContext ctx) {
-        List list = DefaultGroovyMethods.asBoolean(ctx.implementsClause())
-                    ? DefaultGroovyMethods.collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
+        List list = asBoolean(ctx.implementsClause())
+                    ? collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
             public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
-
-            public ClassNode doCall() {
-                return doCall(null);
-            }
-
         }) : new ArrayList();
         ClassNode[] interfaces = (ClassNode[])list.toArray(new ClassNode[list.size()]);
         final ClassNode classNode = EnumHelper.makeEnumNode(ctx.IDENTIFIER().getText(), Modifier.PUBLIC, interfaces, null);// FIXME merge with class declaration.
@@ -240,90 +229,65 @@ import java.util.logging.Logger;
         classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
         classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
 
-        List<TerminalNode> enumConstants = DefaultGroovyMethods.collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<TerminalNode>(this, this) {
+        List<TerminalNode> enumConstants = collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<TerminalNode>(this, this) {
             public TerminalNode doCall(GroovyParser.EnumMemberContext e) {return e.IDENTIFIER();}
 
         }), new Closure<TerminalNode>(this, this) {
             public TerminalNode doCall(GroovyParser.EnumMemberContext it) {return it.IDENTIFIER();}
-
-            public TerminalNode doCall() {
-                return doCall(null);
-            }
-
         });
-        List<GroovyParser.ClassMemberContext> classMembers = DefaultGroovyMethods.collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<GroovyParser.ClassMemberContext>(this, this) {
+        List<GroovyParser.ClassMemberContext> classMembers = collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<GroovyParser.ClassMemberContext>(this, this) {
             public GroovyParser.ClassMemberContext doCall(GroovyParser.EnumMemberContext e) {return e.classMember();}
 
         }), new Closure<GroovyParser.ClassMemberContext>(this, this) {
             public GroovyParser.ClassMemberContext doCall(GroovyParser.EnumMemberContext it) {return it.classMember();}
-
-            public GroovyParser.ClassMemberContext doCall() {
-                return doCall(null);
-            }
-
         });
         DefaultGroovyMethods.each(enumConstants, new Closure<FieldNode>(this, this) {
             public FieldNode doCall(TerminalNode it) {
                 return setupNodeLocation(EnumHelper.addEnumConstant(classNode, it.getText(), null), it.getSymbol());
             }
-
-            public FieldNode doCall() {
-                return doCall(null);
-            }
-
         });
         parseMembers(classNode, classMembers);
     }
 
     public ClassNode parseClassDeclaration(@NotNull final GroovyParser.ClassDeclarationContext ctx) {
         ClassNode classNode;
-        final ClassNode parentClass = DefaultGroovyMethods.asBoolean(classes) ? classes.peek() : null;
-        if (DefaultGroovyMethods.asBoolean(parentClass)) {
+        final ClassNode parentClass = asBoolean(classes) ? classes.peek() : null;
+        if (parentClass != null) {
             String string = parentClass.getName() + "$" + String.valueOf(ctx.IDENTIFIER());
             classNode = new InnerClassNode(parentClass, string, Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
         } else {
             final String name = moduleNode.getPackageName();
-            classNode = new ClassNode((name != null && DefaultGroovyMethods.asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
+            classNode = new ClassNode((name != null && asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
         }
 
 
         setupNodeLocation(classNode, ctx);
         attachAnnotations(classNode, ctx.annotationClause());
         moduleNode.addClass(classNode);
-        if (DefaultGroovyMethods.asBoolean(ctx.extendsClause()))
+        if (asBoolean(ctx.extendsClause()))
             (classNode).setSuperClass(parseExpression(ctx.extendsClause().genericClassNameExpression()));
-        if (DefaultGroovyMethods.asBoolean(ctx.implementsClause()))
-            (classNode).setInterfaces(DefaultGroovyMethods.asType(DefaultGroovyMethods.collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
+        if (asBoolean(ctx.implementsClause()))
+            (classNode).setInterfaces(DefaultGroovyMethods.asType(collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
                 public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
-
-                public ClassNode doCall() {
-                    return doCall(null);
-                }
-
             }), ClassNode[].class));
 
         (classNode).setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
         (classNode).setUsingGenerics((classNode.getGenericsTypes() != null && classNode.getGenericsTypes().length != 0) || (classNode).getSuperClass().isUsingGenerics() || DefaultGroovyMethods.any(classNode.getInterfaces(), new Closure<Boolean>(this, this) {
             public Boolean doCall(ClassNode it) {return it.isUsingGenerics();}
-
-            public Boolean doCall() {
-                return doCall(null);
-            }
-
         }));
-        classNode.setModifiers(parseClassModifiers(ctx.classModifier()) | (DefaultGroovyMethods.asBoolean(ctx.KW_INTERFACE())
+        classNode.setModifiers(parseClassModifiers(ctx.classModifier()) | (asBoolean(ctx.KW_INTERFACE())
                                                                            ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT
                                                                            : 0));
         classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
         classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
 
-        if (DefaultGroovyMethods.asBoolean(ctx.AT())) {
+        if (asBoolean(ctx.AT())) {
             classNode.addInterface(ClassHelper.Annotation_TYPE);
             classNode.setModifiers(classNode.getModifiers() | Opcodes.ACC_ANNOTATION);
         }
 
 
-        DefaultGroovyMethods.leftShift(classes, classNode);
+        classes.add(classNode);
         parseMembers(classNode, ctx.classBody().classMember());
         classes.pop();
 
@@ -365,7 +329,7 @@ import java.util.logging.Logger;
                 parseMember(classNode, (GroovyParser.ClassInitializerContext)memberContext);
             else
                 assert false : "Unknown class member type.";
-            if (DefaultGroovyMethods.asBoolean(memberNode)) setupNodeLocation(memberNode, member);
+            if (asBoolean(memberNode)) setupNodeLocation(memberNode, member);
             if (member.getChildCount() > 1) {
                 assert memberNode != null;
                 for (int i = 0; i < member.children.size() - 2; i++) {
@@ -386,17 +350,17 @@ import java.util.logging.Logger;
         int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : null));
         boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : null));
 
-        DefaultGroovyMethods.leftShift(innerClassesDefinedInMethod, new ArrayList());
-        Statement statement = DefaultGroovyMethods.asBoolean(ctx.methodBody())
+        innerClassesDefinedInMethod.add(new ArrayList());
+        Statement statement = asBoolean(ctx.methodBody())
                               ? parseStatement(DefaultGroovyMethods.asType(ctx.methodBody().blockStatement(), GroovyParser.BlockStatementContext.class))
                               : null;
         List<InnerClassNode> innerClassesDeclared = innerClassesDefinedInMethod.pop();
 
         Parameter[] params = parseParameters(ctx.argumentDeclarationList());
 
-        ClassNode returnType = DefaultGroovyMethods.asBoolean(ctx.typeDeclaration())
+        ClassNode returnType = asBoolean(ctx.typeDeclaration())
                                ? parseTypeDeclaration(ctx.typeDeclaration())
-                               : DefaultGroovyMethods.asBoolean(ctx.genericClassNameExpression())
+                               : asBoolean(ctx.genericClassNameExpression())
                                  ? parseExpression(ctx.genericClassNameExpression())
                                  : ClassHelper.OBJECT_TYPE;
 
@@ -409,11 +373,6 @@ import java.util.logging.Logger;
                 it.setEnclosingMethod(methodNode);
                 return methodNode;
             }
-
-            public MethodNode doCall() {
-                return doCall(null);
-            }
-
         });
 
         setupNodeLocation(methodNode, ctx);
@@ -432,10 +391,10 @@ import java.util.logging.Logger;
 
 
         GroovyParser.ExpressionContext initExprContext = ctx.expression();
-        Expression initialierExpression = DefaultGroovyMethods.asBoolean(initExprContext)
+        Expression initialierExpression = asBoolean(initExprContext)
                                           ? parseExpression(initExprContext)
                                           : null;
-        ClassNode typeDeclaration = DefaultGroovyMethods.asBoolean(ctx.genericClassNameExpression())
+        ClassNode typeDeclaration = asBoolean(ctx.genericClassNameExpression())
                                     ? parseExpression(ctx.genericClassNameExpression())
                                     : ClassHelper.OBJECT_TYPE;
         AnnotatedNode node;
@@ -472,23 +431,18 @@ import java.util.logging.Logger;
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.ConstructorDeclarationContext ctx) {
-        int modifiers = DefaultGroovyMethods.asBoolean(ctx.VISIBILITY_MODIFIER())
+        int modifiers = asBoolean(ctx.VISIBILITY_MODIFIER())
                         ? parseVisibilityModifiers(ctx.VISIBILITY_MODIFIER())
                         : Opcodes.ACC_PUBLIC;
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
-        DefaultGroovyMethods.leftShift(this.innerClassesDefinedInMethod, new ArrayList());
+        this.innerClassesDefinedInMethod.add(new ArrayList());
         final ConstructorNode constructorNode = classNode.addConstructor(modifiers, parseParameters(ctx.argumentDeclarationList()), exceptions, parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class)));
         DefaultGroovyMethods.each(this.innerClassesDefinedInMethod.pop(), new Closure<ConstructorNode>(null, null) {
             public ConstructorNode doCall(InnerClassNode it) {
                 it.setEnclosingMethod(constructorNode);
                 return constructorNode;
             }
-
-            public ConstructorNode doCall() {
-                return doCall(null);
-            }
-
         });
         setupNodeLocation(constructorNode, ctx);
         constructorNode.setSyntheticPublic(ctx.VISIBILITY_MODIFIER() == null);
@@ -534,17 +488,12 @@ import java.util.logging.Logger;
 
     public Statement parseStatement(GroovyParser.BlockStatementContext ctx) {
         final BlockStatement statement = new BlockStatement();
-        if (!DefaultGroovyMethods.asBoolean(ctx)) return statement;
+        if (!asBoolean(ctx)) return statement;
 
         DefaultGroovyMethods.each(ctx.statement(), new Closure<Object>(null, null) {
             public void doCall(GroovyParser.StatementContext it) {
                 statement.addStatement(parseStatement(it));
             }
-
-            public void doCall() {
-                doCall(null);
-            }
-
         });
         return setupNodeLocation(statement, ctx);
     }
@@ -555,7 +504,7 @@ import java.util.logging.Logger;
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.IfStatementContext ctx) {
         Statement trueBranch = parse(ctx.statementBlock(0));
-        Statement falseBranch = DefaultGroovyMethods.asBoolean(ctx.KW_ELSE())
+        Statement falseBranch = asBoolean(ctx.KW_ELSE())
                                 ? parse(ctx.statementBlock(1))
                                 : EmptyStatement.INSTANCE;
         BooleanExpression expression = new BooleanExpression(parseExpression(ctx.expression()));
@@ -592,7 +541,7 @@ import java.util.logging.Logger;
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.ForColonStatementContext ctx) {
-        if (!DefaultGroovyMethods.asBoolean(ctx.typeDeclaration()))
+        if (!asBoolean(ctx.typeDeclaration()))
             throw new RuntimeException("Classic for statement require type to be declared.");
         Parameter parameter = new Parameter(parseTypeDeclaration(ctx.typeDeclaration()), ctx.IDENTIFIER().getText());
         parameter = setupNodeLocation(parameter, ctx.IDENTIFIER().getSymbol());
@@ -601,7 +550,7 @@ import java.util.logging.Logger;
     }
 
     public Statement parse(GroovyParser.StatementBlockContext ctx) {
-        if (DefaultGroovyMethods.asBoolean(ctx.statement()))
+        if (asBoolean(ctx.statement()))
             return setupNodeLocation(parseStatement(ctx.statement()), ctx.statement());
         else return parseStatement(ctx.blockStatement());
     }
@@ -612,12 +561,12 @@ import java.util.logging.Logger;
             BlockStatement stmt = new BlockStatement();// #BSC
             for (GroovyParser.StatementContext st : caseStmt.statement()) stmt.addStatement(parseStatement(st));
 
-            DefaultGroovyMethods.leftShift(caseStatements, setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), stmt), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
+            caseStatements.add(setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), stmt), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
         }
 
 
         Statement defaultStatement;
-        if (DefaultGroovyMethods.asBoolean(ctx.KW_DEFAULT())) {
+        if (asBoolean(ctx.KW_DEFAULT())) {
             defaultStatement = new BlockStatement();// #BSC
             for (GroovyParser.StatementContext stmt : ctx.statement())
                 ((BlockStatement)defaultStatement).addStatement(parseStatement(stmt));
@@ -642,14 +591,14 @@ import java.util.logging.Logger;
         // TODO check validity. Labeling support.
         // Fake inspection result should be suppressed.
         //noinspection GroovyConditionalWithIdenticalBranches
-        return setupNodeLocation(DefaultGroovyMethods.asBoolean(ctx.KW_BREAK())
+        return setupNodeLocation(asBoolean(ctx.KW_BREAK())
                                  ? new BreakStatement()
                                  : new ContinueStatement(), ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.ReturnStatementContext ctx) {
         GroovyParser.ExpressionContext expression = ctx.expression();
-        return setupNodeLocation(new ReturnStatement(DefaultGroovyMethods.asBoolean(expression)
+        return setupNodeLocation(new ReturnStatement(asBoolean(expression)
                                                      ? parseExpression(expression)
                                                      : EmptyExpression.INSTANCE), ctx);
     }
@@ -676,26 +625,17 @@ import java.util.logging.Logger;
                 final String var = it.IDENTIFIER().getText();
 
                 List<GroovyParser.ClassNameExpressionContext> classNameExpression = it.classNameExpression();
-                if (!DefaultGroovyMethods.asBoolean(classNameExpression))
+                if (!asBoolean(classNameExpression))
                     statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(ClassHelper.OBJECT_TYPE, var), catchBlock), it));
                 else {
                     DefaultGroovyMethods.each(classNameExpression, new Closure<Object>(null, null) {
                         public void doCall(GroovyParser.ClassNameExpressionContext it) {
                             statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(parseExpression(DefaultGroovyMethods.asType(it, GroovyParser.ClassNameExpressionContext.class)), var), catchBlock), it));
                         }
-
-                        public void doCall() {
-                            doCall(null);
-                        }
                     });
                 }
                 return null;
             }
-
-            public List<GroovyParser.ClassNameExpressionContext> doCall() {
-                return doCall(null);
-            }
-
         });
         return statement;
     }
@@ -829,13 +769,13 @@ import java.util.logging.Logger;
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.ListConstructorContext ctx) {
-        ListExpression expression = new ListExpression(DefaultGroovyMethods.collect(ctx.expression(), new MethodClosure(this, "parseExpression")));
+        ListExpression expression = new ListExpression(collect(ctx.expression(), new MethodClosure(this, "parseExpression")));
         return setupNodeLocation(expression, ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.MapConstructorContext ctx) {
-        final List collect = DefaultGroovyMethods.collect(ctx.mapEntry(), new MethodClosure(this, "parseExpression"));
-        return setupNodeLocation(new MapExpression(DefaultGroovyMethods.asBoolean(collect)
+        final List collect = collect(ctx.mapEntry(), new MethodClosure(this, "parseExpression"));
+        return setupNodeLocation(new MapExpression(asBoolean(collect)
                                                    ? collect
                                                    : new ArrayList()), ctx);
     }
@@ -845,9 +785,9 @@ import java.util.logging.Logger;
         Expression valueExpr;
         List<GroovyParser.ExpressionContext> expressions = ctx.expression();
         if (expressions.size() == 1) {
-            keyExpr = DefaultGroovyMethods.asBoolean(ctx.gstring())
+            keyExpr = asBoolean(ctx.gstring())
                       ? parseExpression(ctx.gstring())
-                      : new ConstantExpression(DefaultGroovyMethods.asBoolean(ctx.IDENTIFIER())
+                      : new ConstantExpression(asBoolean(ctx.IDENTIFIER())
                                                ? ctx.IDENTIFIER().getText()
                                                : parseString(ctx.STRING()));
 
@@ -866,8 +806,8 @@ import java.util.logging.Logger;
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.ClosureExpressionRuleContext ctx) {
         final Parameter[] parameters1 = parseParameters(ctx.argumentDeclarationList());
-        Parameter[] parameters = DefaultGroovyMethods.asBoolean(ctx.argumentDeclarationList()) ? (
-            DefaultGroovyMethods.asBoolean(parameters1)
+        Parameter[] parameters = asBoolean(ctx.argumentDeclarationList()) ? (
+            asBoolean(parameters1)
             ? parameters1
             : null) : (new Parameter[0]);
 
@@ -899,7 +839,7 @@ import java.util.logging.Logger;
             ClassNode rhClass = setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx.genericClassNameExpression());
             right = new ClassExpression(rhClass);
         default:
-            if (!DefaultGroovyMethods.asBoolean(right)) right = parseExpression(ctx.expression(1));
+            if (!asBoolean(right)) right = parseExpression(ctx.expression(1));
             expression = new BinaryExpression(left, op, right);
             break;
         }
@@ -969,13 +909,8 @@ import java.util.logging.Logger;
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.AnnotationParameterContext ctx) {
         if (ctx instanceof GroovyParser.AnnotationParamArrayExpressionContext) {
             GroovyParser.AnnotationParamArrayExpressionContext c = DefaultGroovyMethods.asType(ctx, GroovyParser.AnnotationParamArrayExpressionContext.class);
-            return setupNodeLocation(new ListExpression(DefaultGroovyMethods.collect(c.annotationParameter(), new Closure<Expression>(null, null) {
+            return setupNodeLocation(new ListExpression(collect(c.annotationParameter(), new Closure<Expression>(null, null) {
                 public Expression doCall(GroovyParser.AnnotationParameterContext it) {return parseExpression(it);}
-
-                public Expression doCall() {
-                    return doCall(null);
-                }
-
             })), c);
         } else if (ctx instanceof GroovyParser.AnnotationParamBoolExpressionContext) {
             return parseExpression((GroovyParser.AnnotationParamBoolExpressionContext)ctx);
@@ -1068,11 +1003,11 @@ import java.util.logging.Logger;
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression parseExpression(GroovyParser.BoolExpressionContext ctx) {
-        return setupNodeLocation(new ConstantExpression(!DefaultGroovyMethods.asBoolean(ctx.KW_FALSE()), true), ctx);
+        return setupNodeLocation(new ConstantExpression(!asBoolean(ctx.KW_FALSE()), true), ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression parseExpression(GroovyParser.AnnotationParamBoolExpressionContext ctx) {
-        return setupNodeLocation(new ConstantExpression(!DefaultGroovyMethods.asBoolean(ctx.KW_FALSE()), true), ctx);
+        return setupNodeLocation(new ConstantExpression(!asBoolean(ctx.KW_FALSE()), true), ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression cleanConstantStringLiteral(String text) {
@@ -1138,13 +1073,8 @@ import java.util.logging.Logger;
             }
 
         };
-        Collection<String> strings = DefaultGroovyMethods.plus(DefaultGroovyMethods.plus(new ArrayList<String>(Arrays.asList(clearStart.call(ctx.GSTRING_START().getText()))), DefaultGroovyMethods.collect(ctx.GSTRING_PART(), new Closure<String>(null, null) {
+        Collection<String> strings = DefaultGroovyMethods.plus(DefaultGroovyMethods.plus(new ArrayList<String>(Arrays.asList(clearStart.call(ctx.GSTRING_START().getText()))), collect(ctx.GSTRING_PART(), new Closure<String>(null, null) {
             public String doCall(TerminalNode it) {return clearPart.call(it.getText());}
-
-            public String doCall() {
-                return doCall(null);
-            }
-
         })), new ArrayList<String>(Arrays.asList(clearEnd.call(ctx.GSTRING_END().getText()))));
         final ArrayList expressions = new ArrayList();
 
@@ -1154,25 +1084,24 @@ import java.util.logging.Logger;
                 if (it instanceof GroovyParser.ExpressionContext) {
                     // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
                     //noinspection GroovyAssignabilityCheck
-                    return DefaultGroovyMethods.leftShift(expressions, (DefaultGroovyMethods.asType(parseExpression((GroovyParser.ExpressionContext)it), Expression.class)));
-                } else if (it instanceof GroovyParser.GstringPathExpressionContext)
-                    return DefaultGroovyMethods.leftShift(expressions, collectPathExpression((GroovyParser.GstringPathExpressionContext)it));
-                else if (it instanceof TerminalNode) {
+                    expressions.add((DefaultGroovyMethods.asType(parseExpression((GroovyParser.ExpressionContext)it), Expression.class)));
+                    return expressions;
+                } else if (it instanceof GroovyParser.GstringPathExpressionContext) {
+                    expressions.add(collectPathExpression((GroovyParser.GstringPathExpressionContext) it));
+                    return expressions;
+                } else if (it instanceof TerminalNode) {
                     ParseTree next = i + 1 < children.size() ? children.get(i + 1) : null;
-                    if (next instanceof TerminalNode && (DefaultGroovyMethods.asType(next, TerminalNode.class)).getSymbol().getType() == GroovyParser.RCURVE)
-                        return DefaultGroovyMethods.leftShift(expressions, new ConstantExpression(null));
+                    if (next instanceof TerminalNode && (DefaultGroovyMethods.asType(next, TerminalNode.class)).getSymbol().getType() == GroovyParser.RCURVE) {
+                        expressions.add(new ConstantExpression(null));
+                        return expressions;
+                    }
                 }
                 return null;
             }
 
         });
-        GStringExpression gstringNode = new GStringExpression(ctx.getText(), DefaultGroovyMethods.collect(strings, new Closure<ConstantExpression>(null, null) {
+        GStringExpression gstringNode = new GStringExpression(ctx.getText(), collect(strings, new Closure<ConstantExpression>(null, null) {
             public ConstantExpression doCall(String it) {return new ConstantExpression(it);}
-
-            public ConstantExpression doCall() {
-                return doCall(null);
-            }
-
         }), expressions);
         return setupNodeLocation(gstringNode, ctx);
     }
@@ -1199,18 +1128,13 @@ import java.util.logging.Logger;
 
         Object methodNode;
         //FIXME in log a, b; a is treated as path expression and became a method call instead of variable
-        if (!DefaultGroovyMethods.asBoolean(ctx.LPAREN()) && ctx.closureExpressionRule().size() == 0)
+        if (!asBoolean(ctx.LPAREN()) && ctx.closureExpressionRule().size() == 0)
             return collectPathExpression(ctx.pathExpression());
 
         // Collect closure's in argumentList expression.
         final Expression argumentListExpression = createArgumentList(ctx.argumentList());
         DefaultGroovyMethods.each(ctx.closureExpressionRule(), new Closure<Object>(null, null) {
             public Object doCall(GroovyParser.ClosureExpressionRuleContext it) {return DefaultGroovyMethods.invokeMethod(argumentListExpression, "addExpression", new Object[]{ parseExpression(it) });}
-
-            public Object doCall() {
-                return doCall(null);
-            }
-
         });
 
         //noinspection GroovyAssignabilityCheck
@@ -1241,7 +1165,7 @@ import java.util.logging.Logger;
     }
 
     public Expression collectPathExpression(GroovyParser.GstringPathExpressionContext ctx) {
-        if (!DefaultGroovyMethods.asBoolean(ctx.GSTRING_PATH_PART()))
+        if (!asBoolean(ctx.GSTRING_PATH_PART()))
             return new VariableExpression(ctx.IDENTIFIER().getText());
         else {
             Expression inj = DefaultGroovyMethods.inject(ctx.GSTRING_PATH_PART(), new VariableExpression(ctx.IDENTIFIER().getText()), new Closure<PropertyExpression>(null, null) {
@@ -1264,8 +1188,8 @@ import java.util.logging.Logger;
         MethodCallExpression expression = new MethodCallExpression(parseExpression(ctx.expression()), method, argumentListExpression);
         expression.setImplicitThis(false);
         TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
-        expression.setSpreadSafe(op.getText().equals("*."));
-        expression.setSafe(op.getText().equals("?."));
+        expression.setSpreadSafe(op.getSymbol().getType() == GroovyParser.STAR_DOT);
+        expression.setSafe(op.getSymbol().getType() == GroovyParser.SAFE_DOT);
         return expression;
     }
 
@@ -1276,7 +1200,7 @@ import java.util.logging.Logger;
     public ClassNode parseExpression(GroovyParser.GenericClassNameExpressionContext ctx) {
         ClassNode classNode = parseExpression(ctx.classNameExpression());
 
-        if (DefaultGroovyMethods.asBoolean(ctx.LBRACK())) classNode = classNode.makeArray();
+        if (asBoolean(ctx.LBRACK())) classNode = classNode.makeArray();
         classNode.setGenericsTypes(parseGenericList(ctx.genericList()));
         return setupNodeLocation(classNode, ctx);
     }
@@ -1284,7 +1208,7 @@ import java.util.logging.Logger;
     public GenericsType[] parseGenericList(GroovyParser.GenericListContext ctx) {
         if (ctx == null)
             return null;
-        List<GenericsType> collect = DefaultGroovyMethods.collect(ctx.genericListElement(), new Closure<GenericsType>(null, null) {
+        List<GenericsType> collect = collect(ctx.genericListElement(), new Closure<GenericsType>(null, null) {
             public GenericsType doCall(GroovyParser.GenericListElementContext it) {
                 if (it instanceof GroovyParser.GenericsConcreteElementContext)
                     return setupNodeLocation(new GenericsType(parseExpression(((GroovyParser.GenericsConcreteElementContext)it).genericClassNameExpression())), it);
@@ -1294,10 +1218,10 @@ import java.util.logging.Logger;
                     ClassNode baseType = ClassHelper.makeWithoutCaching("?");
                     ClassNode[] upperBounds = null;
                     ClassNode lowerBound = null;
-                    if (DefaultGroovyMethods.asBoolean(gwec.KW_EXTENDS())) {
+                    if (asBoolean(gwec.KW_EXTENDS())) {
                         ClassNode classNode = parseExpression(gwec.genericClassNameExpression());
                         upperBounds = new ClassNode[]{ classNode };
-                    } else if (DefaultGroovyMethods.asBoolean(gwec.KW_SUPER()))
+                    } else if (asBoolean(gwec.KW_SUPER()))
                         lowerBound = parseExpression(gwec.genericClassNameExpression());
 
                     GenericsType type = new GenericsType(baseType, upperBounds, lowerBound);
@@ -1307,11 +1231,6 @@ import java.util.logging.Logger;
                 }
 
             }
-
-            public GenericsType doCall() {
-                return doCall(null);
-            }
-
         });
         return collect.toArray(new GenericsType[collect.size()]);
     }
@@ -1319,22 +1238,17 @@ import java.util.logging.Logger;
     public GenericsType[] parseGenericDeclaration(GroovyParser.GenericDeclarationListContext ctx) {
         if (ctx == null)
             return null;
-        List<GenericsType> genericTypes = DefaultGroovyMethods.collect(ctx.genericsDeclarationElement(), new Closure<GenericsType>(null, null) {
+        List<GenericsType> genericTypes = collect(ctx.genericsDeclarationElement(), new Closure<GenericsType>(null, null) {
             public GenericsType doCall(GroovyParser.GenericsDeclarationElementContext it) {
                 ClassNode classNode = parseExpression(it.genericClassNameExpression(0));
                 ClassNode[] upperBounds = null;
-                if (DefaultGroovyMethods.asBoolean(it.KW_EXTENDS())) {
+                if (asBoolean(it.KW_EXTENDS())) {
                     List<GroovyParser.GenericClassNameExpressionContext> genericClassNameExpressionContexts = DefaultGroovyMethods.toList(it.genericClassNameExpression());
-                    upperBounds = DefaultGroovyMethods.asType(DefaultGroovyMethods.collect(genericClassNameExpressionContexts.subList(1, genericClassNameExpressionContexts.size()), new MethodClosure(ASTBuilder.this, "parseExpression")), ClassNode[].class);
+                    upperBounds = DefaultGroovyMethods.asType(collect(genericClassNameExpressionContexts.subList(1, genericClassNameExpressionContexts.size()), new MethodClosure(ASTBuilder.this, "parseExpression")), ClassNode[].class);
                 }
                 GenericsType type = new GenericsType(classNode, upperBounds, null);
                 return setupNodeLocation(type, it);
             }
-
-            public GenericsType doCall() {
-                return doCall(null);
-            }
-
         });
         return  genericTypes.toArray(new GenericsType[genericTypes.size()]);
     }
@@ -1357,27 +1271,27 @@ import java.util.logging.Logger;
             DefaultGroovyMethods.each(ctx.children, new Closure<Collection<? extends Expression>>(null, null) {
                 public Collection<? extends Expression> doCall(ParseTree it) {
                     if (it instanceof GroovyParser.ArgumentContext) {
-                        if (DefaultGroovyMethods.asBoolean(((GroovyParser.ArgumentContext)it).mapEntry()))
-                            return DefaultGroovyMethods.leftShift(mapArgs, parseExpression(((GroovyParser.ArgumentContext)it).mapEntry()));
-                        else
-                            return DefaultGroovyMethods.leftShift(expressions, parseExpression(((GroovyParser.ArgumentContext)it).expression()));
-                    } else if (it instanceof GroovyParser.ClosureExpressionRuleContext)
-                        return DefaultGroovyMethods.leftShift(expressions, parseExpression((GroovyParser.ClosureExpressionRuleContext)it));
+                        if (asBoolean(((GroovyParser.ArgumentContext)it).mapEntry())) {
+                            mapArgs.add(parseExpression(((GroovyParser.ArgumentContext) it).mapEntry()));
+                            return mapArgs;
+                        } else {
+                            expressions.add(parseExpression(((GroovyParser.ArgumentContext) it).expression()));
+                            return expressions;
+                        }
+                    } else if (it instanceof GroovyParser.ClosureExpressionRuleContext) {
+                        expressions.add(parseExpression((GroovyParser.ClosureExpressionRuleContext) it));
+                        return expressions;
+                    }
                     return null;
                 }
-
-                public Collection<? extends Expression> doCall() {
-                    return doCall(null);
-                }
-
             });
         }
-        if (DefaultGroovyMethods.asBoolean(expressions)) {
-            if (DefaultGroovyMethods.asBoolean(mapArgs))
+        if (asBoolean(expressions)) {
+            if (asBoolean(mapArgs))
                 expressions.add(0, new MapExpression(mapArgs));
             return new ArgumentListExpression(expressions);
         } else {
-            if (DefaultGroovyMethods.asBoolean(mapArgs))
+            if (asBoolean(mapArgs))
                 return new TupleExpression(new NamedArgumentListExpression(mapArgs));
             else return new ArgumentListExpression();
         }
@@ -1393,19 +1307,14 @@ import java.util.logging.Logger;
     }
 
     public List<AnnotationNode> parseAnnotations(List<GroovyParser.AnnotationClauseContext> ctxs) {
-        return DefaultGroovyMethods.collect(ctxs, new Closure<AnnotationNode>(null, null) {
+        return collect(ctxs, new Closure<AnnotationNode>(null, null) {
             public AnnotationNode doCall(GroovyParser.AnnotationClauseContext it) {return parseAnnotation(it);}
-
-            public AnnotationNode doCall() {
-                return doCall(null);
-            }
-
         });
     }
 
     public AnnotationNode parseAnnotation(GroovyParser.AnnotationClauseContext ctx) {
         AnnotationNode node = new AnnotationNode(parseExpression(ctx.genericClassNameExpression()));
-        if (DefaultGroovyMethods.asBoolean(ctx.annotationElement()))
+        if (asBoolean(ctx.annotationElement()))
             node.addMember("value", parseAnnotationElement(ctx.annotationElement()));
         else {
             for (GroovyParser.AnnotationElementPairContext pair : ctx.annotationElementPair()) {
@@ -1420,20 +1329,15 @@ import java.util.logging.Logger;
 
     public Expression parseAnnotationElement(GroovyParser.AnnotationElementContext ctx) {
         GroovyParser.AnnotationClauseContext annotationClause = ctx.annotationClause();
-        if (DefaultGroovyMethods.asBoolean(annotationClause))
+        if (asBoolean(annotationClause))
             return setupNodeLocation(new AnnotationConstantExpression(parseAnnotation(annotationClause)), annotationClause);
         else return parseExpression(ctx.annotationParameter());
     }
 
     public ClassNode[] parseThrowsClause(GroovyParser.ThrowsClauseContext ctx) {
-        List list = DefaultGroovyMethods.asBoolean(ctx)
-                    ? DefaultGroovyMethods.collect(ctx.classNameExpression(), new Closure<ClassNode>(null, null) {
+        List list = asBoolean(ctx)
+                    ? collect(ctx.classNameExpression(), new Closure<ClassNode>(null, null) {
             public ClassNode doCall(GroovyParser.ClassNameExpressionContext it) {return parseExpression(it);}
-
-            public ClassNode doCall() {
-                return doCall(null);
-            }
-
         })
                     : new ArrayList();
         return (ClassNode[])list.toArray(new ClassNode[list.size()]);
@@ -1445,7 +1349,7 @@ import java.util.logging.Logger;
      * @return
      */
     public org.codehaus.groovy.syntax.Token createToken(TerminalNode node, int cardinality) {
-        String text = DefaultGroovyMethods.multiply(node.getText(), cardinality);
+        String text = multiply(node.getText(), cardinality);
         return new org.codehaus.groovy.syntax.Token(node.getText().equals("..<") || node.getText().equals("..")
                                                     ? Types.RANGE_OPERATOR
                                                     : Types.lookup(text, Types.ANY), text, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine() + 1);
@@ -1461,32 +1365,27 @@ import java.util.logging.Logger;
     }
 
     public ClassNode parseTypeDeclaration(GroovyParser.TypeDeclarationContext ctx) {
-        return !DefaultGroovyMethods.asBoolean(ctx) || ctx.KW_DEF() != null
+        return !asBoolean(ctx) || ctx.KW_DEF() != null
                ? ClassHelper.OBJECT_TYPE
                : setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx);
     }
 
     public ArrayExpression parse(GroovyParser.NewArrayRuleContext ctx) {
-        List<Expression> collect = DefaultGroovyMethods.collect(ctx.INTEGER(), new Closure<Expression>(null, null) {
+        List<Expression> collect = collect(ctx.INTEGER(), new Closure<Expression>(null, null) {
             public Expression doCall(TerminalNode it) {return parseInteger(it.getText(), it.getSymbol());}
-
-            public Expression doCall() {
-                return doCall(null);
-            }
-
         });
         ArrayExpression expression = new ArrayExpression(parseExpression(ctx.classNameExpression()), new ArrayList<Expression>(), collect);
         return setupNodeLocation(expression, ctx);
     }
 
     public ConstructorCallExpression parse(GroovyParser.NewInstanceRuleContext ctx) {
-        ClassNode creatingClass = DefaultGroovyMethods.asBoolean(ctx.genericClassNameExpression())
+        ClassNode creatingClass = asBoolean(ctx.genericClassNameExpression())
                                   ? parseExpression(ctx.genericClassNameExpression())
                                   : parseExpression(ctx.classNameExpression());
-        if (DefaultGroovyMethods.asBoolean(ctx.LT())) creatingClass.setGenericsTypes(new GenericsType[0]);
+        if (asBoolean(ctx.LT())) creatingClass.setGenericsTypes(new GenericsType[0]);
 
         ConstructorCallExpression expression;
-        if (!DefaultGroovyMethods.asBoolean(ctx.classBody())) {
+        if (!asBoolean(ctx.classBody())) {
             expression = setupNodeLocation(new ConstructorCallExpression(creatingClass, createArgumentList(ctx.argumentList())), ctx);
         } else {
             ClassNode outer = this.classes.peek();
@@ -1494,9 +1393,9 @@ import java.util.logging.Logger;
             expression = setupNodeLocation(new ConstructorCallExpression(classNode, createArgumentList(ctx.argumentList())), ctx);
             expression.setUsingAnonymousInnerClass(true);
             classNode.setAnonymous(true);
-            DefaultGroovyMethods.leftShift(DefaultGroovyMethods.last(this.innerClassesDefinedInMethod), classNode);
+            DefaultGroovyMethods.last(this.innerClassesDefinedInMethod).add(classNode);
             this.moduleNode.addClass(classNode);
-            DefaultGroovyMethods.leftShift(this.classes, classNode);
+            this.classes.add(classNode);
             this.parseMembers(classNode, ctx.classBody().classMember());
             this.classes.pop();
         }
@@ -1507,19 +1406,14 @@ import java.util.logging.Logger;
     public Parameter[] parseParameters(GroovyParser.ArgumentDeclarationListContext ctx) {
         List<Parameter> parameterList = ctx == null || ctx.argumentDeclaration() == null ?
             new ArrayList<Parameter>(0) :
-            DefaultGroovyMethods.collect(ctx.argumentDeclaration(), new Closure<Parameter>(null, null) {
+            collect(ctx.argumentDeclaration(), new Closure<Parameter>(null, null) {
                 public Parameter doCall(GroovyParser.ArgumentDeclarationContext it) {
                     Parameter parameter = new Parameter(parseTypeDeclaration(it.typeDeclaration()), it.IDENTIFIER().getText());
                     attachAnnotations(parameter, it.annotationClause());
-                    if (DefaultGroovyMethods.asBoolean(it.expression()))
+                    if (asBoolean(it.expression()))
                         parameter.setInitialExpression(parseExpression(it.expression()));
                     return setupNodeLocation(parameter, it);
                 }
-
-                public Parameter doCall() {
-                    return doCall(null);
-                }
-
             });
         return parameterList.toArray(new Parameter[parameterList.size()]);
     }
@@ -1527,13 +1421,8 @@ import java.util.logging.Logger;
     public MethodNode getOrCreateClinitMethod(ClassNode classNode) {
         MethodNode methodNode = DefaultGroovyMethods.find(classNode.getMethods(), new Closure<Boolean>(null, null) {
             public Boolean doCall(MethodNode it) {return it.getName().equals("<clinit>");}
-
-            public Boolean doCall() {
-                return doCall(null);
-            }
-
         });
-        if (!DefaultGroovyMethods.asBoolean(methodNode)) {
+        if (!asBoolean(methodNode)) {
             methodNode = new MethodNode("<clinit>", Opcodes.ACC_STATIC, ClassHelper.VOID_TYPE, new Parameter[0], new ClassNode[0], new BlockStatement());
             methodNode.setSynthetic(true);
             classNode.addMethod(methodNode);
@@ -1583,7 +1472,7 @@ import java.util.logging.Logger;
                 assert child instanceof TerminalNode;
                 switch (((TerminalNode)child).getSymbol().getType()) {
                 case GroovyLexer.VISIBILITY_MODIFIER:
-                    DefaultGroovyMethods.leftShift(visibilityModifiers, (TerminalNode)child);
+                    visibilityModifiers.add((TerminalNode)child);
                     break;
                 case GroovyLexer.KW_STATIC:
                     modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STATIC, (TerminalNode)child);
@@ -1601,7 +1490,7 @@ import java.util.logging.Logger;
             }
         }
 
-        if (DefaultGroovyMethods.asBoolean(visibilityModifiers))
+        if (asBoolean(visibilityModifiers))
             modifiers |= parseVisibilityModifiers(visibilityModifiers, 0);
         else modifiers |= Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
         return modifiers;
@@ -1629,49 +1518,41 @@ import java.util.logging.Logger;
      * @see #checkModifierDuplication(int, int, org.antlr.v4.runtime.tree.TerminalNode)
      */
     public ArrayList<Object> parseModifiers(List<GroovyParser.MemberModifierContext> ctxList, Integer defaultVisibilityModifier) {
-        final int[] modifiers = new int[1]; // need to be final,
-        final boolean[] hasVisibilityModifier = { false };
-        DefaultGroovyMethods.each(ctxList, new Closure<Void>(this, this) {
-            public Void doCall(GroovyParser.MemberModifierContext it) {
-                TerminalNode child = (DefaultGroovyMethods.asType(it.getChild(0), TerminalNode.class));
-                switch (child.getSymbol().getType()) {
-                case GroovyLexer.KW_STATIC:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_STATIC, child);
-                    break;
-                case GroovyLexer.KW_ABSTRACT:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_ABSTRACT, child);
-                    break;
-                case GroovyLexer.KW_FINAL:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_FINAL, child);
-                    break;
-                case GroovyLexer.KW_NATIVE:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_NATIVE, child);
-                    break;
-                case GroovyLexer.KW_SYNCHRONIZED:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_SYNCHRONIZED, child);
-                    break;
-                case GroovyLexer.KW_TRANSIENT:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_TRANSIENT, child);
-                    break;
-                case GroovyLexer.KW_VOLATILE:
-                    modifiers[0] |= checkModifierDuplication(modifiers[0], Opcodes.ACC_VOLATILE, child);
-                    break;
-                case GroovyLexer.VISIBILITY_MODIFIER:
-                    modifiers[0] |= parseVisibilityModifiers(child);
-                    hasVisibilityModifier[0] = true;
-                    break;
-                }
-                return null;
+        int modifiers = 0;
+        boolean hasVisibilityModifier = false;
+        for (GroovyParser.MemberModifierContext it : ctxList) {
+            TerminalNode child = (DefaultGroovyMethods.asType(it.getChild(0), TerminalNode.class));
+            switch (child.getSymbol().getType()) {
+            case GroovyLexer.KW_STATIC:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STATIC, child);
+                break;
+            case GroovyLexer.KW_ABSTRACT:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_ABSTRACT, child);
+                break;
+            case GroovyLexer.KW_FINAL:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_FINAL, child);
+                break;
+            case GroovyLexer.KW_NATIVE:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_NATIVE, child);
+                break;
+            case GroovyLexer.KW_SYNCHRONIZED:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_SYNCHRONIZED, child);
+                break;
+            case GroovyLexer.KW_TRANSIENT:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_TRANSIENT, child);
+                break;
+            case GroovyLexer.KW_VOLATILE:
+                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_VOLATILE, child);
+                break;
+            case GroovyLexer.VISIBILITY_MODIFIER:
+                modifiers |= parseVisibilityModifiers(child);
+                hasVisibilityModifier = true;
+                break;
             }
+        }
+        if (!hasVisibilityModifier && defaultVisibilityModifier != null) modifiers |= defaultVisibilityModifier;
 
-            public Void doCall() {
-                return doCall(null);
-            }
-
-        });
-        if (!hasVisibilityModifier[0] && defaultVisibilityModifier != null) modifiers[0] |= defaultVisibilityModifier;
-
-        return new ArrayList<Object>(Arrays.asList(modifiers[0], hasVisibilityModifier[0]));
+        return new ArrayList<Object>(Arrays.asList(modifiers, hasVisibilityModifier));
     }
 
     /**
@@ -1703,7 +1584,7 @@ import java.util.logging.Logger;
     }
 
     public int parseVisibilityModifiers(List<TerminalNode> modifiers, int defaultValue) {
-        if (!DefaultGroovyMethods.asBoolean(modifiers)) return defaultValue;
+        if (! asBoolean(modifiers)) return defaultValue;
 
         if (modifiers.size() > 1) {
             Token modifier = modifiers.get(1).getSymbol();
@@ -1726,7 +1607,7 @@ import java.util.logging.Logger;
      */
     public String parseString(TerminalNode node) {
         String t = node.getText();
-        return DefaultGroovyMethods.asBoolean(t) ? DefaultGroovyMethods.getAt(t, new IntRange(true, 1, -2)) : t;
+        return asBoolean(t) ? DefaultGroovyMethods.getAt(t, new IntRange(true, 1, -2)) : t;
     }
 
     public Object initialExpressionForType(ClassNode type) {
