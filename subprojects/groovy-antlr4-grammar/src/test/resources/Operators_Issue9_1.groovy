@@ -110,4 +110,9 @@ class A {
         5.@"$properties"
         5.&"$method1"
     }
+
+    def testElvis() {
+        assert !'elvis' ? 'presley' : false : 1 ? 2 : 3
+        int c = 1 + 1 / 3 ? 23 / 32 : false
+    }
 }
