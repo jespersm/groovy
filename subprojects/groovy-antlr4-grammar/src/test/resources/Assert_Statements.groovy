@@ -12,4 +12,11 @@ class A {
         assert 2+2 == 1+3 : cowabunga
         // How will it end?
     }
+
+    private def testAssertFreeForm() {
+        assert logic3 :
+            'Error message'
+        assert logic4
+        if (1) { }
+    }
 }

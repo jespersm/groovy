@@ -103,7 +103,7 @@ statement:
     | KW_RETURN expression? #returnStatement
     | KW_THROW expression #throwStatement
     | expression #expressionStatement
-    | KW_ASSERT expression (COLON expression)? #assertStatement
+    | KW_ASSERT expression (COLON NL* expression)? #assertStatement
     | cmdExpressionRule #commandExpressionStatement
 ;
 
