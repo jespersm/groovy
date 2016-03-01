@@ -75,6 +75,7 @@ class MainTest extends Specification {
         "Script_Issue50_1.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Statements_Issue17_1.groovy" | addIgnore([IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Statements_Issue58_1.groovy" | addIgnore([IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "SubscriptOperator.groovy" | _
         "TernaryAndElvis_Issue57.groovy" | _
         "TestClass1.groovy" | _
         "ThrowDeclarations_Issue_28_1.groovy" | _

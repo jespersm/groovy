@@ -43,7 +43,7 @@ methodBody:
 ;
 
 fieldDeclaration:
-    (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* genericClassNameExpression? IDENTIFIER ('=' expression)?
+    (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* genericClassNameExpression? IDENTIFIER (ASSIGN expression)?
     | genericClassNameExpression IDENTIFIER
 ;
 constructorDeclaration: { _input.LT(_input.LT(1).getType() == VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName) }?
@@ -72,7 +72,7 @@ throwsClause: KW_THROWS classNameExpression (COMMA classNameExpression)*;
 argumentDeclarationList:
     argumentDeclaration (COMMA argumentDeclaration)* | /* EMPTY ARGUMENT LIST */ ;
 argumentDeclaration:
-    annotationClause* typeDeclaration? IDENTIFIER ('=' expression)? ;
+    annotationClause* typeDeclaration? IDENTIFIER (ASSIGN expression)? ;
 
 blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
@@ -157,6 +157,7 @@ expression:
     | (NOT | BNOT) expression #unaryExpression
     | (PLUS | MINUS) expression #unaryExpression
     | (DECREMENT | INCREMENT) expression #prefixExpression
+    | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
     | expression POWER expression #binaryExpression
     | expression (MULT | DIV | MOD) expression #binaryExpression
     | expression (PLUS | MINUS) expression #binaryExpression

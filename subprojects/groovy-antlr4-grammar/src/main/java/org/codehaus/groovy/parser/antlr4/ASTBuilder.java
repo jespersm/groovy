@@ -470,7 +470,6 @@ import java.util.logging.Logger;
             return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
         if (ctx instanceof GroovyParser.AssertStatementContext)
             return parseStatement((GroovyParser.AssertStatementContext)ctx);
-
         throw new RuntimeException("Unsupported statement type! " + ctx.getText());
     }
 
@@ -760,6 +759,8 @@ import java.util.logging.Logger;
             return parseExpression((GroovyParser.MapConstructorContext)ctx);
         else if (ctx instanceof GroovyParser.GstringExpressionContext)
             return parseExpression((GroovyParser.GstringExpressionContext)ctx);
+        if (ctx instanceof GroovyParser.IndexExpressionContext)
+            return parseExpression((GroovyParser.IndexExpressionContext)ctx);
 
         throw new RuntimeException("Unsupported expression type! " + String.valueOf(ctx));
     }
@@ -1197,6 +1198,46 @@ import java.util.logging.Logger;
         }
 
     }
+
+    @SuppressWarnings("GroovyUnusedDeclaration") public BinaryExpression parseExpression(GroovyParser.IndexExpressionContext ctx) {
+        // parse the lhs
+        Expression leftExpression = parseExpression(ctx.expression(0));
+        int expressionCount = ctx.expression().size();
+        List<Expression> expressions = new LinkedList<Expression>();
+        Expression rightExpression = null;
+
+        // parse the indices
+        for (int i = 1; i < expressionCount; ++i) {
+            expressions.add(parseExpression(ctx.expression(i)));
+        }
+        if (expressionCount == 2) {
+            // If only one index, treat as single expression
+            rightExpression = expressions.get(0);
+            // unless it's a spread operator...
+            if (rightExpression instanceof SpreadExpression) {
+                ListExpression wrapped = new ListExpression();
+                wrapped.addExpression(rightExpression);
+                rightExpression = setupNodeLocation(wrapped, ctx.expression(1));
+            }
+        } else {
+            // Otherwise, setup as list expression
+            ListExpression listExpression = new ListExpression(expressions);
+            listExpression.setWrapped(true);
+            rightExpression = listExpression;
+            // if nonempty, set location info for index list
+            if (expressionCount > 2) {
+                Token start = ctx.expression(1).getStart();
+                Token stop = ctx.expression(expressionCount - 1).getStart();
+                listExpression.setLineNumber(start.getLine());
+                listExpression.setColumnNumber(start.getCharPositionInLine() + 1);
+                listExpression.setLastLineNumber(stop.getLine());
+                listExpression.setLastColumnNumber(stop.getCharPositionInLine() + 1 + stop.getText().length());
+            }
+        }
+        BinaryExpression binaryExpression = new BinaryExpression(leftExpression, createToken(ctx.LBRACK(), 1), rightExpression);
+        return setupNodeLocation(binaryExpression, ctx);
+    }
+
 
     @SuppressWarnings("GroovyUnusedDeclaration") public MethodCallExpression parseExpression(GroovyParser.MethodCallExpressionContext ctx) {
         TerminalNode methodIdentifier = ctx.IDENTIFIER();
