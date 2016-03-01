@@ -148,6 +148,7 @@ expression:
     | closureExpressionRule #closureExpression
     | LBRACK (expression (COMMA expression)*)?RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) )RBRACK #mapConstructor
+    | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
     | expression (DOT | SAFE_DOT | STAR_DOT) (IDENTIFIER | STRING | gstring) LPAREN argumentList? RPAREN #methodCallExpression
     | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (IDENTIFIER | STRING | gstring) #fieldAccessExpression
     | pathExpression (LPAREN argumentList? RPAREN)? closureExpressionRule* #callExpression

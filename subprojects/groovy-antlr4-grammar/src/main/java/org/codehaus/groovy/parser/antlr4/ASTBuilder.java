@@ -752,6 +752,8 @@ import java.util.logging.Logger;
             return parseExpression((GroovyParser.BoolExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.CallExpressionContext)
             return parseExpression((GroovyParser.CallExpressionContext)ctx);
+        else if (ctx instanceof GroovyParser.ConstructorCallExpressionContext)
+            return parseExpression((GroovyParser.ConstructorCallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.UnaryExpressionContext)
             return parseExpression((GroovyParser.UnaryExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.MapConstructorContext)
@@ -1149,6 +1151,17 @@ import java.util.logging.Logger;
         String methodName = (String)iterator.get(1);
         boolean implicitThis = (Boolean)iterator.get(2);
 
+        if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(methodName)) {
+            // Actually a constructor call
+            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpression);
+            return setupNodeLocation(call, ctx);
+//        } else if (implicitThis && VariableExpression.SUPER_EXPRESSION.getText().equals(methodName)) {
+//            // Use this once path expression is refac'ed
+//            // Actually a constructor call
+//            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.SUPER, argumentListExpression);
+//            return setupNodeLocation(call, ctx);
+        }
+        // OK, just a normal call
         methodNode = new MethodCallExpression(expression, methodName, argumentListExpression);
         ((MethodCallExpression)methodNode).setImplicitThis(implicitThis);
         return (Expression)methodNode;
@@ -1197,6 +1210,12 @@ import java.util.logging.Logger;
         expression.setSpreadSafe(op.getSymbol().getType() == GroovyParser.STAR_DOT);
         expression.setSafe(op.getSymbol().getType() == GroovyParser.SAFE_DOT);
         return expression;
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration") public ConstructorCallExpression parseExpression(GroovyParser.ConstructorCallExpressionContext ctx) {
+        Expression argumentListExpression = createArgumentList(ctx.argumentList());
+        ConstructorCallExpression expression = new ConstructorCallExpression(ClassNode.SUPER, argumentListExpression);
+        return setupNodeLocation(expression, ctx);
     }
 
     public ClassNode parseExpression(GroovyParser.ClassNameExpressionContext ctx) {

@@ -49,6 +49,7 @@ class MainTest extends Specification {
         "Closure_Issue21_1.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Enums_Issue43_1.groovy" | _
         "ExceptionHandling_Issue27_1.groovy" | _
+        "ExplicitConstructor.groovy" | _
         "Extendsimplements_Issue25_1.groovy" | _
         "FieldAccessAndMethodCalls_Issue37_1.groovy" | _
         'FieldAccessAndMethodCalls_Issue37_2.groovy' | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
