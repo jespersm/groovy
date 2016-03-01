@@ -796,13 +796,18 @@ import java.util.logging.Logger;
         Expression valueExpr;
         List<GroovyParser.ExpressionContext> expressions = ctx.expression();
         if (expressions.size() == 1) {
-            keyExpr = asBoolean(ctx.gstring())
+            valueExpr = parseExpression(expressions.get(0));
+            if (ctx.MULT() != null) {
+                // This is really a spread map entry.
+                // This is an odd construct, SpreadMapExpression does not extend MapExpression, so we workaround
+                keyExpr = setupNodeLocation(new SpreadMapExpression(valueExpr), ctx);
+            } else {
+                keyExpr = asBoolean(ctx.gstring())
                       ? parseExpression(ctx.gstring())
                       : new ConstantExpression(asBoolean(ctx.IDENTIFIER())
                                                ? ctx.IDENTIFIER().getText()
                                                : parseString(ctx.STRING()));
-
-            valueExpr = parseExpression(expressions.get(0));
+            }
         } else {
             keyExpr = parseExpression(expressions.get(0));
             valueExpr = parseExpression(expressions.get(1));
