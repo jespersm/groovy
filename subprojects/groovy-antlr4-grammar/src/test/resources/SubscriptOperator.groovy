@@ -22,3 +22,4 @@ someObject[1, *list, 3]
 // Also take care of spread-map:
 def someMap= [c: 3, d: 4]
 def mymap = [a: 1, b: 2, *:someMap, e: 66]
+someFunc(firstArg: 1, otherArg: 2)
