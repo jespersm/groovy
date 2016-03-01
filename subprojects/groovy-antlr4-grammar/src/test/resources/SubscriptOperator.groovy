@@ -14,3 +14,7 @@ someObject[0..10] = 'fish'
 someObject[0..<11] = 'meh'
 
 someObject[some(0), 42] = 127
+
+// Remember the special case for the spread operator
+someObject[*list]
+someObject[1, *list, 3]

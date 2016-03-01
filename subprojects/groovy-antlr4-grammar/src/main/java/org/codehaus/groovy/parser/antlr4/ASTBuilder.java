@@ -761,6 +761,8 @@ import java.util.logging.Logger;
             return parseExpression((GroovyParser.GstringExpressionContext)ctx);
         if (ctx instanceof GroovyParser.IndexExpressionContext)
             return parseExpression((GroovyParser.IndexExpressionContext)ctx);
+        if (ctx instanceof GroovyParser.SpreadExpressionContext)
+            return parseExpression((GroovyParser.SpreadExpressionContext)ctx);
 
         throw new RuntimeException("Unsupported expression type! " + String.valueOf(ctx));
     }
@@ -913,6 +915,11 @@ import java.util.logging.Logger;
         ((Expression)node).setLastLineNumber(op.getSymbol().getLine());
         ((Expression)node).setLastColumnNumber(op.getSymbol().getCharPositionInLine() + 1 + op.getText().length());
         return ((Expression)(node));
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration") public SpreadExpression parseExpression(GroovyParser.SpreadExpressionContext ctx) {
+        SpreadExpression expression = new SpreadExpression(parseExpression(ctx.expression()));
+        return setupNodeLocation(expression, ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.AnnotationParameterContext ctx) {

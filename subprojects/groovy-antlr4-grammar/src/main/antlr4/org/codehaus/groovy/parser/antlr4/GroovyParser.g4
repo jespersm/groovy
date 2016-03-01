@@ -153,6 +153,7 @@ expression:
     | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (IDENTIFIER | STRING | gstring) #fieldAccessExpression
     | pathExpression (LPAREN argumentList? RPAREN)? closureExpressionRule* #callExpression
     | LPAREN expression RPAREN #parenthesisExpression
+    | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
     | (NOT | BNOT) expression #unaryExpression
     | (PLUS | MINUS) expression #unaryExpression
