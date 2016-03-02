@@ -81,6 +81,7 @@ class MainTest extends Specification {
         "TestClass1.groovy" | _
         "ThrowDeclarations_Issue_28_1.groovy" | _
         "Assert_Statements.groovy" | _
+        "ScriptSupport.groovy" | _
     }
 
     def addIgnore(Class aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {

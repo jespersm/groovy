@@ -114,7 +114,7 @@ import java.util.logging.Logger;
             }
         });
 
-        ParseTree tree = parser.compilationUnit();
+        GroovyParser.CompilationUnitContext tree = parser.compilationUnit();
         if (log.isLoggable(Level.FINE)) {
             final StringBuffer s = new StringBuffer();
             new ParseTreeWalker().walk(new ParseTreeListener() {
@@ -157,8 +157,8 @@ import java.util.logging.Logger;
 
 
         try {
-            DefaultGroovyMethods.each(((GroovyParser.CompilationUnitContext)tree).importStatement(), new MethodClosure(this, "parseImportStatement"));
-            DefaultGroovyMethods.each(((GroovyParser.CompilationUnitContext)tree).children, new Closure<ClassNode>(this, this) {
+            DefaultGroovyMethods.each(tree.importStatement(), new MethodClosure(this, "parseImportStatement"));
+            DefaultGroovyMethods.each(tree.children, new Closure<ClassNode>(this, this) {
                 public ClassNode doCall(ParseTree it) {
                     if (it instanceof GroovyParser.EnumDeclarationContext)
                         parseEnumDeclaration((GroovyParser.EnumDeclarationContext)it);
@@ -169,11 +169,13 @@ import java.util.logging.Logger;
                     return null;
                 }
             });
-            collect(((GroovyParser.CompilationUnitContext)tree).statement(), new Closure<Object>(this, this) {
-                public void doCall(GroovyParser.StatementContext it) {
-                    moduleNode.addStatement(parseStatement(it));
+            for (GroovyParser.ScriptPartContext part : tree.scriptPart()) {
+                if (part.statement() != null) {
+                    moduleNode.addStatement(parseStatement(part.statement()));
+                } else {
+                    moduleNode.addMethod(parseScriptMethod(part.methodDeclaration()));
                 }
-            });
+            }
         } catch (CompilationFailedException ignored) {
             // Compilation failed.
         }
@@ -198,6 +200,38 @@ import java.util.logging.Logger;
         moduleNode.setPackageName(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".") + ".");
         attachAnnotations(moduleNode.getPackage(), ctx.annotationClause());
         setupNodeLocation(moduleNode.getPackage(), ctx);
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration") public MethodNode parseScriptMethod(GroovyParser.MethodDeclarationContext ctx) {
+        //noinspection GroovyAssignabilityCheck
+        final Iterator<Object> iterator = parseModifiers(ctx.memberModifier(), Opcodes.ACC_PUBLIC).iterator();
+        int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : null));
+        boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : null));
+
+        innerClassesDefinedInMethod.add(new ArrayList());
+        Statement statement = asBoolean(ctx.methodBody())
+            ? parseStatement(ctx.methodBody().blockStatement())
+            : null;
+        List<InnerClassNode> innerClassesDeclared = innerClassesDefinedInMethod.pop();
+
+        Parameter[] params = parseParameters(ctx.argumentDeclarationList());
+
+        ClassNode returnType = asBoolean(ctx.typeDeclaration())
+            ? parseTypeDeclaration(ctx.typeDeclaration())
+            : asBoolean(ctx.genericClassNameExpression())
+            ? parseExpression(ctx.genericClassNameExpression())
+            : ClassHelper.OBJECT_TYPE;
+
+        ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
+
+        final MethodNode methodNode = new MethodNode(ctx.IDENTIFIER().getText(), modifiers, returnType, params, exceptions, statement);
+        methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
+        methodNode.setAnnotationDefault(true);
+
+        setupNodeLocation(methodNode, ctx);
+        attachAnnotations(methodNode, ctx.annotationClause());
+        methodNode.setSyntheticPublic(!hasVisibilityModifier);
+        return methodNode;
     }
 
     public void parseEnumDeclaration(@NotNull GroovyParser.EnumDeclarationContext ctx) {
