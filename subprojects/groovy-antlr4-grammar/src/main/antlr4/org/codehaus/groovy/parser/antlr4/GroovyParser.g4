@@ -35,7 +35,7 @@ methodDeclaration:
     |
         genericClassNameExpression
     )
-    IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? methodBody?
+    IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? (KW_DEFAULT annotationParameter | methodBody)?
 ;
 
 methodBody:

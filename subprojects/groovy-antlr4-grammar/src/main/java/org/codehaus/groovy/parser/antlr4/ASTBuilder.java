@@ -338,7 +338,7 @@ import java.util.logging.Logger;
 
         innerClassesDefinedInMethod.add(new ArrayList());
         Statement statement = asBoolean(ctx.methodBody())
-                              ? parseStatement(DefaultGroovyMethods.asType(ctx.methodBody().blockStatement(), GroovyParser.BlockStatementContext.class))
+                              ? parseStatement(ctx.methodBody().blockStatement())
                               : null;
         List<InnerClassNode> innerClassesDeclared = innerClassesDefinedInMethod.pop();
 
@@ -352,6 +352,11 @@ import java.util.logging.Logger;
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
         modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
+
+        if (ctx.KW_DEFAULT() != null) {
+            statement = new ExpressionStatement(parseExpression(ctx.annotationParameter()));
+        }
+
         final MethodNode methodNode = classNode.addMethod(ctx.IDENTIFIER().getText(), modifiers, returnType, params, exceptions, statement);
         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
         DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
@@ -360,6 +365,10 @@ import java.util.logging.Logger;
                 return methodNode;
             }
         });
+
+        if (ctx.KW_DEFAULT() != null) {
+            methodNode.setAnnotationDefault(true);
+        }
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
