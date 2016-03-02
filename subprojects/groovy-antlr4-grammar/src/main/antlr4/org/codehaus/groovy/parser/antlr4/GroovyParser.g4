@@ -146,8 +146,8 @@ expression:
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
-    | LBRACK (expression (COMMA expression)*)?RBRACK #listConstructor
-    | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) )RBRACK #mapConstructor
+    | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
+    | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) COMMA?) RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
     | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) LPAREN argumentList? RPAREN #methodCallExpression
     | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression

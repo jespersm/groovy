@@ -4,6 +4,34 @@ class A {
         def a = []
     }
 
+    private void listWithNewlines() {
+        def a = [0,1,2
+        ,3]
+        def b = [4,
+                 5
+        ]
+    }
+
+    private void trailingCommas() {
+        def a = [
+            0,
+            1,
+            2,
+        ]
+        def b = [4,
+                 5
+            ,]
+        def c = [
+            key1: value,
+            key2: 12,
+            key3: 12 + 23,
+        ]
+        def d = [
+            key2: 12,
+            key3: 12 + 23
+            ,]
+    }
+
     private void list() {
         def a = [1,2 + 32, '21']
     }
