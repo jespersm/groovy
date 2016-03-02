@@ -55,6 +55,8 @@ class A {
 
         te ? rn : ary
         elvis?.sing() ?: 'left the building'
+
+        someObject.if || someObject.private || someobject.class
     }
 
     def someMore2() {

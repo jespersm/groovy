@@ -149,8 +149,8 @@ expression:
     | LBRACK (expression (COMMA expression)*)?RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) )RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT) (IDENTIFIER | STRING | gstring) LPAREN argumentList? RPAREN #methodCallExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (IDENTIFIER | STRING | gstring) #fieldAccessExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) LPAREN argumentList? RPAREN #methodCallExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
     | pathExpression (LPAREN argumentList? RPAREN)? closureExpressionRule* #callExpression
     | LPAREN expression RPAREN #parenthesisExpression
     | MULT expression #spreadExpression
@@ -199,7 +199,7 @@ genericListElement:
 mapEntry:
     STRING COLON expression
     | gstring COLON expression
-    | IDENTIFIER COLON expression
+    | selectorName COLON expression
     | LPAREN expression RPAREN COLON expression
     | MULT COLON expression
 ;
@@ -215,4 +215,14 @@ argumentList: ( (closureExpressionRule)+ | argument (COMMA argument)*) ;
 argument:
     mapEntry
     | expression
+;
+
+selectorName:
+    IDENTIFIER | KW_ABSTRACT | KW_AS | KW_ASSERT | KW_BREAK | KW_CASE | KW_CATCH | KW_CLASS | KW_CONTINUE
+     | KW_DEF | KW_DEFAULT | KW_ELSE | KW_ENUM | KW_EXTENDS | KW_FALSE | KW_FINAL | KW_FINALLY
+     | KW_FOR | KW_IF | KW_IMPLEMENTS | KW_IMPORT | KW_IN | KW_INSTANCEOF | KW_INTERFACE
+     | KW_NATIVE | KW_NEW | KW_NULL | KW_PACKAGE
+     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THROW
+     | KW_THROWS | KW_TRANSIENT | KW_TRUE | KW_TRY | KW_VOLATILE | KW_WHILE
+     | VISIBILITY_MODIFIER /* in place of KW_PRIVATE | KW_PROTECTED | KW_PUBLIC */
 ;

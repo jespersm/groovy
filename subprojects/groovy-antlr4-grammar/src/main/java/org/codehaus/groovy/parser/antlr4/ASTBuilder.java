@@ -813,8 +813,8 @@ import java.util.logging.Logger;
             } else {
                 keyExpr = asBoolean(ctx.gstring())
                       ? parseExpression(ctx.gstring())
-                      : new ConstantExpression(asBoolean(ctx.IDENTIFIER())
-                                               ? ctx.IDENTIFIER().getText()
+                      : new ConstantExpression(asBoolean(ctx.selectorName())
+                                               ? ctx.selectorName().getText()
                                                : parseString(ctx.STRING()));
             }
         } else {
@@ -969,8 +969,8 @@ import java.util.logging.Logger;
         TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
         Expression left = parseExpression(ctx.expression());
 
-        TerminalNode methodIdentifier = ctx.IDENTIFIER();
-        Expression right = methodIdentifier != null ? new ConstantExpression(methodIdentifier.getText()) :
+        GroovyParser.SelectorNameContext fieldName = ctx.selectorName();
+        Expression right = fieldName != null ? new ConstantExpression(fieldName.getText()) :
             (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
         );
         Expression node = null;
@@ -1261,8 +1261,8 @@ import java.util.logging.Logger;
 
 
     @SuppressWarnings("GroovyUnusedDeclaration") public MethodCallExpression parseExpression(GroovyParser.MethodCallExpressionContext ctx) {
-        TerminalNode methodIdentifier = ctx.IDENTIFIER();
-        Expression method = methodIdentifier != null ? new ConstantExpression(methodIdentifier.getText()) : (
+        GroovyParser.SelectorNameContext methodSelector = ctx.selectorName();
+        Expression method = methodSelector != null ? new ConstantExpression(methodSelector.getText()) : (
             ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
         );
         Expression argumentListExpression = createArgumentList(ctx.argumentList());

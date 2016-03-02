@@ -1,5 +1,5 @@
 new HashMap(a: a)
-new HashMap(a: a, b:b)
+new HashMap(a: a, b:b, while: '<- keyword')
 new HashMap("$a": a, b:b)
 new HashMap("as ${ 2 + 1 }": a, b:b)
 new HashMap((a): a, b:b, c, {-> })
