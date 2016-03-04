@@ -21,6 +21,7 @@ configurations {
 }
 
 dependencies {
+    antlr4("org.antlr:antlr4:$antlr4Version")
 	testCompile project(':groovy-test')
     testCompile("org.spockframework:spock-core:$spockVersion") {
         exclude module: 'groovy-all'
