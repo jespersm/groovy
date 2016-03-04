@@ -170,7 +170,7 @@ import java.util.logging.Logger;
             });
             for (GroovyParser.ScriptPartContext part : tree.scriptPart()) {
                 if (part.statement() != null) {
-                    moduleNode.addStatement(parseStatement(part.statement()));
+                    unpackStatement(moduleNode, parseStatement(part.statement()));
                 } else {
                     moduleNode.addMethod(parseScriptMethod(part.methodDeclaration()));
                 }
@@ -199,6 +199,26 @@ import java.util.logging.Logger;
         moduleNode.setPackageName(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".") + ".");
         attachAnnotations(moduleNode.getPackage(), ctx.annotationClause());
         setupNodeLocation(moduleNode.getPackage(), ctx);
+    }
+
+    private void unpackStatement(ModuleNode destination, Statement stmt) {
+        if (stmt instanceof DeclarationList) {
+            for (DeclarationExpression decl : ((DeclarationList)stmt).declarations) {
+                destination.addStatement(setupNodeLocation(new ExpressionStatement(decl), decl));
+            }
+        } else {
+            destination.addStatement(stmt);
+        }
+    }
+
+    private void unpackStatement(BlockStatement destination, Statement stmt) {
+        if (stmt instanceof DeclarationList) {
+            for (DeclarationExpression decl : ((DeclarationList)stmt).declarations) {
+                destination.addStatement(setupNodeLocation(new ExpressionStatement(decl), decl));
+            }
+        } else {
+            destination.addStatement(stmt);
+        }
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public MethodNode parseScriptMethod(GroovyParser.MethodDeclarationContext ctx) {
@@ -418,43 +438,45 @@ import java.util.logging.Logger;
         modifiers |= classNode.isInterface() ? Opcodes.ACC_STATIC | Opcodes.ACC_FINAL : 0;
 
 
-        GroovyParser.ExpressionContext initExprContext = ctx.expression();
-        Expression initialierExpression = asBoolean(initExprContext)
-                                          ? parseExpression(initExprContext)
-                                          : null;
-        ClassNode typeDeclaration = asBoolean(ctx.genericClassNameExpression())
-                                    ? parseExpression(ctx.genericClassNameExpression())
-                                    : ClassHelper.OBJECT_TYPE;
-        AnnotatedNode node;
-        Expression initialValue = classNode.isInterface() && !typeDeclaration.equals(ClassHelper.OBJECT_TYPE)
-                                  ? new ConstantExpression(initialExpressionForType(typeDeclaration))
-                                  : initialierExpression;
-        if (classNode.isInterface() || hasVisibilityModifier) {
-            modifiers |= classNode.isInterface() ? Opcodes.ACC_PUBLIC : 0;
+        AnnotatedNode node = null;
+        List<GroovyParser.SingleDeclarationContext> variables = ctx.singleDeclaration();
+        for (GroovyParser.SingleDeclarationContext variableCtx : variables) {
+            GroovyParser.ExpressionContext initExprContext = variableCtx.expression();
+            Expression initialierExpression = asBoolean(initExprContext)
+                ? parseExpression(initExprContext)
+                : null;
+            ClassNode typeDeclaration = asBoolean(ctx.genericClassNameExpression())
+                ? parseExpression(ctx.genericClassNameExpression())
+                : ClassHelper.OBJECT_TYPE;
+            Expression initialValue = classNode.isInterface() && !typeDeclaration.equals(ClassHelper.OBJECT_TYPE)
+                ? new ConstantExpression(initialExpressionForType(typeDeclaration))
+                : initialierExpression;
+            if (classNode.isInterface() || hasVisibilityModifier) {
+                modifiers |= classNode.isInterface() ? Opcodes.ACC_PUBLIC : 0;
 
-            FieldNode field = classNode.addField(ctx.IDENTIFIER().getText(), modifiers, typeDeclaration, initialValue);
-            attachAnnotations(field, ctx.annotationClause());
-            node = setupNodeLocation(field, ctx);
-        } else {// no visibility specified. Generate property node.
-            Integer propertyModifier = modifiers | Opcodes.ACC_PUBLIC;
-            PropertyNode propertyNode = classNode.addProperty(ctx.IDENTIFIER().getText(), propertyModifier, typeDeclaration, initialValue, null, null);
-            propertyNode.getField().setModifiers(modifiers | Opcodes.ACC_PRIVATE);
-            propertyNode.getField().setSynthetic(!classNode.isInterface());
-            node = setupNodeLocation(propertyNode.getField(), ctx);
-            attachAnnotations(propertyNode.getField(), ctx.annotationClause());
-            setupNodeLocation(propertyNode, ctx);
+                FieldNode field = classNode.addField(variableCtx.IDENTIFIER().getText(), modifiers, typeDeclaration, initialValue);
+                attachAnnotations(field, ctx.annotationClause());
+                node = setupNodeLocation(field, variables.size() == 1 ? ctx : variableCtx);
+            } else {// no visibility specified. Generate property node.
+                Integer propertyModifier = modifiers | Opcodes.ACC_PUBLIC;
+                PropertyNode propertyNode = classNode.addProperty(variableCtx.IDENTIFIER().getText(), propertyModifier, typeDeclaration, initialValue, null, null);
+                propertyNode.getField().setModifiers(modifiers | Opcodes.ACC_PRIVATE);
+                propertyNode.getField().setSynthetic(!classNode.isInterface());
+                node = setupNodeLocation(propertyNode.getField(), variables.size() == 1 ? ctx : variableCtx);
+                attachAnnotations(propertyNode.getField(), ctx.annotationClause());
+                setupNodeLocation(propertyNode, variables.size() == 1 ? ctx : variableCtx);
+            }
         }
-
         return node;
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public void parseMember(ClassNode classNode, GroovyParser.ClassInitializerContext ctx) {
-        (DefaultGroovyMethods.asType(getOrCreateClinitMethod(classNode).getCode(), BlockStatement.class)).addStatement(parseStatement(ctx.blockStatement()));
+        unpackStatement((BlockStatement)getOrCreateClinitMethod(classNode).getCode(), parseStatement(ctx.blockStatement()));
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public void parseMember(ClassNode classNode, GroovyParser.ObjectInitializerContext ctx) {
         BlockStatement statement = new BlockStatement();
-        statement.addStatement(parseStatement(ctx.blockStatement()));
+        unpackStatement(statement, parseStatement(ctx.blockStatement()));
         classNode.addObjectInitializerStatements(statement);
     }
 
@@ -475,6 +497,14 @@ import java.util.logging.Logger;
         setupNodeLocation(constructorNode, ctx);
         constructorNode.setSyntheticPublic(ctx.VISIBILITY_MODIFIER() == null);
         return constructorNode;
+    }
+
+    private static class DeclarationList extends Statement{
+        List<DeclarationExpression> declarations;
+
+        DeclarationList(List<DeclarationExpression> declarations) {
+            this.declarations = declarations;
+        }
     }
 
     public Statement parseStatement(GroovyParser.StatementContext ctx) {
@@ -521,7 +551,7 @@ import java.util.logging.Logger;
 
         DefaultGroovyMethods.each(ctx.statement(), new Closure<Object>(null, null) {
             public void doCall(GroovyParser.StatementContext it) {
-                statement.addStatement(parseStatement(it));
+                unpackStatement(statement, parseStatement(it));
             }
         });
         return setupNodeLocation(statement, ctx);
@@ -588,8 +618,9 @@ import java.util.logging.Logger;
         List<CaseStatement> caseStatements = new ArrayList<CaseStatement>();
         for (GroovyParser.CaseStatementContext caseStmt : ctx.caseStatement()) {
             BlockStatement stmt = new BlockStatement();// #BSC
-            for (GroovyParser.StatementContext st : caseStmt.statement()) stmt.addStatement(parseStatement(st));
-
+            for (GroovyParser.StatementContext st : caseStmt.statement()) {
+                unpackStatement (stmt, parseStatement(st));
+            }
             caseStatements.add(setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), stmt), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
         }
 
@@ -598,14 +629,15 @@ import java.util.logging.Logger;
         if (asBoolean(ctx.KW_DEFAULT())) {
             defaultStatement = new BlockStatement();// #BSC
             for (GroovyParser.StatementContext stmt : ctx.statement())
-                ((BlockStatement)defaultStatement).addStatement(parseStatement(stmt));
+                unpackStatement((BlockStatement)defaultStatement,parseStatement(stmt));
         } else defaultStatement = EmptyStatement.INSTANCE;// TODO Refactor empty stataements and expressions.
 
         return new SwitchStatement(parseExpression(ctx.expression()), caseStatements, defaultStatement);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.DeclarationStatementContext ctx) {
-        return setupNodeLocation(new ExpressionStatement(parseDeclaration(ctx.declarationRule())), ctx);
+        List<DeclarationExpression> declarations = parseDeclaration(ctx.declarationRule());
+        return setupNodeLocation(new DeclarationList(declarations), ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.NewArrayStatementContext ctx) {
@@ -660,7 +692,7 @@ import java.util.logging.Logger;
         GroovyParser.BlockStatementContext finallyBlockStatement = ctx.finallyBlock() != null ? ctx.finallyBlock().blockStatement() : null;
         if (finallyBlockStatement != null) {
             BlockStatement fbs = new BlockStatement();
-            fbs.addStatement(parseStatement(finallyBlockStatement));
+            unpackStatement(fbs, parseStatement(finallyBlockStatement));
             finallyStatement = setupNodeLocation(fbs, finallyBlockStatement);
 
         } else finallyStatement = EmptyStatement.INSTANCE;
@@ -718,7 +750,7 @@ import java.util.logging.Logger;
         }
 
 
-        return new ExpressionStatement(expression);
+        return setupNodeLocation(new ExpressionStatement(expression), ctx);
     }
 
     /**
@@ -1184,7 +1216,13 @@ import java.util.logging.Logger;
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.DeclarationExpressionContext ctx) {
-        return parseDeclaration(ctx.declarationRule());
+        List<?> declarations = parseDeclaration(ctx.declarationRule());
+
+        if (declarations.size() == 1) {
+            return setupNodeLocation((Expression) declarations.get(0), ctx);
+        } else {
+            return new ClosureListExpression((List<Expression>)declarations);
+        }
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {
@@ -1373,15 +1411,29 @@ import java.util.logging.Logger;
         return  genericTypes.toArray(new GenericsType[genericTypes.size()]);
     }
 
-    public Expression parseDeclaration(GroovyParser.DeclarationRuleContext ctx) {
-        VariableExpression left = new VariableExpression(ctx.IDENTIFIER().getText(), parseTypeDeclaration(ctx.typeDeclaration()));
-        Integer col = ctx.getStart().getCharPositionInLine() + 1;// FIXME Why assignment token location is it's first occurrence.
-        org.codehaus.groovy.syntax.Token token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, "=", ctx.getStart().getLine(), col);
-        Expression right = ctx.getChildCount() == 2 ? new EmptyExpression() : parseExpression(ctx.expression());
-
-        DeclarationExpression expression = new DeclarationExpression(left, token, right);
-        attachAnnotations(expression, ctx.annotationClause());
-        return setupNodeLocation(expression, ctx);
+    public List<DeclarationExpression> parseDeclaration(GroovyParser.DeclarationRuleContext ctx) {
+        ClassNode type = parseTypeDeclaration(ctx.typeDeclaration());
+        List<GroovyParser.SingleDeclarationContext> variables = ctx.singleDeclaration();
+        List<DeclarationExpression> declarations = new LinkedList<DeclarationExpression>();
+        for (GroovyParser.SingleDeclarationContext variableCtx : variables) {
+            GroovyParser.ExpressionContext initExprContext = variableCtx.expression();
+            VariableExpression left = new VariableExpression(variableCtx.IDENTIFIER().getText(), type);
+            Integer col = variableCtx.getStart().getCharPositionInLine() + 1;// FIXME Why assignment token location is it's first occurrence.
+            org.codehaus.groovy.syntax.Token token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, "=", variableCtx.getStart().getLine(), col);
+            GroovyParser.ExpressionContext initialValueCtx = variableCtx.expression();
+            Expression initialValue = initialValueCtx != null ? parseExpression(variableCtx.expression()) : setupNodeLocation(new EmptyExpression(),ctx);
+            DeclarationExpression expression = new DeclarationExpression(left, token, initialValue);
+            attachAnnotations(expression, ctx.annotationClause());
+            declarations.add(setupNodeLocation(expression, variableCtx));
+        }
+        if (declarations.size() == 1) {
+            setupNodeLocation(declarations.get(0), ctx);
+        } else {
+            // Tweak start of first declaration
+            declarations.get(0).setLineNumber(ctx.getStart().getLine());
+            declarations.get(0).setColumnNumber(ctx.getStart().getCharPositionInLine() + 1);
+        }
+        return declarations;
     }
 
     @SuppressWarnings("UnnecessaryQualifiedReference") private Expression createArgumentList(GroovyParser.ArgumentListContext ctx) {
@@ -1564,6 +1616,7 @@ import java.util.logging.Logger;
         astNode.setColumnNumber(ctx.getStart().getCharPositionInLine() + 1);
         astNode.setLastLineNumber(ctx.getStop().getLine());
         astNode.setLastColumnNumber(ctx.getStop().getCharPositionInLine() + 1 + ctx.getStop().getText().length());
+//        System.err.println(astNode.getClass().getSimpleName() + " at " + astNode.getLineNumber() + ":" + astNode.getColumnNumber());
         return astNode;
     }
 
@@ -1572,6 +1625,15 @@ import java.util.logging.Logger;
         astNode.setColumnNumber(token.getCharPositionInLine() + 1);
         astNode.setLastLineNumber(token.getLine());
         astNode.setLastColumnNumber(token.getCharPositionInLine() + 1 + token.getText().length());
+//        System.err.println(astNode.getClass().getSimpleName() + " at " + astNode.getLineNumber() + ":" + astNode.getColumnNumber());
+        return astNode;
+    }
+
+    public <T extends ASTNode> T setupNodeLocation(T astNode, ASTNode source) {
+        astNode.setLineNumber(source.getLineNumber());
+        astNode.setColumnNumber(source.getColumnNumber());
+        astNode.setLastLineNumber(source.getLastLineNumber());
+        astNode.setLastColumnNumber(source.getLastColumnNumber());
         return astNode;
     }
 

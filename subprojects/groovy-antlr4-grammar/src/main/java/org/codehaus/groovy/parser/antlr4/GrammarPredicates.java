@@ -19,7 +19,7 @@ public class GrammarPredicates {
             token = nameOrPath.LT(index);
         }
         String tokenText = token.getText();
-        if (Arrays.binarySearch(primitiveClassNames, tokenText)!=-1) return true;
+        if (Arrays.binarySearch(primitiveClassNames, tokenText) >= 0) return true;
         return Character.isUpperCase(tokenText.codePointAt(0));
     }
 

@@ -48,8 +48,10 @@ methodBody:
 ;
 
 fieldDeclaration:
-    (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* genericClassNameExpression? IDENTIFIER (ASSIGN expression)?
-    | genericClassNameExpression IDENTIFIER
+    (
+        (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* genericClassNameExpression?
+        | genericClassNameExpression)
+    singleDeclaration ( COMMA singleDeclaration)*
 ;
 constructorDeclaration: { _input.LT(_input.LT(1).getType() == VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName) }?
     VISIBILITY_MODIFIER? IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? LCURVE blockStatement? RCURVE ; // Inner NL 's handling.
@@ -83,7 +85,8 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule: annotationClause* typeDeclaration IDENTIFIER (ASSIGN expression)? ;
+declarationRule: annotationClause* typeDeclaration singleDeclaration ( COMMA singleDeclaration)*;
+singleDeclaration: IDENTIFIER (ASSIGN expression)?;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
 classBody: LCURVE (classMember | NL | SEMICOLON)* RCURVE ;
