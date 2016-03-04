@@ -3,7 +3,6 @@ package org.codehaus.groovy.parser.antlr4;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.Nullable;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
@@ -88,13 +87,13 @@ import java.util.logging.Logger;
             @Override
             public void syntaxError(
                 @NotNull Recognizer<?, ?> recognizer,
-                @Nullable Object offendingSymbol, int line, int charPositionInLine,
-                @NotNull String msg, @Nullable RecognitionException e) {
+                Object offendingSymbol, int line, int charPositionInLine,
+                @NotNull String msg, RecognitionException e) {
                 sourceUnit.getErrorCollector().addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine+1), sourceUnit));
             }
 
             @Override
-            public void reportAmbiguity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex, boolean exact, @Nullable BitSet ambigAlts, @NotNull ATNConfigSet configs) {
+            public void reportAmbiguity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, @NotNull ATNConfigSet configs) {
                 log.fine("Ambiguity at " + startIndex + " - " + stopIndex);
             }
 
@@ -102,7 +101,7 @@ import java.util.logging.Logger;
             public void reportAttemptingFullContext(
                 @NotNull Parser recognizer,
                 @NotNull DFA dfa, int startIndex, int stopIndex,
-                @Nullable BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
+                BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
                 log.fine("Attempting Full Context at " + startIndex + " - " + stopIndex);
             }
 
