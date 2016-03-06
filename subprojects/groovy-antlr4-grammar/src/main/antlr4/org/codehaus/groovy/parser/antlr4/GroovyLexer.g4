@@ -108,7 +108,7 @@ fragment ESC_SEQUENCE: '\\' [btnfr"'\\] | OCTAL_ESC_SEQ ;
 fragment OCTAL_ESC_SEQ: '\\' [0-3]? [0-7]? [0-7] ;
 
 // Numbers
-DECIMAL: DIGITS ('.' DIGITS EXP_PART? | EXP_PART) DECIMAL_TYPE_MODIFIER? ;
+DECIMAL: (DIGITS ('.' DIGITS EXP_PART? | EXP_PART) DECIMAL_TYPE_MODIFIER? ) | DIGITS DECIMAL_ONLY_TYPE_MODIFIER ;
 INTEGER: (('0x' | '0X') HEX_DIGITS | '0' OCT_DIGITS | DEC_DIGITS) INTEGER_TYPE_MODIFIER? ;
 
 fragment DIGITS: [0-9] | [0-9][0-9_]*[0-9] ;
@@ -121,6 +121,7 @@ fragment EXP_PART: ([eE] SIGN? [0-9]+) ;
 
 fragment INTEGER_TYPE_MODIFIER: ('G' | 'L' | 'I' | 'g' | 'l' | 'i') ;
 fragment DECIMAL_TYPE_MODIFIER: ('G' | 'D' | 'F' | 'g' | 'd' | 'f') ;
+fragment DECIMAL_ONLY_TYPE_MODIFIER: ( 'D' | 'F' | 'd' | 'f') ;
 
 KW_CLASS: 'class' ;
 KW_INTERFACE: 'interface' ;
