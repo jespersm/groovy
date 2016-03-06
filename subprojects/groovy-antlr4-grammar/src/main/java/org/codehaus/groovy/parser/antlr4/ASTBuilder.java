@@ -3,6 +3,7 @@ package org.codehaus.groovy.parser.antlr4;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
@@ -183,15 +184,43 @@ import java.util.logging.Logger;
 
     public void parseImportStatement(@NotNull GroovyParser.ImportStatementContext ctx) {
         ImportNode node;
-        if (ctx.getChild(ctx.getChildCount() - 1).getText().equals("*")) {
-            moduleNode.addStarImport(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".") + ".");
-            node = DefaultGroovyMethods.last(moduleNode.getStarImports());
-        } else {
-            moduleNode.addImport(DefaultGroovyMethods.last(ctx.IDENTIFIER()).getText(), ClassHelper.make(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".")), parseAnnotations(ctx.annotationClause()));
-            node = DefaultGroovyMethods.last(moduleNode.getImports());
-            setupNodeLocation(node.getType(), ctx);
-        }
+        List<TerminalNode> qualifiedClassName = new ArrayList<TerminalNode>(ctx.IDENTIFIER());
+        boolean isStar = ctx.MULT() != null;
+        boolean isStatic = ctx.KW_STATIC() != null;
+        String alias = (ctx.KW_AS() != null) ? DefaultGroovyMethods.pop(qualifiedClassName).getText() : null;
+        List<AnnotationNode> annotations = parseAnnotations(ctx.annotationClause());
 
+        if (isStar) {
+            if (isStatic) {
+                // import is like "import static foo.Bar.*"
+                // packageName is actually a className in this case
+                ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
+                moduleNode.addStaticStarImport(DefaultGroovyMethods.last(qualifiedClassName).getText(), type, annotations);
+            } else {
+                // import is like "import foo.*"
+                moduleNode.addStarImport(DefaultGroovyMethods.join(qualifiedClassName, ".") + ".", annotations);
+            }
+            node = DefaultGroovyMethods.last(moduleNode.getStarImports());
+            if (alias != null) throw new GroovyBugError(
+                "imports like 'import foo.* as Bar' are not " +
+                    "supported and should be caught by the grammar");
+        } else {
+            if (isStatic) {
+                // import is like "import static foo.Bar.method"
+                // packageName is really class name in this case
+                String fieldName = DefaultGroovyMethods.pop(qualifiedClassName).getText();
+                ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
+                moduleNode.addStaticImport(type, fieldName, alias != null ? alias : fieldName, annotations);
+            } else {
+                // import is like "import foo.Bar"
+                ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
+                if (alias == null) {
+                    alias = DefaultGroovyMethods.last(qualifiedClassName).getText();
+                }
+                moduleNode.addImport(alias, type, annotations);
+            }
+            node = DefaultGroovyMethods.last(moduleNode.getImports());
+        }
         setupNodeLocation(node, ctx);
     }
 
