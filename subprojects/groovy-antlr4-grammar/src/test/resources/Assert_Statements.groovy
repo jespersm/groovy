@@ -5,6 +5,8 @@ class A {
         assert false : 'this is an error expression'
         assert 42
         assert 42 : 'Thanks for all the fish!'
+        // This one is allowed in Groovy, too.
+        assert 42, 'Thanks for all the fish!'
     }
 
     private def testAssert2() {
