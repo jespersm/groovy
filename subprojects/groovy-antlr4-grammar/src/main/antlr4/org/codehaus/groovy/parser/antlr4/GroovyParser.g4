@@ -164,6 +164,7 @@ expression:
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
     | (NOT | BNOT) expression #unaryExpression
+    | LPAREN genericClassNameExpression RPAREN expression #castExpression
     | (PLUS | MINUS) expression #unaryExpression
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression

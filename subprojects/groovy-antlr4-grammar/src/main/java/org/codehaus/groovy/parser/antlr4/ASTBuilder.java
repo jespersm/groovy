@@ -828,6 +828,8 @@ import java.util.logging.Logger;
             return parseExpression((GroovyParser.TernaryExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.MethodCallExpressionContext)
             return parseExpression((GroovyParser.MethodCallExpressionContext)ctx);
+        else if (ctx instanceof GroovyParser.CastExpressionContext)
+            return parseExpression((GroovyParser.CastExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.DeclarationExpressionContext)
             return parseExpression((GroovyParser.DeclarationExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.ElvisExpressionContext)
@@ -968,6 +970,13 @@ import java.util.logging.Logger;
         ((Expression)expression).setLineNumber(op.getStartLine());
         ((Expression)expression).setLastLineNumber(op.getStartLine());
         return ((Expression)(expression));
+    }
+
+    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.CastExpressionContext ctx) {
+        Expression left = parseExpression(ctx.expression());
+        ClassNode classNode = setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx.genericClassNameExpression());
+        CastExpression expression = new CastExpression(classNode, left);
+        return setupNodeLocation(expression, ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.TernaryExpressionContext ctx) {

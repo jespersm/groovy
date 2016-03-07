@@ -47,6 +47,7 @@ class A {
 
         5 in null
         5 as Integer
+        (Integer)5
         5 instanceof Integer
 
         5.properties
