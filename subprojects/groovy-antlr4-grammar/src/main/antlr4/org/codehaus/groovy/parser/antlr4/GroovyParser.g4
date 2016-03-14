@@ -157,7 +157,6 @@ expression:
     | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) COMMA?) RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
     | pathExpression (LPAREN argumentList? RPAREN)? closureExpressionRule* #callExpression
     | LPAREN expression RPAREN #parenthesisExpression
@@ -183,6 +182,7 @@ expression:
     | expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression ELVIS NL* expression #elvisExpression
     | expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     | STRING #constantExpression
     | gstring #gstringExpression
     | DECIMAL #constantDecimalExpression

@@ -12,4 +12,14 @@ class A {
         // Integer.someDummyProperty.@attributeMethod('0xff', 12)
         Integer.some.dummy.property.path.method('0xff', 12)
     }
+
+    def b() {
+        [1, 2, 3].each { print it }
+    }
+
+    def a(p1, p2) {
+        println "$p1, $p2"
+
+        a 1, {print 'abc'}
+    }
 }
