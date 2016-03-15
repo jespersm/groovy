@@ -21,5 +21,10 @@ class A {
         println "$p1, $p2"
 
         a 1, {print 'abc'}
+
+        a(1) {
+            print 'abc'
+        }
+
     }
 }
