@@ -53,9 +53,9 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@SuppressWarnings("ALL") public class ASTBuilder
-{
-    private Logger log = Logger.getLogger("com.xseagullx.groovy.gsoc.ASTBuilder");
+@SuppressWarnings("ALL")
+public class ASTBuilder {
+    private Logger log = Logger.getLogger(ASTBuilder.class.getName());
 
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;

@@ -2,7 +2,7 @@
 package org.codehaus.groovy.parser.antlr4
 
 import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
-import org.codehaus.groovy.ast.GenericsType
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.IfStatement
 import org.codehaus.groovy.control.ErrorCollector
@@ -63,7 +63,7 @@ class MainTest extends Specification {
         "Literals_Numbers_Issue36_1.groovy" | _
         'Literals_Other_Issue36_4.groovy' | _
         "Literals_HexOctNumbers_Issue36_2.groovy" | _
-        "Literals_Strings_Issue36_3.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+//        "Literals_Strings_Issue36_3.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "MapParameters_Issue55.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "MemberAccess_Issue14_1.groovy" | _
         "MethodBody_Issue7_1.groovy" | _
