@@ -26,5 +26,8 @@ class A {
             print 'abc'
         }
 
+        this.a(1) {
+            print 'abc'
+        }
     }
 }
