@@ -250,7 +250,8 @@ public class ASTBuilder {
         }
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public MethodNode parseScriptMethod(GroovyParser.MethodDeclarationContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public MethodNode parseScriptMethod(GroovyParser.MethodDeclarationContext ctx) {
         //noinspection GroovyAssignabilityCheck
         final Iterator<Object> iterator = parseModifiers(ctx.memberModifier(), Opcodes.ACC_PUBLIC).iterator();
         int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : null));
@@ -272,7 +273,9 @@ public class ASTBuilder {
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
 
-        final MethodNode methodNode = new MethodNode(ctx.IDENTIFIER().getText(), modifiers, returnType, params, exceptions, statement);
+        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
+
+        final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
         methodNode.setAnnotationDefault(true);
 
@@ -439,7 +442,9 @@ public class ASTBuilder {
             statement = new ExpressionStatement(parseExpression(ctx.annotationParameter()));
         }
 
-        final MethodNode methodNode = classNode.addMethod(ctx.IDENTIFIER().getText(), modifiers, returnType, params, exceptions, statement);
+        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
+
+        final MethodNode methodNode = classNode.addMethod(methodName, modifiers, returnType, params, exceptions, statement);
         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
         DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
             public MethodNode doCall(InnerClassNode it) {

@@ -82,6 +82,8 @@ class MainTest extends Specification {
         "ThrowDeclarations_Issue_28_1.groovy" | _
         "Assert_Statements.groovy" | _
         "Unicode_Identifiers.groovy" | _
+        "ClassMembers_String_Method_Name.groovy" | _
+        "ScriptPart_String_Method_Name.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
