@@ -273,11 +273,10 @@ public class ASTBuilder {
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
 
-        if (null != classNode) { // parsing member method
-            modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
-        }
 
-        MethodNode methodNode = createMethodNode.call(classNode, ctx, modifiers, returnType, params, exceptions, statement, innerClassesDeclared);
+        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
+
+        MethodNode methodNode = createMethodNode.call(classNode, ctx, methodName, modifiers, returnType, params, exceptions, statement, innerClassesDeclared);
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
@@ -290,9 +289,7 @@ public class ASTBuilder {
     public MethodNode parseScriptMethod(final GroovyParser.MethodDeclarationContext ctx) {
 
         return parseMethod(null, ctx, new Closure<MethodNode>(this, this) {
-                                                public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
-
-                                                    String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
+                                                public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
 
                                                     final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
                                                     methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
@@ -437,13 +434,12 @@ public class ASTBuilder {
     @SuppressWarnings("GroovyUnusedDeclaration")
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
         return parseMethod(classNode, ctx, new Closure<MethodNode>(this, this) {
-                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
+                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
+                        modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
 
                         if (ctx.KW_DEFAULT() != null) {
                             statement = new ExpressionStatement(parseExpression(ctx.annotationParameter()));
                         }
-
-                        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
 
                         final MethodNode methodNode = classNode.addMethod(methodName, modifiers, returnType, params, exceptions, statement);
                         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
