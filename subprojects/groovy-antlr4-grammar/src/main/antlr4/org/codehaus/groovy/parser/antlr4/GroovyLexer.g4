@@ -95,7 +95,7 @@ mode SLASHY_GSTRING_MODE ;
 
 mode GSTRING_TYPE_SELECTOR_MODE ; // We drop here after exiting curved brace?
     GSTRING_BRACE_L: '{' { pushBrace(Brace.CURVE); tlePos = tokenIndex + 1; } -> type(LCURVE), popMode, pushMode(DEFAULT_MODE) ;
-    GSTRING_ID: JavaLetterInGString JavaLetterOrDigitInGString* -> type(IDENTIFIER), popMode, pushMode(GSTRING_PATH) ; // TODO EXCLUDE DOLLAR CHAR
+    GSTRING_ID: JavaLetterInGString JavaLetterOrDigitInGString* -> type(IDENTIFIER), popMode, pushMode(GSTRING_PATH) ;
 
 mode GSTRING_PATH ;
     GSTRING_PATH_PART: '.' JavaLetterInGString JavaLetterOrDigitInGString* ;
