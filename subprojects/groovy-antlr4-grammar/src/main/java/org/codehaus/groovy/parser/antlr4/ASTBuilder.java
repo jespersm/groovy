@@ -251,7 +251,7 @@ public class ASTBuilder {
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
-    public MethodNode parseScriptMethod(GroovyParser.MethodDeclarationContext ctx) {
+    private MethodNode parseMethod(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, Closure<MethodNode> createMethodNode) {
         //noinspection GroovyAssignabilityCheck
         final Iterator<Object> iterator = parseModifiers(ctx.memberModifier(), Opcodes.ACC_PUBLIC).iterator();
         int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : null));
@@ -259,30 +259,49 @@ public class ASTBuilder {
 
         innerClassesDefinedInMethod.add(new ArrayList());
         Statement statement = asBoolean(ctx.methodBody())
-            ? parseStatement(ctx.methodBody().blockStatement())
-            : null;
+                ? parseStatement(ctx.methodBody().blockStatement())
+                : null;
         List<InnerClassNode> innerClassesDeclared = innerClassesDefinedInMethod.pop();
 
         Parameter[] params = parseParameters(ctx.argumentDeclarationList());
 
         ClassNode returnType = asBoolean(ctx.typeDeclaration())
-            ? parseTypeDeclaration(ctx.typeDeclaration())
-            : asBoolean(ctx.genericClassNameExpression())
-            ? parseExpression(ctx.genericClassNameExpression())
-            : ClassHelper.OBJECT_TYPE;
+                ? parseTypeDeclaration(ctx.typeDeclaration())
+                : asBoolean(ctx.genericClassNameExpression())
+                ? parseExpression(ctx.genericClassNameExpression())
+                : ClassHelper.OBJECT_TYPE;
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
 
-        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
+        if (null != classNode) { // parsing member method
+            modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
+        }
 
-        final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
-        methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
-        methodNode.setAnnotationDefault(true);
+        MethodNode methodNode = createMethodNode.call(classNode, ctx, modifiers, returnType, params, exceptions, statement, innerClassesDeclared);
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
         methodNode.setSyntheticPublic(!hasVisibilityModifier);
         return methodNode;
+    }
+
+
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public MethodNode parseScriptMethod(final GroovyParser.MethodDeclarationContext ctx) {
+
+        return parseMethod(null, ctx, new Closure<MethodNode>(this, this) {
+                                                public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
+
+                                                    String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
+
+                                                    final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
+                                                    methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
+                                                    methodNode.setAnnotationDefault(true);
+
+                                                    return methodNode;
+                                                }
+                                      }
+        );
     }
 
     public void parseEnumDeclaration(@NotNull GroovyParser.EnumDeclarationContext ctx) {
@@ -415,52 +434,35 @@ public class ASTBuilder {
 
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
-        //noinspection GroovyAssignabilityCheck
-        final Iterator<Object> iterator = parseModifiers(ctx.memberModifier(), Opcodes.ACC_PUBLIC).iterator();
-        int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : null));
-        boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : null));
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
+        return parseMethod(classNode, ctx, new Closure<MethodNode>(this, this) {
+                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
 
-        innerClassesDefinedInMethod.add(new ArrayList());
-        Statement statement = asBoolean(ctx.methodBody())
-                              ? parseStatement(ctx.methodBody().blockStatement())
-                              : null;
-        List<InnerClassNode> innerClassesDeclared = innerClassesDefinedInMethod.pop();
+                        if (ctx.KW_DEFAULT() != null) {
+                            statement = new ExpressionStatement(parseExpression(ctx.annotationParameter()));
+                        }
 
-        Parameter[] params = parseParameters(ctx.argumentDeclarationList());
+                        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
 
-        ClassNode returnType = asBoolean(ctx.typeDeclaration())
-                               ? parseTypeDeclaration(ctx.typeDeclaration())
-                               : asBoolean(ctx.genericClassNameExpression())
-                                 ? parseExpression(ctx.genericClassNameExpression())
-                                 : ClassHelper.OBJECT_TYPE;
+                        final MethodNode methodNode = classNode.addMethod(methodName, modifiers, returnType, params, exceptions, statement);
+                        methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
+                        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
+                            public MethodNode doCall(InnerClassNode it) {
+                                it.setEnclosingMethod(methodNode);
+                                return methodNode;
+                            }
+                        });
 
-        ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
-        modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
+                        if (ctx.KW_DEFAULT() != null) {
+                            methodNode.setAnnotationDefault(true);
+                        }
 
-        if (ctx.KW_DEFAULT() != null) {
-            statement = new ExpressionStatement(parseExpression(ctx.annotationParameter()));
-        }
 
-        String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
-
-        final MethodNode methodNode = classNode.addMethod(methodName, modifiers, returnType, params, exceptions, statement);
-        methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
-        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
-            public MethodNode doCall(InnerClassNode it) {
-                it.setEnclosingMethod(methodNode);
-                return methodNode;
-            }
-        });
-
-        if (ctx.KW_DEFAULT() != null) {
-            methodNode.setAnnotationDefault(true);
-        }
-
-        setupNodeLocation(methodNode, ctx);
-        attachAnnotations(methodNode, ctx.annotationClause());
-        methodNode.setSyntheticPublic(!hasVisibilityModifier);
-        return methodNode;
+                        return methodNode;
+                    }
+                }
+        );
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.FieldDeclarationContext ctx) {
