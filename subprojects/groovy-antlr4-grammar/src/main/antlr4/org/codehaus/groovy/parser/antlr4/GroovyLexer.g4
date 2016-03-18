@@ -1,4 +1,21 @@
-
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
 lexer grammar GroovyLexer;
 
 @members {
@@ -65,6 +82,7 @@ RBRACK : ']' { popBrace(); } -> popMode ;
 LCURVE : '{' { pushBrace(Brace.CURVE); tlePos = tokenIndex + 1; } -> pushMode(DEFAULT_MODE) ;
 RCURVE : '}' { popBrace(); } -> popMode ;
 
+
 MULTILINE_STRING:
     ('\'\'\'' STRING_ELEMENT*? '\'\'\''
     | '"""' STRING_ELEMENT*? '"""'
@@ -72,8 +90,13 @@ MULTILINE_STRING:
     | '"' STRING_ELEMENT*? (NL | '"')) -> type(STRING)
 ;
 
+
+MULTILINE_GSTRING_START : '"""' TQ_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
+
+
 SLASHY_STRING: '/' { isSlashyStringAlowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
 STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' QUOTED_STRING_ELEMENT*? '\'' ;
+
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 SLASHY_GSTRING_START: '/' SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
@@ -82,11 +105,20 @@ fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
 fragment STRING_ELEMENT: ESC_SEQUENCE | ~('$') ;
 fragment QUOTED_STRING_ELEMENT: ESC_SEQUENCE | ~('\'') ;
 fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '$') ;
+fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
+                            |  '"' { _input.LA(1) != '"' && _input.LA(2) != '"' }?
+                            | ~('$')
+                            ) ;
+
+mode TRIPLE_QUOTED_GSTRING_MODE ;
+    MULTILINE_GSTRING_END: '"""' -> type(GSTRING_END), popMode ;
+    MULTILINE_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+    MULTILINE_GSTRING_ELEMENT: TQ_STRING_ELEMENT -> more ;
 
 mode DOUBLE_QUOTED_GSTRING_MODE ;
     GSTRING_END: '"' -> popMode ;
     GSTRING_PART: '$' -> pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-    GSTRING_ELEMENT: (ESC_SEQUENCE | ~('$' | '"')) -> more ;
+    GSTRING_ELEMENT: DQ_STRING_ELEMENT -> more ;
 
 mode SLASHY_GSTRING_MODE ;
     SLASHY_GSTRING_END: '/' -> type(GSTRING_END), popMode ;

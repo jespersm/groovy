@@ -1,45 +1,41 @@
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
 package org.codehaus.groovy.parser.antlr4;
 
+import groovy.lang.Closure;
+import groovy.lang.IntRange;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.*;
 import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.antlr.EnumHelper;
+import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.*;
-import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
-import org.codehaus.groovy.parser.antlr4.util.StringUtil;
-import groovy.lang.Closure;
-import groovy.lang.IntRange;
-import org.antlr.v4.runtime.misc.NotNull;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeListener;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.codehaus.groovy.antlr.EnumHelper;
-import org.codehaus.groovy.parser.antlr4.GroovyLexer;
-import org.codehaus.groovy.parser.antlr4.GroovyParser;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotatedNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.ConstructorNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.GenericsType;
-import org.codehaus.groovy.ast.ImportNode;
-import org.codehaus.groovy.ast.InnerClassNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.ModuleNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.PropertyNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.parser.antlr4.util.StringUtil;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.collect;
-import static org.codehaus.groovy.runtime.DefaultGroovyMethods.multiply;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.codehaus.groovy.syntax.Numbers;
 import org.codehaus.groovy.syntax.SyntaxException;
@@ -53,6 +49,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
+
 @SuppressWarnings("ALL")
 public class ASTBuilder {
     private Logger log = Logger.getLogger(ASTBuilder.class.getName());
@@ -60,7 +58,8 @@ public class ASTBuilder {
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
         this.sourceUnit = sourceUnit;
-        moduleNode = new ModuleNode(sourceUnit);
+        this.moduleNode = new ModuleNode(sourceUnit);
+
 
         String text = null;
         try {
@@ -1042,7 +1041,8 @@ public class ASTBuilder {
         return setupNodeLocation(expression, ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.AnnotationParameterContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.AnnotationParameterContext ctx) {
         if (ctx instanceof GroovyParser.AnnotationParamArrayExpressionContext) {
             GroovyParser.AnnotationParamArrayExpressionContext c = DefaultGroovyMethods.asType(ctx, GroovyParser.AnnotationParamArrayExpressionContext.class);
             return setupNodeLocation(new ListExpression(collect(c.annotationParameter(), new Closure<Expression>(null, null) {
@@ -1180,14 +1180,19 @@ public class ASTBuilder {
         return parseConstantString(ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.GstringExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.GstringExpressionContext ctx) {
         return parseExpression(ctx.gstring());
     }
 
     public Expression parseExpression(GroovyParser.GstringContext ctx) {
         Closure<String> clearStart = new Closure<String>(null, null) {
             public String doCall(String it) {
-                return it.length() == 2
+                if (it.startsWith("\"\"\"")) {
+                    it = it.substring(2); // translate leading """ to "
+                }
+
+                return (it.length() == 2)
                        ? ""
                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 1, -2));
             }
@@ -1203,7 +1208,11 @@ public class ASTBuilder {
         };
         Closure<String> clearEnd = new Closure<String>(null, null) {
             public String doCall(String it) {
-                return it.length() == 1
+                if (it.endsWith("\"\"\"")) {
+                    it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
+                }
+
+                return (it.length() == 1)
                        ? ""
                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
             }

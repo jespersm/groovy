@@ -1,21 +1,28 @@
 
 package org.codehaus.groovy.parser.antlr4
 
-import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
-import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.FieldNode
+import org.codehaus.groovy.ast.GenericsType
+import org.codehaus.groovy.ast.PropertyNode
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.IfStatement
 import org.codehaus.groovy.control.ErrorCollector
+import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
 import org.codehaus.groovy.parser.antlr4.util.ASTWriter
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class MainTest extends Specification {
+    public static final String DEFAULT_RESOURCES_PATH = 'subprojects/groovy-antlr4-grammar/src/test/resources';
+    public static final String RESOURCES_PATH = new File(DEFAULT_RESOURCES_PATH).exists() ? DEFAULT_RESOURCES_PATH : 'src/test/resources';
+
 
 	@Unroll
     def "test ast builder for #path"() {
+        def filename = path;
+
         setup:
-        def file = new File('subprojects/groovy-antlr4-grammar/src/test/resources/' + path)
+        def file = new File("$RESOURCES_PATH/$path")
         def moduleNodeNew = new Main(Configuration.NEW).process(file)
         def moduleNodeOld = new Main(Configuration.OLD).process(file)
         def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
@@ -84,6 +91,7 @@ class MainTest extends Specification {
         "Unicode_Identifiers.groovy" | _
         "ClassMembers_String_Method_Name.groovy" | _
         "ScriptPart_String_Method_Name.groovy" | _
+        "Multiline_GString.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
@@ -103,7 +111,7 @@ class MainTest extends Specification {
 	@Unroll
     def "test invalid class modifiers #path"() {
         expect:
-        def file = new File('subprojects/groovy-antlr4-grammar/src/test/resources/' + path)
+        def file = new File("$RESOURCES_PATH/$path")
 
         def errorCollectorNew = new Main(Configuration.NEW).process(file).context.errorCollector
         def errorCollectorOld = new Main(Configuration.OLD).process(file).context.errorCollector
@@ -127,7 +135,7 @@ class MainTest extends Specification {
     @Unroll
     def "test invalid files #path"() {
         when:
-            def file = new File('subprojects/groovy-antlr4-grammar/src/test/resources/' + path)
+            def file = new File("$RESOURCES_PATH/$path")
         then:
             ! canLoad(file, Configuration.NEW) && ! canLoad(file, Configuration.OLD)
         where:
