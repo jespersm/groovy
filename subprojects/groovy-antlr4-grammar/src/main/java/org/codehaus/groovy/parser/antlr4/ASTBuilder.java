@@ -1193,15 +1193,20 @@ public class ASTBuilder {
         return parseExpression(ctx.gstring());
     }
 
+    private String replaceEscapes(String text) {
+        return StringUtil.replaceStandardEscapes(StringUtil.replaceHexEscapes(StringUtil.replaceOctalEscapes(text)));
+    }
+
     public Expression parseExpression(GroovyParser.GstringContext ctx) {
         Closure<String> clearStart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 if (it.startsWith("\"\"\"")) {
                     it = removeCR(it);
-                    it = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(it));
 
                     it = it.substring(2); // translate leading """ to "
                 }
+
+                it = replaceEscapes(it);
 
                 return (it.length() == 2)
                        ? ""
@@ -1212,7 +1217,7 @@ public class ASTBuilder {
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 it = removeCR(it);
-                it = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(it));
+                it = replaceEscapes(it);
 
                 return it.length() == 1
                        ? ""
@@ -1224,9 +1229,11 @@ public class ASTBuilder {
             public String doCall(String it) {
                 if (it.endsWith("\"\"\"")) {
                     it = removeCR(it);
-                    it = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(it));
+
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
                 }
+
+                it = replaceEscapes(it);
 
                 return (it.length() == 1)
                        ? ""
