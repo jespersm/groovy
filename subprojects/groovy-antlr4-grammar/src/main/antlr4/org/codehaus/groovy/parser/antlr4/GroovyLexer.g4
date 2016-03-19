@@ -30,7 +30,8 @@ lexer grammar GroovyLexer;
     long tokenIndex = 0;
     long tlePos = 0;
 
-    @Override public Token nextToken() {
+    @Override
+    public Token nextToken() {
         if (!(_interp instanceof PositionAdjustingLexerATNSimulator))
             _interp = new PositionAdjustingLexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
 
@@ -44,6 +45,7 @@ lexer grammar GroovyLexer;
         if (token.getType() == ROLLBACK_ONE) {
            ((PositionAdjustingLexerATNSimulator)getInterpreter()).resetAcceptPosition(getInputStream(), _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine - 1);
         }
+
         super.emit(token);
     }
 
@@ -69,6 +71,8 @@ lexer grammar GroovyLexer;
     }
 }
 
+
+
 LINE_COMMENT: '//' .*? '\n' -> type(NL) ;
 BLOCK_COMMENT: '/*' .*? '*/' -> type(NL) ;
 SHEBANG_COMMENT: { tokenIndex == 0 }? '#!' .*? '\n' -> skip ;
@@ -84,36 +88,42 @@ RCURVE : '}' { popBrace(); } -> popMode ;
 
 
 MULTILINE_STRING:
-    ('\'\'\'' STRING_ELEMENT*? '\'\'\''
-    | '"""' STRING_ELEMENT*? '"""'
-    | '\'' STRING_ELEMENT*? (NL | '\'')
-    | '"' STRING_ELEMENT*? (NL | '"')) -> type(STRING)
+    ('\'\'\'' TSQ_STRING_ELEMENT*? '\'\'\''
+    | '"""' TQ_STRING_ELEMENT*? '"""'
+    | '\'' SQ_STRING_ELEMENT*? (NL | '\'')      // Single quoted string support multiline???
+    | '"' DQ_STRING_ELEMENT*? (NL | '"')        // Single quoted string support multiline???
+    )  -> type(STRING)
 ;
 
 
-MULTILINE_GSTRING_START : '"""' TQ_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
+MULTILINE_GSTRING_START : '"""' TQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
 
 
 SLASHY_STRING: '/' { isSlashyStringAlowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
-STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' QUOTED_STRING_ELEMENT*? '\'' ;
+STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
 
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 SLASHY_GSTRING_START: '/' SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
-fragment STRING_ELEMENT: ESC_SEQUENCE | ~('$') ;
-fragment QUOTED_STRING_ELEMENT: ESC_SEQUENCE | ~('\'') ;
-fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '$') ;
+fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
+                             |  '\'' { _input.LA(1) != '\'' && _input.LA(2) != '\'' }?
+                             | ~('\\')
+                             )
+                             ;
+fragment SQ_STRING_ELEMENT: ESC_SEQUENCE | ~('\'' | '\\') ;
+fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '\\' | '$') ;
 fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
                             |  '"' { _input.LA(1) != '"' && _input.LA(2) != '"' }?
-                            | ~('$')
-                            ) ;
+                            | ~('\\' | '$')
+                            )
+                            ;
 
 mode TRIPLE_QUOTED_GSTRING_MODE ;
     MULTILINE_GSTRING_END: '"""' -> type(GSTRING_END), popMode ;
     MULTILINE_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-    MULTILINE_GSTRING_ELEMENT: TQ_STRING_ELEMENT -> more ;
+    MULTILINE_GSTRING_ELEMENT: TQ_STRING_ELEMENT  -> more ;
 
 mode DOUBLE_QUOTED_GSTRING_MODE ;
     GSTRING_END: '"' -> popMode ;

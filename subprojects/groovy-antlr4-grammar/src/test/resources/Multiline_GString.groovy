@@ -6,3 +6,8 @@
 """abc"${cde}"""
 """abc""${cde}"""
 """abc"${cde}'ef'"""
+"""
+Hello,
+   ${name}
+!
+"""

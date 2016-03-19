@@ -1146,13 +1146,17 @@ public class ASTBuilder {
         return setupNodeLocation(new ConstantExpression(!asBoolean(ctx.KW_FALSE()), true), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression cleanConstantStringLiteral(String text) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public ConstantExpression cleanConstantStringLiteral(String text) {
         Boolean isSlashy = text.startsWith("/");
 
-        if (text.startsWith("'''") || text.startsWith("\"\"\""))
+        if (text.startsWith("'''") || text.startsWith("\"\"\"")) {
+            text = removeCR(text); // remove CR in the multiline string
+
             text = text.length() == 6 ? "" : text.substring(3, text.length() - 3);
-        else if (text.startsWith("'") || text.startsWith("/") || text.startsWith("\""))
+        } else if (text.startsWith("'") || text.startsWith("/") || text.startsWith("\"")) {
             text = text.length() == 2 ? "" : text.substring(1, text.length() - 1);
+        }
 
         //Find escapes.
         if (!isSlashy)
@@ -1160,6 +1164,10 @@ public class ASTBuilder {
         else
             text = text.replace("\\/", "/");
         return new ConstantExpression(text, true);
+    }
+
+    private String removeCR(String text) {
+        return text.replace("\r\n", "\n");
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
@@ -1189,6 +1197,7 @@ public class ASTBuilder {
         Closure<String> clearStart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 if (it.startsWith("\"\"\"")) {
+                    it = removeCR(it);
                     it = it.substring(2); // translate leading """ to "
                 }
 
@@ -1209,6 +1218,7 @@ public class ASTBuilder {
         Closure<String> clearEnd = new Closure<String>(null, null) {
             public String doCall(String it) {
                 if (it.endsWith("\"\"\"")) {
+                    it = removeCR(it);
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
                 }
 
