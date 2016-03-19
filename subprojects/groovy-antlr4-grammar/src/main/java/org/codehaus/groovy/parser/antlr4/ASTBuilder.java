@@ -16,6 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
+
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -530,7 +531,7 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement{
+    private static class DeclarationList extends Statement {
         List<DeclarationExpression> declarations;
 
         DeclarationList(List<DeclarationExpression> declarations) {
@@ -1209,6 +1210,8 @@ public class ASTBuilder {
         };
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
+                it = removeCR(it);
+
                 return it.length() == 1
                        ? ""
                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));

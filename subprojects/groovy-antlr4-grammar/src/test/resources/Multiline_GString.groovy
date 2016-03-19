@@ -9,5 +9,5 @@
 """
 Hello,
    ${name}
-!
+! ${date}
 """
