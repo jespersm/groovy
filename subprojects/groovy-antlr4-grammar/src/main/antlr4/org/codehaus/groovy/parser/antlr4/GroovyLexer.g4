@@ -147,21 +147,23 @@ mode DEFAULT_MODE ;
 
 fragment SLASHY_ESCAPE: '\\' '/' ;
 fragment ESC_SEQUENCE: '\\' [btnfr"'\\] | OCTAL_ESC_SEQ | UNICODE_ESCAPE;
-fragment OCTAL_ESC_SEQ: '\\' [0-3]? [0-7]? [0-7] ;
+fragment OCTAL_ESC_SEQ: '\\' [0-3]? ZERO_TO_SEVEN? ZERO_TO_SEVEN ;
 fragment UNICODE_ESCAPE: '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
 // Numbers
 DECIMAL: (DIGITS ('.' DIGITS EXP_PART? | EXP_PART) DECIMAL_TYPE_MODIFIER? ) | DIGITS DECIMAL_ONLY_TYPE_MODIFIER ;
 INTEGER: (('0x' | '0X') HEX_DIGITS | '0' OCT_DIGITS | DEC_DIGITS) INTEGER_TYPE_MODIFIER? ;
 
-fragment DIGITS: [0-9] | [0-9][0-9_]*[0-9] ;
-fragment DEC_DIGITS: [0-9] | [1-9][0-9_]*[0-9] ;
-fragment OCT_DIGITS: [0-7] | [0-7][0-7_]*[0-7] ;
+fragment DIGITS: DIGIT | DIGIT (DIGIT | '_')* DIGIT ;
+fragment DEC_DIGITS: DIGIT | [1-9] (DIGIT | '_')* DIGIT ;
+fragment OCT_DIGITS: ZERO_TO_SEVEN | ZERO_TO_SEVEN (ZERO_TO_SEVEN | '_')* ZERO_TO_SEVEN ;
+fragment ZERO_TO_SEVEN: [0-7];
 fragment HEX_DIGITS: HEX_DIGIT | HEX_DIGIT (HEX_DIGIT | '_')* HEX_DIGIT ;
 fragment HEX_DIGIT : [0-9a-fA-F];
 
 fragment SIGN: ('-'|'+') ;
-fragment EXP_PART: ([eE] SIGN? [0-9]+) ;
+fragment EXP_PART: ([eE] SIGN? DIGIT+) ;
+fragment DIGIT: [0-9];
 
 fragment INTEGER_TYPE_MODIFIER: ('G' | 'L' | 'I' | 'g' | 'l' | 'i') ;
 fragment DECIMAL_TYPE_MODIFIER: ('G' | 'D' | 'F' | 'g' | 'd' | 'f') ;
