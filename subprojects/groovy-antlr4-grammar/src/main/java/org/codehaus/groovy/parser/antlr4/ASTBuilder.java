@@ -16,7 +16,6 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -531,7 +530,7 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement {
+    private static class DeclarationList extends Statement{
         List<DeclarationExpression> declarations;
 
         DeclarationList(List<DeclarationExpression> declarations) {
@@ -1199,6 +1198,8 @@ public class ASTBuilder {
             public String doCall(String it) {
                 if (it.startsWith("\"\"\"")) {
                     it = removeCR(it);
+                    it = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(it));
+
                     it = it.substring(2); // translate leading """ to "
                 }
 
@@ -1211,6 +1212,7 @@ public class ASTBuilder {
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 it = removeCR(it);
+                it = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(it));
 
                 return it.length() == 1
                        ? ""
@@ -1222,6 +1224,7 @@ public class ASTBuilder {
             public String doCall(String it) {
                 if (it.endsWith("\"\"\"")) {
                     it = removeCR(it);
+                    it = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(it));
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
                 }
 

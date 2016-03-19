@@ -92,6 +92,7 @@ class MainTest extends Specification {
         "ClassMembers_String_Method_Name.groovy" | _
         "ScriptPart_String_Method_Name.groovy" | _
         "Multiline_GString.groovy" | _
+        "Unescape_String_Literals_Issue7.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }

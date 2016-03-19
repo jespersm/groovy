@@ -1,0 +1,9 @@
+'hello\tworld'
+'''
+hello\tworld
+'''
+"hello\tworld"
+"""
+hello\t${name}!
+\t\t\t${date}
+"""
