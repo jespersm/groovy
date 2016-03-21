@@ -1,4 +1,21 @@
-
+/*
+ *  Licensed to the Apache Software Foundation (ASF) under one
+ *  or more contributor license agreements.  See the NOTICE file
+ *  distributed with this work for additional information
+ *  regarding copyright ownership.  The ASF licenses this file
+ *  to you under the Apache License, Version 2.0 (the
+ *  "License"); you may not use this file except in compliance
+ *  with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
 lexer grammar GroovyLexer;
 
 @members {
@@ -13,7 +30,8 @@ lexer grammar GroovyLexer;
     long tokenIndex = 0;
     long tlePos = 0;
 
-    @Override public Token nextToken() {
+    @Override
+    public Token nextToken() {
         if (!(_interp instanceof PositionAdjustingLexerATNSimulator))
             _interp = new PositionAdjustingLexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
 
@@ -27,6 +45,7 @@ lexer grammar GroovyLexer;
         if (token.getType() == ROLLBACK_ONE) {
            ((PositionAdjustingLexerATNSimulator)getInterpreter()).resetAcceptPosition(getInputStream(), _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine - 1);
         }
+
         super.emit(token);
     }
 
@@ -52,6 +71,8 @@ lexer grammar GroovyLexer;
     }
 }
 
+
+
 LINE_COMMENT: '//' .*? '\n' -> type(NL) ;
 BLOCK_COMMENT: '/*' .*? '*/' -> type(NL) ;
 SHEBANG_COMMENT: { tokenIndex == 0 }? '#!' .*? '\n' -> skip ;
@@ -65,28 +86,49 @@ RBRACK : ']' { popBrace(); } -> popMode ;
 LCURVE : '{' { pushBrace(Brace.CURVE); tlePos = tokenIndex + 1; } -> pushMode(DEFAULT_MODE) ;
 RCURVE : '}' { popBrace(); } -> popMode ;
 
+
 MULTILINE_STRING:
-    ('\'\'\'' STRING_ELEMENT*? '\'\'\''
-    | '"""' STRING_ELEMENT*? '"""'
-    | '\'' STRING_ELEMENT*? (NL | '\'')
-    | '"' STRING_ELEMENT*? (NL | '"')) -> type(STRING)
+    ('\'\'\'' TSQ_STRING_ELEMENT*? '\'\'\''
+    | '"""' TQ_STRING_ELEMENT*? '"""'
+    | '\'' SQ_STRING_ELEMENT*? (NL | '\'')      // Single quoted string support multiline???
+    | '"' DQ_STRING_ELEMENT*? (NL | '"')        // Single quoted string support multiline???
+    )  -> type(STRING)
 ;
 
+
+MULTILINE_GSTRING_START : '"""' TQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
+
+
 SLASHY_STRING: '/' { isSlashyStringAlowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
-STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' QUOTED_STRING_ELEMENT*? '\'' ;
+STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
+
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 SLASHY_GSTRING_START: '/' SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
-fragment STRING_ELEMENT: ESC_SEQUENCE | ~('$') ;
-fragment QUOTED_STRING_ELEMENT: ESC_SEQUENCE | ~('\'') ;
-fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '$') ;
+fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
+                             |  '\'' { _input.LA(1) != '\'' && _input.LA(2) != '\'' }?
+                             | ~('\\')
+                             )
+                             ;
+fragment SQ_STRING_ELEMENT: ESC_SEQUENCE | ~('\'' | '\\') ;
+fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '\\' | '$') ;
+fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
+                            |  '"' { _input.LA(1) != '"' && _input.LA(2) != '"' }?
+                            | ~('\\' | '$')
+                            )
+                            ;
+
+mode TRIPLE_QUOTED_GSTRING_MODE ;
+    MULTILINE_GSTRING_END: '"""' -> type(GSTRING_END), popMode ;
+    MULTILINE_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+    MULTILINE_GSTRING_ELEMENT: TQ_STRING_ELEMENT  -> more ;
 
 mode DOUBLE_QUOTED_GSTRING_MODE ;
     GSTRING_END: '"' -> popMode ;
     GSTRING_PART: '$' -> pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-    GSTRING_ELEMENT: (ESC_SEQUENCE | ~('$' | '"')) -> more ;
+    GSTRING_ELEMENT: DQ_STRING_ELEMENT -> more ;
 
 mode SLASHY_GSTRING_MODE ;
     SLASHY_GSTRING_END: '/' -> type(GSTRING_END), popMode ;
@@ -104,20 +146,24 @@ mode GSTRING_PATH ;
 mode DEFAULT_MODE ;
 
 fragment SLASHY_ESCAPE: '\\' '/' ;
-fragment ESC_SEQUENCE: '\\' [btnfr"'\\] | OCTAL_ESC_SEQ ;
-fragment OCTAL_ESC_SEQ: '\\' [0-3]? [0-7]? [0-7] ;
+fragment ESC_SEQUENCE: '\\' [btnfr"'\\] | OCTAL_ESC_SEQ | UNICODE_ESCAPE;
+fragment OCTAL_ESC_SEQ: '\\' [0-3]? ZERO_TO_SEVEN? ZERO_TO_SEVEN ;
+fragment UNICODE_ESCAPE: '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;
 
 // Numbers
 DECIMAL: (DIGITS ('.' DIGITS EXP_PART? | EXP_PART) DECIMAL_TYPE_MODIFIER? ) | DIGITS DECIMAL_ONLY_TYPE_MODIFIER ;
 INTEGER: (('0x' | '0X') HEX_DIGITS | '0' OCT_DIGITS | DEC_DIGITS) INTEGER_TYPE_MODIFIER? ;
 
-fragment DIGITS: [0-9] | [0-9][0-9_]*[0-9] ;
-fragment DEC_DIGITS: [0-9] | [1-9][0-9_]*[0-9] ;
-fragment OCT_DIGITS: [0-7] | [0-7][0-7_]*[0-7] ;
-fragment HEX_DIGITS: [0-9abcdefABCDEF] | [0-9abcdefABCDEF][0-9abcdefABCDEF_]*[0-9abcdefABCDEF] ;  // Simplify by extracting one digit element?
+fragment DIGITS: DIGIT | DIGIT (DIGIT | '_')* DIGIT ;
+fragment DEC_DIGITS: DIGIT | [1-9] (DIGIT | '_')* DIGIT ;
+fragment OCT_DIGITS: ZERO_TO_SEVEN | ZERO_TO_SEVEN (ZERO_TO_SEVEN | '_')* ZERO_TO_SEVEN ;
+fragment ZERO_TO_SEVEN: [0-7];
+fragment HEX_DIGITS: HEX_DIGIT | HEX_DIGIT (HEX_DIGIT | '_')* HEX_DIGIT ;
+fragment HEX_DIGIT : [0-9a-fA-F];
 
 fragment SIGN: ('-'|'+') ;
-fragment EXP_PART: ([eE] SIGN? [0-9]+) ;
+fragment EXP_PART: ([eE] SIGN? DIGIT+) ;
+fragment DIGIT: [0-9];
 
 fragment INTEGER_TYPE_MODIFIER: ('G' | 'L' | 'I' | 'g' | 'l' | 'i') ;
 fragment DECIMAL_TYPE_MODIFIER: ('G' | 'D' | 'F' | 'g' | 'd' | 'f') ;
