@@ -32,5 +32,12 @@ class Strings {
         '\t'
         "\n"
         "\\ "
+
+        '''
+            ''hello world''
+            'hello'
+            ''world'
+            'hi''
+        '''
     }
 }
