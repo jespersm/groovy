@@ -6,6 +6,7 @@
 """abc"${cde}"""
 """abc""${cde}"""
 """abc"${cde}'ef'"""
+"""abc""p""ahaha${cde}"""
 """
 Hello,
    ${name}

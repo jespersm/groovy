@@ -108,15 +108,15 @@ SLASHY_GSTRING_START: '/' SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pu
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
 fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
-                             |  '\'' { _input.LA(1) != '\'' && _input.LA(2) != '\'' }?
-                             | ~('\\')
+                             |  '\'' { !(_input.LA(1) == '\'' && _input.LA(2) == '\'') }?
+                             | ~('\\' | '\'')
                              )
                              ;
 fragment SQ_STRING_ELEMENT: ESC_SEQUENCE | ~('\'' | '\\') ;
 fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '\\' | '$') ;
 fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
-                            |  '"' { _input.LA(1) != '"' && _input.LA(2) != '"' }?
-                            | ~('\\' | '$')
+                            |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
+                            | ~('\\' | '"' | '$')
                             )
                             ;
 
