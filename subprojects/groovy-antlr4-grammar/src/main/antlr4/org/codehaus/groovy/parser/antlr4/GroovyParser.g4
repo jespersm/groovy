@@ -147,7 +147,11 @@ pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
 closureExpressionRule: LCURVE (argumentDeclarationList CLOSURE_ARG_SEPARATOR)? blockStatement? RCURVE ;
-gstring: GSTRING_START (gstringPathExpression | LCURVE expression? RCURVE) (GSTRING_PART (gstringPathExpression | LCURVE expression? RCURVE))* GSTRING_END ;
+gstringExpressionBody:( gstringPathExpression
+                      | LCURVE expression? RCURVE
+                      | closureExpressionRule
+                      );
+gstring:  GSTRING_START gstringExpressionBody (GSTRING_PART  gstringExpressionBody)* GSTRING_END ;
 
 // Special cases.
 // 1. Command expression(parenthesis-less expressions)

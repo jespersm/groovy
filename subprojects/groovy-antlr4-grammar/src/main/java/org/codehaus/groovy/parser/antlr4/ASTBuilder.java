@@ -923,16 +923,18 @@ public class ASTBuilder {
         return setupNodeLocation(new MapEntryExpression(keyExpr, valueExpr), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.ClosureExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.ClosureExpressionContext ctx) {
         return parseExpression(ctx.closureExpressionRule());
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.ClosureExpressionRuleContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.ClosureExpressionRuleContext ctx) {
         final Parameter[] parameters1 = parseParameters(ctx.argumentDeclarationList());
         Parameter[] parameters = asBoolean(ctx.argumentDeclarationList()) ? (
-            asBoolean(parameters1)
-            ? parameters1
-            : null) : (new Parameter[0]);
+                asBoolean(parameters1)
+                        ? parameters1
+                        : null) : (new Parameter[0]);
 
         Statement statement = parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class));
         return setupNodeLocation(new ClosureExpression(parameters, statement), ctx);
@@ -1209,8 +1211,8 @@ public class ASTBuilder {
                 it = replaceEscapes(it);
 
                 return (it.length() == 2)
-                       ? ""
-                       : DefaultGroovyMethods.getAt(it, new IntRange(true, 1, -2));
+                        ? ""
+                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 1, -2));
             }
 
         };
@@ -1220,8 +1222,8 @@ public class ASTBuilder {
                 it = replaceEscapes(it);
 
                 return it.length() == 1
-                       ? ""
-                       : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
+                        ? ""
+                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
             }
 
         };
@@ -1236,34 +1238,41 @@ public class ASTBuilder {
                 it = replaceEscapes(it);
 
                 return (it.length() == 1)
-                       ? ""
-                       : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
+                        ? ""
+                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
             }
 
         };
         Collection<String> strings = DefaultGroovyMethods.plus(DefaultGroovyMethods.plus(new ArrayList<String>(Arrays.asList(clearStart.call(ctx.GSTRING_START().getText()))), collect(ctx.GSTRING_PART(), new Closure<String>(null, null) {
             public String doCall(TerminalNode it) {return clearPart.call(it.getText());}
         })), new ArrayList<String>(Arrays.asList(clearEnd.call(ctx.GSTRING_END().getText()))));
-        final ArrayList expressions = new ArrayList();
+        final List<Expression> expressions = new ArrayList<Expression>();
 
         final List<ParseTree> children = ctx.children;
         DefaultGroovyMethods.eachWithIndex(children, new Closure<Collection>(null, null) {
             public Collection doCall(Object it, Integer i) {
-                if (it instanceof GroovyParser.ExpressionContext) {
-                    // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
-                    //noinspection GroovyAssignabilityCheck
-                    expressions.add((DefaultGroovyMethods.asType(parseExpression((GroovyParser.ExpressionContext)it), Expression.class)));
-                    return expressions;
-                } else if (it instanceof GroovyParser.GstringPathExpressionContext) {
-                    expressions.add(collectPathExpression((GroovyParser.GstringPathExpressionContext) it));
-                    return expressions;
-                } else if (it instanceof TerminalNode) {
-                    ParseTree next = i + 1 < children.size() ? children.get(i + 1) : null;
-                    if (next instanceof TerminalNode && (DefaultGroovyMethods.asType(next, TerminalNode.class)).getSymbol().getType() == GroovyParser.RCURVE) {
-                        expressions.add(new ConstantExpression(null));
+                if (it instanceof GroovyParser.GstringExpressionBodyContext) {
+                    GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
+
+                    if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
+                        expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
                         return expressions;
+                    } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
+                        expressions.add((DefaultGroovyMethods.asType(parseExpression(gstringExpressionBodyContext.closureExpressionRule()), Expression.class)));
+                        return expressions;
+                    } else {
+                        if (asBoolean(gstringExpressionBodyContext.expression())) {
+                            // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
+                            //noinspection GroovyAssignabilityCheck
+                            expressions.add((DefaultGroovyMethods.asType(parseExpression(gstringExpressionBodyContext.expression()), Expression.class)));
+                            return expressions;
+                        } else { // handle empty expression e.g. "GString ${}"
+                            expressions.add(new ConstantExpression(null));
+                            return expressions;
+                        }
                     }
                 }
+
                 return null;
             }
 
