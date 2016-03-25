@@ -22,6 +22,17 @@ options { tokenVocab = GroovyLexer; }
 
 @members {
     String currentClassName = null; // Used for correct constructor recognition.
+
+    boolean isDeclarationRuleInExpressionEnabed = true;
+    boolean isDeclarationRuleInExpressionEnabed() {
+        return isDeclarationRuleInExpressionEnabed;
+    }
+    void enableDeclarationRuleInExpression() {
+        isDeclarationRuleInExpressionEnabed = true;
+    }
+    void disableDeclarationRuleInExpression() {
+        isDeclarationRuleInExpressionEnabed = false;
+    }
 }
 
 compilationUnit: SHEBANG_COMMENT? (NL*) packageDefinition? (NL | SEMICOLON)* (importStatement (NL | SEMICOLON)*)* (NL | SEMICOLON)* (classDeclaration | enumDeclaration | NL)* (NL | SEMICOLON)* (scriptPart (NL | SEMICOLON)+)* (scriptPart)? (NL | SEMICOLON)* EOF;
@@ -147,7 +158,14 @@ pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
 closureExpressionRule: LCURVE (argumentDeclarationList CLOSURE_ARG_SEPARATOR)? blockStatement? RCURVE ;
-gstringExpressionBody:( gstringPathExpression
+gstringExpressionBody
+@init {
+    disableDeclarationRuleInExpression();
+}
+@after {
+    enableDeclarationRuleInExpression();
+}
+                     :( gstringPathExpression
                       | LCURVE expression? RCURVE
                       | closureExpressionRule
                       );
@@ -171,7 +189,7 @@ annotationParameter:
 ;
 
 expression:
-    declarationRule #declarationExpression
+      {isDeclarationRuleInExpressionEnabed()}?  declarationRule #declarationExpression
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression

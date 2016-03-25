@@ -16,6 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
+
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -530,7 +531,7 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement{
+    private static class DeclarationList extends Statement {
         List<DeclarationExpression> declarations;
 
         DeclarationList(List<DeclarationExpression> declarations) {
@@ -1251,29 +1252,41 @@ public class ASTBuilder {
         final List<ParseTree> children = ctx.children;
         DefaultGroovyMethods.eachWithIndex(children, new Closure<Collection>(null, null) {
             public Collection doCall(Object it, Integer i) {
-                if (it instanceof GroovyParser.GstringExpressionBodyContext) {
-                    GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
+                if (!(it instanceof GroovyParser.GstringExpressionBodyContext)) {
+                    return null;
+                }
 
-                    if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
-                        expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
+                GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
+
+                if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
+                    expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
+                    return expressions;
+                } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
+                    GroovyParser.ClosureExpressionRuleContext closureExpressionRule = gstringExpressionBodyContext.closureExpressionRule();
+                    Expression expression = parseExpression(closureExpressionRule);
+
+                    if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
+                        MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
+                        methodCallExpression.setImplicitThis(true);
+
+                        expressions.add(methodCallExpression);
                         return expressions;
-                    } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
-                        expressions.add((DefaultGroovyMethods.asType(parseExpression(gstringExpressionBodyContext.closureExpressionRule()), Expression.class)));
+                    }
+
+                    expressions.add(expression);
+                    return expressions;
+                } else {
+                    if (asBoolean(gstringExpressionBodyContext.expression())) {
+                        // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
+                        //noinspection GroovyAssignabilityCheck
+                        expressions.add(parseExpression(gstringExpressionBodyContext.expression()));
                         return expressions;
-                    } else {
-                        if (asBoolean(gstringExpressionBodyContext.expression())) {
-                            // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
-                            //noinspection GroovyAssignabilityCheck
-                            expressions.add((DefaultGroovyMethods.asType(parseExpression(gstringExpressionBodyContext.expression()), Expression.class)));
-                            return expressions;
-                        } else { // handle empty expression e.g. "GString ${}"
-                            expressions.add(new ConstantExpression(null));
-                            return expressions;
-                        }
+                    } else { // handle empty expression e.g. "GString ${}"
+                        expressions.add(new ConstantExpression(null));
+                        return expressions;
                     }
                 }
 
-                return null;
             }
 
         });
