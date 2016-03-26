@@ -47,6 +47,7 @@ lexer grammar GroovyLexer;
         return super.nextToken();
     }
 
+    @Override
     public void emit(Token token) {
         tokenIndex++;
 
@@ -56,7 +57,7 @@ lexer grammar GroovyLexer;
         }
 
         //System.out.println("EM: " + tokenNames[lastTokenType != -1 ? lastTokenType : 0] + ": " + lastTokenType + " TLE = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex + " " + token.getText());
-        if (token.getType() == ROLLBACK_ONE) {
+        if (tokenType == ROLLBACK_ONE) {
            ((PositionAdjustingLexerATNSimulator)getInterpreter()).resetAcceptPosition(getInputStream(), _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine - 1);
         }
 
