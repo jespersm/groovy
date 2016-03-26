@@ -21,17 +21,17 @@ parser grammar GroovyParser;
 options { tokenVocab = GroovyLexer; }
 
 @members {
-    String currentClassName = null; // Used for correct constructor recognition.
+    private String currentClassName = null; // Used for correct constructor recognition.
+    private boolean declarationRuleInExpressionEnabled = true;
 
-    boolean isDeclarationRuleInExpressionEnabed = true;
-    boolean isDeclarationRuleInExpressionEnabed() {
-        return isDeclarationRuleInExpressionEnabed;
+    private boolean isDeclarationRuleInExpressionEnabled() {
+        return declarationRuleInExpressionEnabled;
     }
-    void enableDeclarationRuleInExpression() {
-        isDeclarationRuleInExpressionEnabed = true;
+    private void enableDeclarationRuleInExpression() {
+        declarationRuleInExpressionEnabled = true;
     }
-    void disableDeclarationRuleInExpression() {
-        isDeclarationRuleInExpressionEnabed = false;
+    private void disableDeclarationRuleInExpression() {
+        declarationRuleInExpressionEnabled = false;
     }
 }
 
@@ -189,7 +189,7 @@ annotationParameter:
 ;
 
 expression:
-      {isDeclarationRuleInExpressionEnabed()}?  declarationRule #declarationExpression
+      {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
