@@ -22,7 +22,7 @@ options { tokenVocab = GroovyLexer; }
 
 @members {
     private String currentClassName = null; // Used for correct constructor recognition.
-    private boolean declarationRuleInExpressionEnabled = true;
+    private boolean declarationRuleInExpressionEnabled = false;
 
     private boolean isDeclarationRuleInExpressionEnabled() {
         return declarationRuleInExpressionEnabled;
@@ -123,9 +123,9 @@ statement:
     declarationRule #declarationStatement
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
-    | KW_FOR LPAREN (expression)? SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
-    | KW_FOR LPAREN typeDeclaration? IDENTIFIER KW_IN expression RPAREN NL* statementBlock #forInStatement
-    | KW_FOR LPAREN typeDeclaration IDENTIFIER COLON expression RPAREN NL* statementBlock #forColonStatement
+    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} (expression)? {disableDeclarationRuleInExpression();} SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
+    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} typeDeclaration? IDENTIFIER {disableDeclarationRuleInExpression();} KW_IN expression RPAREN NL* statementBlock #forInStatement
+    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} typeDeclaration  IDENTIFIER {disableDeclarationRuleInExpression();} COLON expression RPAREN NL* statementBlock #forColonStatement
     | KW_IF LPAREN expression RPAREN NL* statementBlock NL* (KW_ELSE NL* statementBlock)? #ifStatement
     | KW_WHILE LPAREN expression RPAREN NL* statementBlock #whileStatement
     | KW_SWITCH LPAREN expression RPAREN NL* LCURVE
@@ -158,14 +158,7 @@ pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
 closureExpressionRule: LCURVE (argumentDeclarationList CLOSURE_ARG_SEPARATOR)? blockStatement? RCURVE ;
-gstringExpressionBody
-@init {
-    disableDeclarationRuleInExpression();
-}
-@after {
-    enableDeclarationRuleInExpression();
-}
-                     :( gstringPathExpression
+gstringExpressionBody:( gstringPathExpression
                       | LCURVE expression? RCURVE
                       | closureExpressionRule
                       );
