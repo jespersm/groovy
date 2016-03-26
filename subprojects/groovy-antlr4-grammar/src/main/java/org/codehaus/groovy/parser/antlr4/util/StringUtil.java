@@ -44,4 +44,8 @@ public class StringUtil {
 		    }
 	    });
     }
+
+	public static String replaceEscapes(String text) {
+        return replaceStandardEscapes(replaceHexEscapes(replaceOctalEscapes(text)));
+    }
 }

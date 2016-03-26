@@ -16,7 +16,6 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -531,7 +530,7 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement {
+    private static class DeclarationList extends Statement{
         List<DeclarationExpression> declarations;
 
         DeclarationList(List<DeclarationExpression> declarations) {
@@ -1163,7 +1162,7 @@ public class ASTBuilder {
 
         //Find escapes.
         if (!isSlashy)
-            text = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(text));
+            text = StringUtil.replaceEscapes(text);
         else
             text = text.replace("\\/", "/");
         return new ConstantExpression(text, true);
@@ -1183,21 +1182,19 @@ public class ASTBuilder {
         return setupNodeLocation(cleanConstantStringLiteral(token.getText()), token);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression parseExpression(GroovyParser.ConstantExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public ConstantExpression parseExpression(GroovyParser.ConstantExpressionContext ctx) {
         return parseConstantString(ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression parseExpression(GroovyParser.AnnotationParamStringExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public ConstantExpression parseExpression(GroovyParser.AnnotationParamStringExpressionContext ctx) {
         return parseConstantString(ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
     public Expression parseExpression(GroovyParser.GstringExpressionContext ctx) {
         return parseExpression(ctx.gstring());
-    }
-
-    private String replaceEscapes(String text) {
-        return StringUtil.replaceStandardEscapes(StringUtil.replaceHexEscapes(StringUtil.replaceOctalEscapes(text)));
     }
 
     public Expression parseExpression(GroovyParser.GstringContext ctx) {
@@ -1209,7 +1206,7 @@ public class ASTBuilder {
                     it = it.substring(2); // translate leading """ to "
                 }
 
-                it = replaceEscapes(it);
+                it = StringUtil.replaceEscapes(it);
 
                 return (it.length() == 2)
                         ? ""
@@ -1220,7 +1217,7 @@ public class ASTBuilder {
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 it = removeCR(it);
-                it = replaceEscapes(it);
+                it = StringUtil.replaceEscapes(it);
 
                 return it.length() == 1
                         ? ""
@@ -1236,7 +1233,7 @@ public class ASTBuilder {
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
                 }
 
-                it = replaceEscapes(it);
+                it = StringUtil.replaceEscapes(it);
 
                 return (it.length() == 1)
                         ? ""
