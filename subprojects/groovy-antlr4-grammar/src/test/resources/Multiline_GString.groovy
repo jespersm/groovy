@@ -12,3 +12,13 @@ Hello,
    ${name}
 ! ${date}
 """
+""" Hello,
+${
+    def name = 'world'
+    return name
+}"""
+""" Hello,
+${->
+    def name = 'world'
+    return name
+}"""

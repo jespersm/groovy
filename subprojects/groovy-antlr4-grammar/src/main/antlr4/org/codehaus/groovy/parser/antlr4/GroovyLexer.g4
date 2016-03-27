@@ -18,17 +18,26 @@
  */
 lexer grammar GroovyLexer;
 
+@header {
+    import java.util.ArrayDeque;
+    import java.util.Arrays;
+    import java.util.Deque;
+    import java.util.List;
+}
+
 @members {
-    enum Brace {
+    public static final List<Integer> ALLOWED_OP_LIST = Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
+
+    private static enum Brace {
        ROUND,
        SQUARE,
-       CURVE,
+       CURVE
     };
-    java.util.Deque<Brace> braceStack = new java.util.ArrayDeque<Brace>();
-    Brace topBrace = null;
-    int lastTokenType = 0;
-    long tokenIndex = 0;
-    long tlePos = 0;
+    private Deque<Brace> braceStack = new ArrayDeque<Brace>();
+    private Brace topBrace = null;
+    private int lastTokenType = 0;
+    private long tokenIndex = 0;
+    private long tlePos = 0;
 
     @Override
     public Token nextToken() {
@@ -38,11 +47,17 @@ lexer grammar GroovyLexer;
         return super.nextToken();
     }
 
+    @Override
     public void emit(Token token) {
         tokenIndex++;
-        lastTokenType = token.getType();
+
+        int tokenType = token.getType();
+        if (NL != tokenType) { // newline should be ignored
+            lastTokenType = tokenType;
+        }
+
         //System.out.println("EM: " + tokenNames[lastTokenType != -1 ? lastTokenType : 0] + ": " + lastTokenType + " TLE = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex + " " + token.getText());
-        if (token.getType() == ROLLBACK_ONE) {
+        if (tokenType == ROLLBACK_ONE) {
            ((PositionAdjustingLexerATNSimulator)getInterpreter()).resetAcceptPosition(getInputStream(), _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine - 1);
         }
 
@@ -61,10 +76,10 @@ lexer grammar GroovyLexer;
         //System.out.println("> " + topBrace);
     }
 
-    public boolean isSlashyStringAlowed() {
-        java.util.List<Integer> ints = java.util.Arrays.asList(PLUS, NOT, BNOT, MULT); // FIXME add more operators.
+
+    public boolean isSlashyStringAllowed() {
         //System.out.println("SP: " + " TLECheck = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex);
-        boolean isLastTokenOp = ints.contains(Integer.valueOf(lastTokenType));
+        boolean isLastTokenOp = ALLOWED_OP_LIST.contains(Integer.valueOf(lastTokenType));
         boolean res = isLastTokenOp || tlePos == tokenIndex;
         //System.out.println("SP: " + tokenNames[lastTokenType] + ": " + lastTokenType + " res " + res + (res ? ( isLastTokenOp ? " op" : " tle") : ""));
         return res;
@@ -89,22 +104,20 @@ RCURVE : '}' { popBrace(); } -> popMode ;
 
 MULTILINE_STRING:
     ('\'\'\'' TSQ_STRING_ELEMENT*? '\'\'\''
-    | '"""' TQ_STRING_ELEMENT*? '"""'
-    | '\'' SQ_STRING_ELEMENT*? (NL | '\'')      // Single quoted string support multiline???
-    | '"' DQ_STRING_ELEMENT*? (NL | '"')        // Single quoted string support multiline???
+    | '"""' TDQ_STRING_ELEMENT*? '"""'
     )  -> type(STRING)
 ;
 
 
-MULTILINE_GSTRING_START : '"""' TQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
+MULTILINE_GSTRING_START : '"""' TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
 
 
-SLASHY_STRING: '/' { isSlashyStringAlowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
+SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
 STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
 
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-SLASHY_GSTRING_START: '/' SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+SLASHY_GSTRING_START: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
 fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
@@ -114,7 +127,7 @@ fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
                              ;
 fragment SQ_STRING_ELEMENT: ESC_SEQUENCE | ~('\'' | '\\') ;
 fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '\\' | '$') ;
-fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
+fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE
                             |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
                             | ~('\\' | '"' | '$')
                             )
@@ -123,7 +136,7 @@ fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
 mode TRIPLE_QUOTED_GSTRING_MODE ;
     MULTILINE_GSTRING_END: '"""' -> type(GSTRING_END), popMode ;
     MULTILINE_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-    MULTILINE_GSTRING_ELEMENT: TQ_STRING_ELEMENT  -> more ;
+    MULTILINE_GSTRING_ELEMENT: TDQ_STRING_ELEMENT  -> more ;
 
 mode DOUBLE_QUOTED_GSTRING_MODE ;
     GSTRING_END: '"' -> popMode ;

@@ -21,7 +21,18 @@ parser grammar GroovyParser;
 options { tokenVocab = GroovyLexer; }
 
 @members {
-    String currentClassName = null; // Used for correct constructor recognition.
+    private String currentClassName = null; // Used for correct constructor recognition.
+    private boolean declarationRuleInExpressionEnabled = false;
+
+    private boolean isDeclarationRuleInExpressionEnabled() {
+        return declarationRuleInExpressionEnabled;
+    }
+    private void enableDeclarationRuleInExpression() {
+        declarationRuleInExpressionEnabled = true;
+    }
+    private void disableDeclarationRuleInExpression() {
+        declarationRuleInExpressionEnabled = false;
+    }
 }
 
 compilationUnit: SHEBANG_COMMENT? (NL*) packageDefinition? (NL | SEMICOLON)* (importStatement (NL | SEMICOLON)*)* (NL | SEMICOLON)* (classDeclaration | enumDeclaration | NL)* (NL | SEMICOLON)* (scriptPart (NL | SEMICOLON)+)* (scriptPart)? (NL | SEMICOLON)* EOF;
@@ -112,9 +123,9 @@ statement:
     declarationRule #declarationStatement
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
-    | KW_FOR LPAREN (expression)? SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
-    | KW_FOR LPAREN typeDeclaration? IDENTIFIER KW_IN expression RPAREN NL* statementBlock #forInStatement
-    | KW_FOR LPAREN typeDeclaration IDENTIFIER COLON expression RPAREN NL* statementBlock #forColonStatement
+    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} (expression)? {disableDeclarationRuleInExpression();} SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
+    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} typeDeclaration? IDENTIFIER {disableDeclarationRuleInExpression();} KW_IN expression RPAREN NL* statementBlock #forInStatement
+    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} typeDeclaration  IDENTIFIER {disableDeclarationRuleInExpression();} COLON expression RPAREN NL* statementBlock #forColonStatement
     | KW_IF LPAREN expression RPAREN NL* statementBlock NL* (KW_ELSE NL* statementBlock)? #ifStatement
     | KW_WHILE LPAREN expression RPAREN NL* statementBlock #whileStatement
     | KW_SWITCH LPAREN expression RPAREN NL* LCURVE
@@ -147,7 +158,11 @@ pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
 closureExpressionRule: LCURVE (argumentDeclarationList CLOSURE_ARG_SEPARATOR)? blockStatement? RCURVE ;
-gstring: GSTRING_START (gstringPathExpression | LCURVE expression? RCURVE) (GSTRING_PART (gstringPathExpression | LCURVE expression? RCURVE))* GSTRING_END ;
+gstringExpressionBody:( gstringPathExpression
+                      | LCURVE expression? RCURVE
+                      | closureExpressionRule
+                      );
+gstring:  GSTRING_START gstringExpressionBody (GSTRING_PART  gstringExpressionBody)* GSTRING_END ;
 
 // Special cases.
 // 1. Command expression(parenthesis-less expressions)
@@ -167,7 +182,7 @@ annotationParameter:
 ;
 
 expression:
-    declarationRule #declarationExpression
+      {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
@@ -185,21 +200,37 @@ expression:
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
     | expression POWER expression #binaryExpression
-    | expression (MULT | DIV | MOD) expression #binaryExpression
-    | expression (PLUS | MINUS) expression #binaryExpression
-    | expression (LSHIFT | GT GT | GT GT GT | RANGE | ORANGE) expression #binaryExpression
-    | expression (((LT | LTE | GT | GTE | KW_IN) expression) | ((KW_AS | KW_INSTANCEOF) genericClassNameExpression)) #binaryExpression
-    | expression (EQUAL | UNEQUAL | SPACESHIP) expression #binaryExpression
-    | expression (FIND | MATCH) expression #binaryExpression
+    | expression MULT expression #binaryExpression
+    | expression DIV expression #binaryExpression
+    | expression MOD expression #binaryExpression
+    | expression PLUS expression #binaryExpression
+    | expression MINUS expression #binaryExpression
+    | expression LSHIFT expression #binaryExpression
+    | expression GT GT expression #binaryExpression
+    | expression GT GT GT expression #binaryExpression
+    | expression RANGE expression #binaryExpression
+    | expression ORANGE expression #binaryExpression
+    | expression GT expression #binaryExpression
+    | expression GTE expression #binaryExpression
+    | expression LT expression #binaryExpression
+    | expression LTE expression #binaryExpression
+    | expression KW_IN expression #binaryExpression
+    | expression KW_AS genericClassNameExpression #binaryExpression
+    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
+    | expression EQUAL expression #binaryExpression
+    | expression UNEQUAL expression #binaryExpression
+    | expression SPACESHIP expression #binaryExpression
+    | expression FIND expression #binaryExpression
+    | expression MATCH expression #binaryExpression
     | expression BAND expression #binaryExpression
     |<assoc=right> expression XOR expression #binaryExpression
     | expression BOR expression #binaryExpression
     | expression AND expression #binaryExpression
     | expression OR expression #binaryExpression
-    | expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
+    |<assoc=right> expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression ELVIS NL* expression #elvisExpression
-    | expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
     | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
+    |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
     | STRING #constantExpression
     | gstring #gstringExpression
     | DECIMAL #constantDecimalExpression

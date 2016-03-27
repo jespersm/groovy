@@ -923,22 +923,25 @@ public class ASTBuilder {
         return setupNodeLocation(new MapEntryExpression(keyExpr, valueExpr), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.ClosureExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.ClosureExpressionContext ctx) {
         return parseExpression(ctx.closureExpressionRule());
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.ClosureExpressionRuleContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.ClosureExpressionRuleContext ctx) {
         final Parameter[] parameters1 = parseParameters(ctx.argumentDeclarationList());
         Parameter[] parameters = asBoolean(ctx.argumentDeclarationList()) ? (
-            asBoolean(parameters1)
-            ? parameters1
-            : null) : (new Parameter[0]);
+                asBoolean(parameters1)
+                        ? parameters1
+                        : null) : (new Parameter[0]);
 
         Statement statement = parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class));
         return setupNodeLocation(new ClosureExpression(parameters, statement), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.BinaryExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.BinaryExpressionContext ctx) {
         TerminalNode c = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
         int i = 1;
         for (ParseTree next = ctx.getChild(i + 1); next instanceof TerminalNode && ((TerminalNode)next).getSymbol().getType() == GroovyParser.GT; next = ctx.getChild(i + 1))
@@ -1160,7 +1163,7 @@ public class ASTBuilder {
 
         //Find escapes.
         if (!isSlashy)
-            text = StringUtil.replaceStandardEscapes(StringUtil.replaceOctalEscapes(text));
+            text = StringUtil.replaceEscapes(text);
         else
             text = text.replace("\\/", "/");
         return new ConstantExpression(text, true);
@@ -1180,21 +1183,19 @@ public class ASTBuilder {
         return setupNodeLocation(cleanConstantStringLiteral(token.getText()), token);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression parseExpression(GroovyParser.ConstantExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public ConstantExpression parseExpression(GroovyParser.ConstantExpressionContext ctx) {
         return parseConstantString(ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public ConstantExpression parseExpression(GroovyParser.AnnotationParamStringExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public ConstantExpression parseExpression(GroovyParser.AnnotationParamStringExpressionContext ctx) {
         return parseConstantString(ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
     public Expression parseExpression(GroovyParser.GstringExpressionContext ctx) {
         return parseExpression(ctx.gstring());
-    }
-
-    private String replaceEscapes(String text) {
-        return StringUtil.replaceStandardEscapes(StringUtil.replaceHexEscapes(StringUtil.replaceOctalEscapes(text)));
     }
 
     public Expression parseExpression(GroovyParser.GstringContext ctx) {
@@ -1206,22 +1207,22 @@ public class ASTBuilder {
                     it = it.substring(2); // translate leading """ to "
                 }
 
-                it = replaceEscapes(it);
+                it = StringUtil.replaceEscapes(it);
 
                 return (it.length() == 2)
-                       ? ""
-                       : DefaultGroovyMethods.getAt(it, new IntRange(true, 1, -2));
+                        ? ""
+                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 1, -2));
             }
 
         };
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 it = removeCR(it);
-                it = replaceEscapes(it);
+                it = StringUtil.replaceEscapes(it);
 
                 return it.length() == 1
-                       ? ""
-                       : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
+                        ? ""
+                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
             }
 
         };
@@ -1233,38 +1234,57 @@ public class ASTBuilder {
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
                 }
 
-                it = replaceEscapes(it);
+                it = StringUtil.replaceEscapes(it);
 
                 return (it.length() == 1)
-                       ? ""
-                       : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
+                        ? ""
+                        : DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -2));
             }
 
         };
         Collection<String> strings = DefaultGroovyMethods.plus(DefaultGroovyMethods.plus(new ArrayList<String>(Arrays.asList(clearStart.call(ctx.GSTRING_START().getText()))), collect(ctx.GSTRING_PART(), new Closure<String>(null, null) {
             public String doCall(TerminalNode it) {return clearPart.call(it.getText());}
         })), new ArrayList<String>(Arrays.asList(clearEnd.call(ctx.GSTRING_END().getText()))));
-        final ArrayList expressions = new ArrayList();
+        final List<Expression> expressions = new ArrayList<Expression>();
 
         final List<ParseTree> children = ctx.children;
         DefaultGroovyMethods.eachWithIndex(children, new Closure<Collection>(null, null) {
             public Collection doCall(Object it, Integer i) {
-                if (it instanceof GroovyParser.ExpressionContext) {
-                    // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
-                    //noinspection GroovyAssignabilityCheck
-                    expressions.add((DefaultGroovyMethods.asType(parseExpression((GroovyParser.ExpressionContext)it), Expression.class)));
+                if (!(it instanceof GroovyParser.GstringExpressionBodyContext)) {
+                    return null;
+                }
+
+                GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
+
+                if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
+                    expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
                     return expressions;
-                } else if (it instanceof GroovyParser.GstringPathExpressionContext) {
-                    expressions.add(collectPathExpression((GroovyParser.GstringPathExpressionContext) it));
+                } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
+                    GroovyParser.ClosureExpressionRuleContext closureExpressionRule = gstringExpressionBodyContext.closureExpressionRule();
+                    Expression expression = parseExpression(closureExpressionRule);
+
+                    if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
+                        MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
+                        methodCallExpression.setImplicitThis(true);
+
+                        expressions.add(methodCallExpression);
+                        return expressions;
+                    }
+
+                    expressions.add(expression);
                     return expressions;
-                } else if (it instanceof TerminalNode) {
-                    ParseTree next = i + 1 < children.size() ? children.get(i + 1) : null;
-                    if (next instanceof TerminalNode && (DefaultGroovyMethods.asType(next, TerminalNode.class)).getSymbol().getType() == GroovyParser.RCURVE) {
+                } else {
+                    if (asBoolean(gstringExpressionBodyContext.expression())) {
+                        // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
+                        //noinspection GroovyAssignabilityCheck
+                        expressions.add(parseExpression(gstringExpressionBodyContext.expression()));
+                        return expressions;
+                    } else { // handle empty expression e.g. "GString ${}"
                         expressions.add(new ConstantExpression(null));
                         return expressions;
                     }
                 }
-                return null;
+
             }
 
         });
