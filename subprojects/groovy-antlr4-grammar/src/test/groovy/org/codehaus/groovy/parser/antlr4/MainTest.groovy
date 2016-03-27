@@ -16,8 +16,6 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-
-
 package org.codehaus.groovy.parser.antlr4
 
 import org.codehaus.groovy.ast.FieldNode
@@ -114,6 +112,7 @@ class MainTest extends Specification {
         "Unescape_String_Literals_Issue7.groovy" | _
         "GString-closure-and-expression_issue12.groovy" | _
         "Slashy_Strings.groovy" | _
+        "Expression_Precedence.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }

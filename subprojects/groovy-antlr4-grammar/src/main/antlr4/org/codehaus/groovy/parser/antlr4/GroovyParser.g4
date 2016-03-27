@@ -200,12 +200,28 @@ expression:
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
     | expression POWER expression #binaryExpression
-    | expression (MULT | DIV | MOD) expression #binaryExpression
-    | expression (PLUS | MINUS) expression #binaryExpression
-    | expression (LSHIFT | GT GT | GT GT GT | RANGE | ORANGE) expression #binaryExpression
-    | expression (((LT | LTE | GT | GTE | KW_IN) expression) | ((KW_AS | KW_INSTANCEOF) genericClassNameExpression)) #binaryExpression
-    | expression (EQUAL | UNEQUAL | SPACESHIP) expression #binaryExpression
-    | expression (FIND | MATCH) expression #binaryExpression
+    | expression MULT expression #binaryExpression
+    | expression DIV expression #binaryExpression
+    | expression MOD expression #binaryExpression
+    | expression PLUS expression #binaryExpression
+    | expression MINUS expression #binaryExpression
+    | expression LSHIFT expression #binaryExpression
+    | expression GT GT expression #binaryExpression
+    | expression GT GT GT expression #binaryExpression
+    | expression RANGE expression #binaryExpression
+    | expression ORANGE expression #binaryExpression
+    | expression GT expression #binaryExpression
+    | expression GTE expression #binaryExpression
+    | expression LT expression #binaryExpression
+    | expression LTE expression #binaryExpression
+    | expression KW_IN expression #binaryExpression
+    | expression KW_AS genericClassNameExpression #binaryExpression
+    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
+    | expression EQUAL expression #binaryExpression
+    | expression UNEQUAL expression #binaryExpression
+    | expression SPACESHIP expression #binaryExpression
+    | expression FIND expression #binaryExpression
+    | expression MATCH expression #binaryExpression
     | expression BAND expression #binaryExpression
     |<assoc=right> expression XOR expression #binaryExpression
     | expression BOR expression #binaryExpression

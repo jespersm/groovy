@@ -26,8 +26,8 @@ p25=[1,2]*./plus/(2)
 p26=[1,2]*./${op}/(2)
 p27=1?:/cd/
 p28=1?:/a${c}b/
-// p29=1>2?/ab/:/cd/                 // FIXME failed due to priority of the ternaryExpression
-// p30=1>2?/c${f}d/:/c${f}d/         // FIXME failed due to priority of the ternaryExpression
+p29=1>2?/ab/:/cd/
+p30=1>2?/c${f}d/:/c${f}d/
 p29=true?
             /ab/:
                     /cd/

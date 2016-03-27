@@ -940,7 +940,8 @@ public class ASTBuilder {
         return setupNodeLocation(new ClosureExpression(parameters, statement), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.BinaryExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.BinaryExpressionContext ctx) {
         TerminalNode c = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
         int i = 1;
         for (ParseTree next = ctx.getChild(i + 1); next instanceof TerminalNode && ((TerminalNode)next).getSymbol().getType() == GroovyParser.GT; next = ctx.getChild(i + 1))
