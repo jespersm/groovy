@@ -104,14 +104,12 @@ RCURVE : '}' { popBrace(); } -> popMode ;
 
 MULTILINE_STRING:
     ('\'\'\'' TSQ_STRING_ELEMENT*? '\'\'\''
-    | '"""' TQ_STRING_ELEMENT*? '"""'
-    | '\'' SQ_STRING_ELEMENT*? (NL | '\'')      // Single quoted string support multiline???
-    | '"' DQ_STRING_ELEMENT*? (NL | '"')        // Single quoted string support multiline???
+    | '"""' TDQ_STRING_ELEMENT*? '"""'
     )  -> type(STRING)
 ;
 
 
-MULTILINE_GSTRING_START : '"""' TQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
+MULTILINE_GSTRING_START : '"""' TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
 
 
 SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
@@ -129,7 +127,7 @@ fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
                              ;
 fragment SQ_STRING_ELEMENT: ESC_SEQUENCE | ~('\'' | '\\') ;
 fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '\\' | '$') ;
-fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
+fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE
                             |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
                             | ~('\\' | '"' | '$')
                             )
@@ -138,7 +136,7 @@ fragment TQ_STRING_ELEMENT: (ESC_SEQUENCE
 mode TRIPLE_QUOTED_GSTRING_MODE ;
     MULTILINE_GSTRING_END: '"""' -> type(GSTRING_END), popMode ;
     MULTILINE_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-    MULTILINE_GSTRING_ELEMENT: TQ_STRING_ELEMENT  -> more ;
+    MULTILINE_GSTRING_ELEMENT: TDQ_STRING_ELEMENT  -> more ;
 
 mode DOUBLE_QUOTED_GSTRING_MODE ;
     GSTRING_END: '"' -> popMode ;
