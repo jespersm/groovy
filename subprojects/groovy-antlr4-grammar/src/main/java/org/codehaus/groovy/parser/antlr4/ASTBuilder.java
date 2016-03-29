@@ -16,6 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
+
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -54,110 +55,32 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
 
 @SuppressWarnings("ALL")
 public class ASTBuilder {
-    private Logger log = Logger.getLogger(ASTBuilder.class.getName());
 
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
         this.sourceUnit = sourceUnit;
         this.moduleNode = new ModuleNode(sourceUnit);
 
-
-        String text = null;
-        try {
-            text = StringUtil.replaceHexEscapes(
-                                    DefaultGroovyMethods.getText(
-                                            new BufferedReader(
-                                                    sourceUnit.getSource().getReader())));
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error occurred when reading source code and replacing escapes.", e);
-        }
+        String text = this.readSourceCode(sourceUnit);
 
         if (log.isLoggable(Level.FINE)) {
-            final GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
-            log.fine(multiply("=", 60) + "\n" + text + "\n" + multiply("=", 60));
-            log.fine("\nLexer TOKENS:\n\t" + DefaultGroovyMethods.join(collect(lexer.getAllTokens(), new Closure<String>(this, this) {
-                public String doCall(Token it) { return String.valueOf(it.getLine()) + ", " + String.valueOf(it.getStartIndex()) + ":" + String.valueOf(it.getStopIndex()) + " " + GroovyLexer.tokenNames[it.getType()] + " " + it.getText(); }
-            }), "\n\t") + multiply("=", 60));
+            this.logTokens(text);
         }
-
 
         GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        GroovyParser parser = new GroovyParser(new CommonTokenStream(lexer));
 
-        GroovyParser parser = new GroovyParser(tokens);
-        parser.removeErrorListeners();
-        parser.addErrorListener(new ANTLRErrorListener() {
-            @Override
-            public void syntaxError(
-                @NotNull Recognizer<?, ?> recognizer,
-                Object offendingSymbol, int line, int charPositionInLine,
-                @NotNull String msg, RecognitionException e) {
-                sourceUnit.getErrorCollector().addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine+1), sourceUnit));
-            }
+        this.setUpErrorListener(parser);
 
-            @Override
-            public void reportAmbiguity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, @NotNull ATNConfigSet configs) {
-                log.fine("Ambiguity at " + startIndex + " - " + stopIndex);
-            }
+        this.startParsing(parser);
+    }
 
-            @Override
-            public void reportAttemptingFullContext(
-                @NotNull Parser recognizer,
-                @NotNull DFA dfa, int startIndex, int stopIndex,
-                BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
-                log.fine("Attempting Full Context at " + startIndex + " - " + stopIndex);
-            }
-
-            @Override
-            public void reportContextSensitivity(
-                @NotNull Parser recognizer,
-                @NotNull DFA dfa, int startIndex, int stopIndex, int prediction, @NotNull ATNConfigSet configs) {
-                log.fine("Context Sensitivity at " + startIndex + " - " + stopIndex);
-            }
-        });
-
+    private void startParsing(GroovyParser parser) {
         GroovyParser.CompilationUnitContext tree = parser.compilationUnit();
+
         if (log.isLoggable(Level.FINE)) {
-            final StringBuffer s = new StringBuffer();
-            new ParseTreeWalker().walk(new ParseTreeListener() {
-                @Override public void visitTerminal(@NotNull TerminalNode node) {
-                    s.append(multiply(".\t", indent));
-                    s.append(String.valueOf(node));
-                    s.append("\n");
-                }
-
-                @Override public void visitErrorNode(@NotNull ErrorNode node) {
-                }
-
-                @Override public void enterEveryRule(@NotNull final ParserRuleContext ctx) {
-                    s.append(multiply(".\t", indent));
-                    s.append(GroovyParser.ruleNames[ctx.getRuleIndex()] + ": {");
-                    s.append("\n");
-                    indent = indent++;
-                }
-
-                @Override public void exitEveryRule(@NotNull ParserRuleContext ctx) {
-                    indent = indent--;
-                    s.append(multiply(".\t", indent));
-                    s.append("}");
-                    s.append("\n");
-                }
-
-                public int getIndent() {
-                    return indent;
-                }
-
-                public void setIndent(int indent) {
-                    this.indent = indent;
-                }
-
-                private int indent;
-            }, tree);
-
-            log.fine((multiply("=", 60)) + "\n" + String.valueOf(s) + "\n" + (multiply("=", 60)));
+            this.logTreeStr(tree);
         }
-
 
         try {
             DefaultGroovyMethods.each(tree.importStatement(), new MethodClosure(this, "parseImportStatement"));
@@ -182,7 +105,6 @@ public class ASTBuilder {
         } catch (CompilationFailedException ignored) {
             // Compilation failed.
         }
-
     }
 
     public void parseImportStatement(@NotNull GroovyParser.ImportStatementContext ctx) {
@@ -534,7 +456,7 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement{
+    private static class DeclarationList extends Statement {
         List<DeclarationExpression> declarations;
 
         DeclarationList(List<DeclarationExpression> declarations) {
@@ -1168,23 +1090,22 @@ public class ASTBuilder {
         Boolean isSlashy = text.startsWith("/");
 
         if (text.startsWith("'''") || text.startsWith("\"\"\"")) {
-            text = removeCR(text); // remove CR in the multiline string
+            text = StringUtil.removeCR(text); // remove CR in the multiline string
 
             text = text.length() == 6 ? "" : text.substring(3, text.length() - 3);
         } else if (text.startsWith("'") || text.startsWith("/") || text.startsWith("\"")) {
             text = text.length() == 2 ? "" : text.substring(1, text.length() - 1);
         }
 
-        //Find escapes.
-        if (!isSlashy)
-            text = StringUtil.replaceEscapes(text);
-        else
+        //handle escapes.
+        if (isSlashy) {
+            text = StringUtil.replaceHexEscapes(text);
             text = text.replace("\\/", "/");
-        return new ConstantExpression(text, true);
-    }
+        } else {
+            text = StringUtil.replaceEscapes(text);
+        }
 
-    private String removeCR(String text) {
-        return text.replace("\r\n", "\n");
+        return new ConstantExpression(text, true);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
@@ -1216,7 +1137,7 @@ public class ASTBuilder {
         Closure<String> clearStart = new Closure<String>(null, null) {
             public String doCall(String it) {
                 if (it.startsWith("\"\"\"")) {
-                    it = removeCR(it);
+                    it = StringUtil.removeCR(it);
 
                     it = it.substring(2); // translate leading """ to "
                 }
@@ -1231,7 +1152,7 @@ public class ASTBuilder {
         };
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
-                it = removeCR(it);
+                it = StringUtil.removeCR(it);
                 it = StringUtil.replaceEscapes(it);
 
                 return it.length() == 1
@@ -1243,7 +1164,7 @@ public class ASTBuilder {
         Closure<String> clearEnd = new Closure<String>(null, null) {
             public String doCall(String it) {
                 if (it.endsWith("\"\"\"")) {
-                    it = removeCR(it);
+                    it = StringUtil.removeCR(it);
 
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)); // translate tailing """ to "
                 }
@@ -1932,6 +1853,106 @@ public class ASTBuilder {
         else return null;
     }
 
+    private String readSourceCode(SourceUnit sourceUnit) {
+        String text = null;
+        try {
+            text = DefaultGroovyMethods.getText(
+                    new BufferedReader(
+                            sourceUnit.getSource().getReader()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error occurred when reading source code.", e);
+        }
+
+        return text;
+    }
+
+
+    private void setUpErrorListener(GroovyParser parser) {
+        parser.removeErrorListeners();
+        parser.addErrorListener(new ANTLRErrorListener() {
+            @Override
+            public void syntaxError(
+                    @NotNull Recognizer<?, ?> recognizer,
+                    Object offendingSymbol, int line, int charPositionInLine,
+                    @NotNull String msg, RecognitionException e) {
+                sourceUnit.getErrorCollector().addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine+1), sourceUnit));
+            }
+
+            @Override
+            public void reportAmbiguity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, @NotNull ATNConfigSet configs) {
+                log.fine("Ambiguity at " + startIndex + " - " + stopIndex);
+            }
+
+            @Override
+            public void reportAttemptingFullContext(
+                    @NotNull Parser recognizer,
+                    @NotNull DFA dfa, int startIndex, int stopIndex,
+                    BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
+                log.fine("Attempting Full Context at " + startIndex + " - " + stopIndex);
+            }
+
+            @Override
+            public void reportContextSensitivity(
+                    @NotNull Parser recognizer,
+                    @NotNull DFA dfa, int startIndex, int stopIndex, int prediction, @NotNull ATNConfigSet configs) {
+                log.fine("Context Sensitivity at " + startIndex + " - " + stopIndex);
+            }
+        });
+    }
+
+    private void logTreeStr(GroovyParser.CompilationUnitContext tree) {
+        final StringBuilder s = new StringBuilder();
+        new ParseTreeWalker().walk(new ParseTreeListener() {
+            @Override
+            public void visitTerminal(@NotNull TerminalNode node) {
+                s.append(multiply(".\t", indent));
+                s.append(String.valueOf(node));
+                s.append("\n");
+            }
+
+            @Override
+            public void visitErrorNode(@NotNull ErrorNode node) {
+            }
+
+            @Override
+            public void enterEveryRule(@NotNull final ParserRuleContext ctx) {
+                s.append(multiply(".\t", indent));
+                s.append(GroovyParser.ruleNames[ctx.getRuleIndex()] + ": {");
+                s.append("\n");
+                indent = indent++;
+            }
+
+            @Override
+            public void exitEveryRule(@NotNull ParserRuleContext ctx) {
+                indent = indent--;
+                s.append(multiply(".\t", indent));
+                s.append("}");
+                s.append("\n");
+            }
+
+            public int getIndent() {
+                return indent;
+            }
+
+            public void setIndent(int indent) {
+                this.indent = indent;
+            }
+
+            private int indent;
+        }, tree);
+
+        log.fine((multiply("=", 60)) + "\n" + String.valueOf(s) + "\n" + (multiply("=", 60)));
+    }
+
+    private void logTokens(String text) {
+        final GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
+        log.fine(multiply("=", 60) + "\n" + text + "\n" + multiply("=", 60));
+        log.fine("\nLexer TOKENS:\n\t" + DefaultGroovyMethods.join(collect(lexer.getAllTokens(), new Closure<String>(this, this) {
+            public String doCall(Token it) { return String.valueOf(it.getLine()) + ", " + String.valueOf(it.getStartIndex()) + ":" + String.valueOf(it.getStopIndex()) + " " + GroovyLexer.tokenNames[it.getType()] + " " + it.getText(); }
+        }), "\n\t") + multiply("=", 60));
+    }
+
     public ModuleNode getModuleNode() {
         return moduleNode;
     }
@@ -1947,4 +1968,5 @@ public class ASTBuilder {
     private Stack<ClassNode> classes = new Stack<ClassNode>();
     private Stack<List<InnerClassNode>> innerClassesDefinedInMethod = new Stack<List<InnerClassNode>>();
     private int anonymousClassesCount = 0;
+    private Logger log = Logger.getLogger(ASTBuilder.class.getName());
 }
