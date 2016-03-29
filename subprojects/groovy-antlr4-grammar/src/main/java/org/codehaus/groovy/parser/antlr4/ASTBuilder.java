@@ -42,6 +42,7 @@ import org.codehaus.groovy.syntax.SyntaxException;
 import org.codehaus.groovy.syntax.Types;
 import org.objectweb.asm.Opcodes;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -63,10 +64,13 @@ public class ASTBuilder {
 
         String text = null;
         try {
-            text = StringUtil.replaceHexEscapes(DefaultGroovyMethods.getText(sourceUnit.getSource().getReader()));
+            text = StringUtil.replaceHexEscapes(
+                                    DefaultGroovyMethods.getText(
+                                            new BufferedReader(
+                                                    sourceUnit.getSource().getReader())));
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("Smth went wrong.", e);
+            throw new RuntimeException("Error occurred when reading source code and replacing escapes.", e);
         }
 
         if (log.isLoggable(Level.FINE)) {
@@ -696,7 +700,8 @@ public class ASTBuilder {
     }
 
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.AssertStatementContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Statement parseStatement(GroovyParser.AssertStatementContext ctx) {
         Expression conditionExpression = parseExpression(ctx.expression(0));
         BooleanExpression booleanConditionExpression =
             conditionExpression instanceof BooleanExpression
@@ -898,22 +903,31 @@ public class ASTBuilder {
                                                    : new ArrayList()), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public MapEntryExpression parseExpression(GroovyParser.MapEntryContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public MapEntryExpression parseExpression(GroovyParser.MapEntryContext ctx) {
         Expression keyExpr;
         Expression valueExpr;
         List<GroovyParser.ExpressionContext> expressions = ctx.expression();
         if (expressions.size() == 1) {
             valueExpr = parseExpression(expressions.get(0));
-            if (ctx.MULT() != null) {
+            if (asBoolean(ctx.MULT())) {
                 // This is really a spread map entry.
                 // This is an odd construct, SpreadMapExpression does not extend MapExpression, so we workaround
                 keyExpr = setupNodeLocation(new SpreadMapExpression(valueExpr), ctx);
             } else {
-                keyExpr = asBoolean(ctx.gstring())
-                      ? parseExpression(ctx.gstring())
-                      : new ConstantExpression(asBoolean(ctx.selectorName())
-                                               ? ctx.selectorName().getText()
-                                               : parseString(ctx.STRING()));
+                if (asBoolean(ctx.STRING())) {
+                    keyExpr = new ConstantExpression(parseString(ctx.STRING()));
+                } else if (asBoolean(ctx.selectorName())) {
+                    keyExpr = new ConstantExpression(ctx.selectorName().getText());
+                } else if (asBoolean(ctx.gstring())) {
+                    keyExpr = parseExpression(ctx.gstring());
+                } else if (asBoolean(ctx.INTEGER())) {
+                    keyExpr = parseInteger(ctx.INTEGER().getText(), ctx);
+                } else if (asBoolean(ctx.DECIMAL())) {
+                    keyExpr = parseDecimal(ctx.DECIMAL().getText(), ctx);
+                } else {
+                    throw new RuntimeException("Unsupported map key type! " + String.valueOf(ctx));
+                }
             }
         } else {
             keyExpr = parseExpression(expressions.get(0));
@@ -1251,7 +1265,7 @@ public class ASTBuilder {
         DefaultGroovyMethods.eachWithIndex(children, new Closure<Collection>(null, null) {
             public Collection doCall(Object it, Integer i) {
                 if (!(it instanceof GroovyParser.GstringExpressionBodyContext)) {
-                    return null;
+                    return expressions;
                 }
 
                 GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
@@ -1264,8 +1278,9 @@ public class ASTBuilder {
                     Expression expression = parseExpression(closureExpressionRule);
 
                     if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
+
                         MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
-                        methodCallExpression.setImplicitThis(true);
+                        copyNodeLocation(expression, methodCallExpression);
 
                         expressions.add(methodCallExpression);
                         return expressions;
@@ -1529,7 +1544,8 @@ public class ASTBuilder {
         return declarations;
     }
 
-    @SuppressWarnings("UnnecessaryQualifiedReference") private Expression createArgumentList(GroovyParser.ArgumentListContext ctx) {
+    @SuppressWarnings("UnnecessaryQualifiedReference")
+    private Expression createArgumentList(GroovyParser.ArgumentListContext ctx) {
         final List<MapEntryExpression> mapArgs = new ArrayList<MapEntryExpression>();
         final List<Expression> expressions = new ArrayList<Expression>();
         if (ctx != null) {
@@ -1694,6 +1710,17 @@ public class ASTBuilder {
         }
 
         return methodNode;
+    }
+
+    private <T extends ASTNode> void copyNodeLocation(T srcNode, T destNode) {
+        if (null == srcNode || null == destNode) {
+            throw new IllegalArgumentException("srcNode[" + srcNode + "] and destNode[" + destNode + "] should not be null");
+        }
+
+        destNode.setLineNumber(srcNode.getLineNumber());
+        destNode.setColumnNumber(srcNode.getColumnNumber());
+        destNode.setLastLineNumber(srcNode.getLastLineNumber());
+        destNode.setLastColumnNumber(srcNode.getLastColumnNumber());
     }
 
     /**

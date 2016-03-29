@@ -21,6 +21,7 @@ package org.codehaus.groovy.parser.antlr4
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.GenericsType
 import org.codehaus.groovy.ast.PropertyNode
+import org.codehaus.groovy.ast.stmt.AssertStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
 import org.codehaus.groovy.ast.stmt.IfStatement
 import org.codehaus.groovy.control.ErrorCollector
@@ -32,6 +33,7 @@ import spock.lang.Unroll
 class MainTest extends Specification {
     public static final String DEFAULT_RESOURCES_PATH = 'subprojects/groovy-antlr4-grammar/src/test/resources';
     public static final String RESOURCES_PATH = new File(DEFAULT_RESOURCES_PATH).exists() ? DEFAULT_RESOURCES_PATH : 'src/test/resources';
+
 
 
 	@Unroll
@@ -117,6 +119,37 @@ class MainTest extends Specification {
 
     }
 
+
+    @Unroll
+    def "test Groovy in Action 2nd Edition for #path"() {
+        def filename = path;
+
+        setup:
+        def file = new File("$RESOURCES_PATH/GroovyInAction2/$path")
+        def moduleNodeNew = new Main(Configuration.NEW).process(file)
+        def moduleNodeOld = new Main(Configuration.OLD).process(file)
+        def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
+        config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
+
+        expect:
+        moduleNodeNew
+        moduleNodeOld
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeOld == moduleNodeOld2
+        }
+        and:
+        ASTWriter.astToString(moduleNodeNew) == ASTWriter.astToString(moduleNodeOld2)
+        and:
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeNew == moduleNodeOld, "Fail in $path"
+        }
+
+        where:
+        path | config
+        "appD/Listing_D_01_GStrings.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "appD/Listing_D_02_Lists.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+    }
+
     def addIgnore(Class aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
         c = c ?: ASTComparatorCategory.DEFAULT_CONFIGURATION.clone() as Map<Class, List<String>>;
         c[aClass].addAll(ignore)
@@ -128,6 +161,7 @@ class MainTest extends Specification {
         aClass.each { c[it].addAll(ignore) }
         c
     }
+
 
 	@Unroll
     def "test invalid class modifiers #path"() {
@@ -164,6 +198,7 @@ class MainTest extends Specification {
             "Statement_Errors_1.groovy" | _
             "Statement_Errors_2.groovy" | _
     }
+
 
     boolean canLoad(File file, Configuration config) {
         def module = new Main(config).process(file)
