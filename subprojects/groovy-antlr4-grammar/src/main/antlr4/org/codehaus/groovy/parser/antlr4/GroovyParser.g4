@@ -259,6 +259,8 @@ mapEntry:
     | selectorName COLON expression
     | LPAREN expression RPAREN COLON expression
     | MULT COLON expression
+    | DECIMAL COLON expression
+    | INTEGER COLON expression
 ;
 
 classModifier: //JSL7 8.1 FIXME Now gramar allows modifier duplication. It's possible to make it more strict listing all 24 permutations.
