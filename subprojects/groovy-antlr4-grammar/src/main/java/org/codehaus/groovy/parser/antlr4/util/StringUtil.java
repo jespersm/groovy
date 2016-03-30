@@ -16,7 +16,6 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-
 package org.codehaus.groovy.parser.antlr4.util;
 
 import groovy.lang.Closure;

@@ -16,7 +16,6 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -456,7 +455,7 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement {
+    private static class DeclarationList extends Statement{
         List<DeclarationExpression> declarations;
 
         DeclarationList(List<DeclarationExpression> declarations) {
@@ -1444,25 +1443,82 @@ public class ASTBuilder {
         ClassNode type = parseTypeDeclaration(ctx.typeDeclaration());
         List<GroovyParser.SingleDeclarationContext> variables = ctx.singleDeclaration();
         List<DeclarationExpression> declarations = new LinkedList<DeclarationExpression>();
+
+        if (asBoolean(ctx.tupleDeclaration())) {
+            DeclarationExpression declarationExpression = parseTupleDeclaration(ctx.tupleDeclaration());
+
+            declarations.add(declarationExpression);
+
+            return declarations;
+        }
+
         for (GroovyParser.SingleDeclarationContext variableCtx : variables) {
-            GroovyParser.ExpressionContext initExprContext = variableCtx.expression();
             VariableExpression left = new VariableExpression(variableCtx.IDENTIFIER().getText(), type);
-            Integer col = variableCtx.getStart().getCharPositionInLine() + 1;// FIXME Why assignment token location is it's first occurrence.
-            org.codehaus.groovy.syntax.Token token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, "=", variableCtx.getStart().getLine(), col);
+
+            org.codehaus.groovy.syntax.Token token;
+            if (asBoolean(variableCtx.ASSIGN())) {
+                token = createGroovyToken(variableCtx.ASSIGN().getSymbol(), Types.ASSIGN);
+            } else {
+                int line = variableCtx.start.getLine();
+                int col = -1; //ASSIGN TOKEN DOES NOT APPEAR, SO COL IS -1. IF NO ERROR OCCURS, THE ORIGINAL CODE CAN BE REMOVED IN THE FURTURE: variableCtx.getStart().getCharPositionInLine() + 1; // FIXME Why assignment token location is it's first occurrence.
+
+                token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, "=", line, col);
+            }
+
             GroovyParser.ExpressionContext initialValueCtx = variableCtx.expression();
             Expression initialValue = initialValueCtx != null ? parseExpression(variableCtx.expression()) : setupNodeLocation(new EmptyExpression(),ctx);
             DeclarationExpression expression = new DeclarationExpression(left, token, initialValue);
             attachAnnotations(expression, ctx.annotationClause());
             declarations.add(setupNodeLocation(expression, variableCtx));
         }
-        if (declarations.size() == 1) {
+
+        int declarationsSize = declarations.size();
+        if (declarationsSize == 1) {
             setupNodeLocation(declarations.get(0), ctx);
-        } else {
+        } else if (declarationsSize > 0) {
+            DeclarationExpression declarationExpression = declarations.get(0);
             // Tweak start of first declaration
-            declarations.get(0).setLineNumber(ctx.getStart().getLine());
-            declarations.get(0).setColumnNumber(ctx.getStart().getCharPositionInLine() + 1);
+            declarationExpression.setLineNumber(ctx.getStart().getLine());
+            declarationExpression.setColumnNumber(ctx.getStart().getCharPositionInLine() + 1);
         }
+
         return declarations;
+    }
+
+    private org.codehaus.groovy.syntax.Token createGroovyToken(Token token, int type) {
+        if (null == token) {
+            throw new IllegalArgumentException("token should not be null");
+        }
+
+        return new org.codehaus.groovy.syntax.Token(type, token.getText(), token.getLine(), token.getCharPositionInLine());
+    }
+
+    private DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx) {
+        // tuple must have an initial value.
+        if (null == ctx.expression()) {
+            throw new RuntimeException("tuple declaration must have an initial value.");
+        }
+
+        List<Expression> variables = new LinkedList<Expression>();
+
+        for (GroovyParser.TupleVariableDeclarationContext tupleVariableDeclarationContext : ctx.tupleVariableDeclaration()) {
+            ClassNode type = asBoolean(tupleVariableDeclarationContext.genericClassNameExpression())
+                                ? setupNodeLocation(parseExpression(tupleVariableDeclarationContext.genericClassNameExpression()), ctx)
+                                : ClassHelper.OBJECT_TYPE;
+
+            variables.add(new VariableExpression(tupleVariableDeclarationContext.IDENTIFIER().getText(), type));
+        }
+
+        ArgumentListExpression argumentListExpression = new ArgumentListExpression(variables);
+        Token assignToken = ctx.ASSIGN().getSymbol();
+        org.codehaus.groovy.syntax.Token token = createGroovyToken(assignToken, Types.ASSIGN);
+
+        Expression initialValue = (ctx != null) ? parseExpression(ctx.expression())
+                                                : setupNodeLocation(new EmptyExpression(),ctx);
+
+        DeclarationExpression declarationExpression  = new DeclarationExpression(argumentListExpression, token, initialValue);
+
+        return setupNodeLocation(declarationExpression, ctx);
     }
 
     @SuppressWarnings("UnnecessaryQualifiedReference")

@@ -113,14 +113,18 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule: annotationClause* typeDeclaration singleDeclaration ( COMMA singleDeclaration)*;
+declarationRule: annotationClause* ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
+                                   | KW_DEF tupleDeclaration
+                                   );
 singleDeclaration: IDENTIFIER (ASSIGN expression)?;
+tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN expression)?;
+tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
 classBody: LCURVE (classMember | NL | SEMICOLON)* RCURVE ;
 
 statement:
-    declarationRule #declarationStatement
+      declarationRule #declarationStatement
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
     | KW_FOR LPAREN {enableDeclarationRuleInExpression();} (expression)? {disableDeclarationRuleInExpression();} SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
@@ -182,8 +186,7 @@ annotationParameter:
 ;
 
 expression:
-      {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
-    | newArrayRule #newArrayExpression
+      newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
     | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
@@ -231,6 +234,7 @@ expression:
     | expression ELVIS NL* expression #elvisExpression
     | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
+    | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
     | STRING #constantExpression
     | gstring #gstringExpression
     | DECIMAL #constantDecimalExpression

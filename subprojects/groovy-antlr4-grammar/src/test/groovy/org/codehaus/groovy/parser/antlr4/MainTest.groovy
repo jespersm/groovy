@@ -115,6 +115,7 @@ class MainTest extends Specification {
         "GString-closure-and-expression_issue12.groovy" | _
         "Slashy_Strings.groovy" | _
         "Expression_Precedence.groovy" | _
+        "Tuples_issue13.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
@@ -197,6 +198,8 @@ class MainTest extends Specification {
             path | output
             "Statement_Errors_1.groovy" | _
             "Statement_Errors_2.groovy" | _
+            "Statement_Errors_3.groovy" | _
+
     }
 
 

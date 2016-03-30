@@ -22,11 +22,12 @@ lexer grammar GroovyLexer;
     import java.util.ArrayDeque;
     import java.util.Arrays;
     import java.util.Deque;
-    import java.util.List;
+    import java.util.Set;
+    import java.util.HashSet;
 }
 
 @members {
-    public static final List<Integer> ALLOWED_OP_LIST = Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
+    public static final Set<Integer> ALLOWED_OP_SET = new HashSet<Integer>(Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR)); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
 
     private static enum Brace {
        ROUND,
@@ -79,7 +80,7 @@ lexer grammar GroovyLexer;
 
     public boolean isSlashyStringAllowed() {
         //System.out.println("SP: " + " TLECheck = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex);
-        boolean isLastTokenOp = ALLOWED_OP_LIST.contains(Integer.valueOf(lastTokenType));
+        boolean isLastTokenOp = ALLOWED_OP_SET.contains(Integer.valueOf(lastTokenType));
         boolean res = isLastTokenOp || tlePos == tokenIndex;
         //System.out.println("SP: " + tokenNames[lastTokenType] + ": " + lastTokenType + " res " + res + (res ? ( isLastTokenOp ? " op" : " tle") : ""));
         return res;

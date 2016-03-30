@@ -73,7 +73,7 @@ class ASTComparatorCategory {
         (ClosureListExpression): EXPRESSION_IGNORE_LIST,
         (ConstantExpression): EXPRESSION_IGNORE_LIST,
         (ConstructorCallExpression): EXPRESSION_IGNORE_LIST,
-        (DeclarationExpression): ["text", "columnNumber", "lineNumber", "lastColumnNumber", "lastLineNumber", "tupleExpression"],
+        (DeclarationExpression): ["text", "columnNumber", "lineNumber", "lastColumnNumber", "lastLineNumber"],
         (ElvisOperatorExpression): EXPRESSION_IGNORE_LIST,
         (EmptyExpression): EXPRESSION_IGNORE_LIST,
         (ExpressionTransformer): EXPRESSION_IGNORE_LIST,
@@ -102,6 +102,10 @@ class ASTComparatorCategory {
     ];
 
     static Map<Class, List<String>> configuration = DEFAULT_CONFIGURATION;
+
+    static Map<Class, List<String>> CAST_EXCEPTION_CONFIGURATION = [
+            (DeclarationExpression) : ['variableExpression', 'tupleExpression'], // DeclarationExpression will try to cast leftExpression as VariableExpression or TupleExpression, ignore it.
+    ];
 
     static void apply(config = DEFAULT_CONFIGURATION, Closure cl) {
         configuration = config
@@ -139,7 +143,18 @@ class ASTComparatorCategory {
 
             def name = p.name
             lastName = "$name :::: ${ a.getClass() } ${ a.hashCode() }"
-            !(name in ignore) && name != 'nodeMetaData' && a."$name" != b."$name"
+
+            try {
+                return !(name in ignore) && name != 'nodeMetaData' && a."$name" != b."$name"
+            } catch(ClassCastException e) {
+                for (Map.Entry<Class, String> entry : CAST_EXCEPTION_CONFIGURATION.entrySet()) {
+                    if (entry.key.isInstance(a) && entry.value.contains(name)) {
+                        return false;
+                    }
+                }
+
+                throw e;
+            }
         }
 
         if (difference)
