@@ -1237,10 +1237,31 @@ public class ASTBuilder {
         return setupNodeLocation(new ConstantExpression(null), ctx);
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.AssignmentExpressionContext ctx) {
-        Expression left = parseExpression(ctx.expression(0));// TODO reference to AntlrParserPlugin line 2304 for error handling.
-        Expression right = parseExpression(ctx.expression(1));
-        return setupNodeLocation(new BinaryExpression(left, createToken(DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class)), right), ctx);
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.AssignmentExpressionContext ctx) {
+        Expression left;
+        Expression right;
+        org.codehaus.groovy.syntax.Token token;
+
+        if (asBoolean(ctx.LPAREN())) { // tuple assignment expression
+            List<Expression> expressions = new LinkedList<Expression>();
+
+            for (TerminalNode id : ctx.IDENTIFIER()) {
+                expressions.add(new VariableExpression(id.getText(), ClassHelper.OBJECT_TYPE));
+            }
+
+            left = new TupleExpression(expressions);
+            right = parseExpression(ctx.expression(0));
+
+            token = this.createGroovyToken(ctx.ASSIGN().getSymbol(), Types.ASSIGN);
+        } else {
+            left = parseExpression(ctx.expression(0));// TODO reference to AntlrParserPlugin line 2304 for error handling.
+            right = parseExpression(ctx.expression(1));
+
+            token = createToken(DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class));
+        }
+
+        return setupNodeLocation(new BinaryExpression(left, token, right), ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.DeclarationExpressionContext ctx) {
@@ -1510,8 +1531,7 @@ public class ASTBuilder {
         }
 
         ArgumentListExpression argumentListExpression = new ArgumentListExpression(variables);
-        Token assignToken = ctx.ASSIGN().getSymbol();
-        org.codehaus.groovy.syntax.Token token = createGroovyToken(assignToken, Types.ASSIGN);
+        org.codehaus.groovy.syntax.Token token = createGroovyToken(ctx.ASSIGN().getSymbol(), Types.ASSIGN);
 
         Expression initialValue = (ctx != null) ? parseExpression(ctx.expression())
                                                 : setupNodeLocation(new EmptyExpression(),ctx);
