@@ -63,6 +63,17 @@ public class StringUtil {
 	    });
     }
 
+	public static String replaceEscapes(String text, boolean isSlashy) {
+		if (isSlashy) {
+			text = StringUtil.replaceHexEscapes(text);
+			text = text.replace("\\/", "/");
+		} else {
+			text = StringUtil.replaceEscapes(text);
+		}
+
+		return text;
+	}
+
 	public static String replaceEscapes(String text) {
         return replaceStandardEscapes(replaceHexEscapes(replaceOctalEscapes(text)));
     }

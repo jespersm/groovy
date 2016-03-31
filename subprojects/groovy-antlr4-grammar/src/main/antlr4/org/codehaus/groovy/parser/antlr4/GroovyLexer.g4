@@ -114,13 +114,23 @@ MULTILINE_GSTRING_START : '"""' TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START)
 
 
 SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
+DOLLAR_SLASHY_STRING: '$/' { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '/$' -> type(STRING) ;
 STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
 
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-SLASHY_GSTRING_START: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+SLASHY_GSTRING_START:        '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+
+
+DOLLAR_SLASHY_GSTRING_START: '$/' { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(DOLLAR_SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
+fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
+                                       | '/' { _input.LA(1) == '$' }?
+                                       | ~('$')
+                                       )
+                                       ;
 fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
                              |  '\'' { !(_input.LA(1) == '\'' && _input.LA(2) == '\'') }?
                              | ~('\\' | '\'')
@@ -147,7 +157,12 @@ mode DOUBLE_QUOTED_GSTRING_MODE ;
 mode SLASHY_GSTRING_MODE ;
     SLASHY_GSTRING_END: '/' -> type(GSTRING_END), popMode ;
     SLASHY_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-    SLASHY_GSTRING_ELEMENT: (SLASHY_ESCAPE | ~('$' | '/')) -> more ;
+    SLASHY_GSTRING_ELEMENT: SLASHY_STRING_ELEMENT -> more ;
+
+mode DOLLAR_SLASHY_GSTRING_MODE;
+    DOLLAR_SLASHY_GSTRING_END: '/$' -> type(GSTRING_END), popMode ;
+    DOLLAR_SLASHY_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+    DOLLAR_SLASHY_GSTRING_ELEMENT: DOLLAR_SLASHY_STRING_ELEMENT -> more ;
 
 mode GSTRING_TYPE_SELECTOR_MODE ; // We drop here after exiting curved brace?
     GSTRING_BRACE_L: '{' { pushBrace(Brace.CURVE); tlePos = tokenIndex + 1; } -> type(LCURVE), popMode, pushMode(DEFAULT_MODE) ;
