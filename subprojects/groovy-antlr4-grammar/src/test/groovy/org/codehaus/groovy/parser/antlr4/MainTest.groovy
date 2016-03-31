@@ -20,6 +20,7 @@ package org.codehaus.groovy.parser.antlr4
 
 import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.GenericsType
+import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.PropertyNode
 import org.codehaus.groovy.ast.stmt.AssertStatement
 import org.codehaus.groovy.ast.stmt.ExpressionStatement
@@ -149,6 +150,8 @@ class MainTest extends Specification {
         path | config
         "appD/Listing_D_01_GStrings.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "appD/Listing_D_02_Lists.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "appD/Listing_D_03_Closures.groovy" | addIgnore([AssertStatement, Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+
     }
 
     def addIgnore(Class aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
