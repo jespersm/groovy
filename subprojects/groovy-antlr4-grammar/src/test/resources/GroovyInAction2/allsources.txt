@@ -3,7 +3,7 @@
 [PASS]	./appD/Listing_D_01_GStrings.groovy
 [PASS]	./appD/Listing_D_02_Lists.groovy
 [PASS]	./appD/Listing_D_03_Closures.groovy  // FIXME ISSUE#18(Fail to parse the call expression when the callee is not a path expression)
-[TODO]	./appD/Listing_D_04_Regex.groovy
+[PASS]	./appD/Listing_D_04_Regex.groovy
 [TODO]	./appD/Listing_D_05_GPath.groovy
 [TODO]	./chap01/customers.xml
 [TODO]	./chap01/data.txt
