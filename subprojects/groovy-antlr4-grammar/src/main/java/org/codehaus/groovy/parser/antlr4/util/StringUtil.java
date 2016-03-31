@@ -63,12 +63,20 @@ public class StringUtil {
 	    });
     }
 
-	public static String replaceEscapes(String text, boolean isSlashy) {
-		if (isSlashy) {
+	public static final int SLASHY = 0;
+	public static final int DOLLAR_SLASHY = 1;
+	public static final int NONE_SLASHY = -1;
+
+	public static String replaceEscapes(String text, int slashyType) {
+		if (slashyType == SLASHY || slashyType == DOLLAR_SLASHY) {
 			text = StringUtil.replaceHexEscapes(text);
-			text = text.replace("\\/", "/");
-		} else {
+
+			if (slashyType == SLASHY)
+				text = text.replace("\\/", "/");
+		} else if (slashyType == NONE_SLASHY) {
 			text = StringUtil.replaceEscapes(text);
+		} else {
+			throw new IllegalArgumentException("Invalid slashyType: " + slashyType);
 		}
 
 		return text;

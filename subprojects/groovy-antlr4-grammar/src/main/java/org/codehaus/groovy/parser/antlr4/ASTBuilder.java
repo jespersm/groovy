@@ -1086,7 +1086,8 @@ public class ASTBuilder {
 
     @SuppressWarnings("GroovyUnusedDeclaration")
     public ConstantExpression cleanConstantStringLiteral(String text) {
-        boolean isSlashy = text.startsWith("/") || text.startsWith("$/");
+        int slashyType = text.startsWith("/") ? StringUtil.SLASHY :
+                                text.startsWith("$/") ? StringUtil.DOLLAR_SLASHY : StringUtil.NONE_SLASHY;
 
         if (text.startsWith("'''") || text.startsWith("\"\"\"")) {
             text = StringUtil.removeCR(text); // remove CR in the multiline string
@@ -1101,7 +1102,7 @@ public class ASTBuilder {
         }
 
         //handle escapes.
-        text = StringUtil.replaceEscapes(text, isSlashy);
+        text = StringUtil.replaceEscapes(text, slashyType);
 
         return new ConstantExpression(text, true);
     }
@@ -1133,7 +1134,8 @@ public class ASTBuilder {
 
     public Expression parseExpression(GroovyParser.GstringContext ctx) {
         String gstringStartText = ctx.GSTRING_START().getText();
-        final boolean isSlashy = gstringStartText.startsWith("/") || gstringStartText.startsWith("$/");
+        final int slashyType = gstringStartText.startsWith("/") ? StringUtil.SLASHY :
+                                    gstringStartText.startsWith("$/") ? StringUtil.DOLLAR_SLASHY : StringUtil.NONE_SLASHY;
 
         Closure<String> clearStart = new Closure<String>(null, null) {
             public String doCall(String it) {
@@ -1149,7 +1151,7 @@ public class ASTBuilder {
 
                 }
 
-                it = StringUtil.replaceEscapes(it, isSlashy);
+                it = StringUtil.replaceEscapes(it, slashyType);
 
                 return (it.length() == 2)
                         ? ""
@@ -1159,9 +1161,10 @@ public class ASTBuilder {
         };
         final Closure<String> clearPart = new Closure<String>(null, null) {
             public String doCall(String it) {
+
                 it = StringUtil.removeCR(it);
 
-                it = StringUtil.replaceEscapes(it, isSlashy);
+                it = StringUtil.replaceEscapes(it, slashyType);
 
                 return it.length() == 1
                         ? ""
@@ -1171,6 +1174,7 @@ public class ASTBuilder {
         };
         Closure<String> clearEnd = new Closure<String>(null, null) {
             public String doCall(String it) {
+
                 if (it.endsWith("\"\"\"")) {
                     it = StringUtil.removeCR(it);
 
@@ -1181,7 +1185,7 @@ public class ASTBuilder {
                     it = DefaultGroovyMethods.getAt(it, new IntRange(true, 0, -3)) + "\""; // translate tailing /$ to "
                 }
 
-                it = StringUtil.replaceEscapes(it, isSlashy);
+                it = StringUtil.replaceEscapes(it, slashyType);
 
                 return (it.length() == 1)
                         ? ""
