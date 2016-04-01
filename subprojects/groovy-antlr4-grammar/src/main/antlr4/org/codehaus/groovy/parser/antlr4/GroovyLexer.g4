@@ -114,7 +114,7 @@ MULTILINE_GSTRING_START : TDQ TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), 
 
 
 SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
-DOLLAR_SLASHY_STRING: '$/' { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '/$' -> type(STRING) ;
+DOLLAR_SLASHY_STRING: LDSQ { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? RDSQ -> type(STRING) ;
 STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
 
 
@@ -122,7 +122,7 @@ GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MOD
 SLASHY_GSTRING_START:        '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 
-DOLLAR_SLASHY_GSTRING_START: '$/' { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(DOLLAR_SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+DOLLAR_SLASHY_GSTRING_START: LDSQ { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(DOLLAR_SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
@@ -143,8 +143,10 @@ fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE
                             | ~('\\' | '"' | '$')
                             )
                             ;
-fragment TSQ: '\'\'\'';
-fragment TDQ: '"""';
+fragment  TSQ: '\'\'\'';
+fragment  TDQ: '"""';
+fragment LDSQ: '$/';
+fragment RDSQ: '/$';
 
 
 mode TRIPLE_QUOTED_GSTRING_MODE ;
@@ -163,16 +165,16 @@ mode SLASHY_GSTRING_MODE ;
     SLASHY_GSTRING_ELEMENT: SLASHY_STRING_ELEMENT -> more ;
 
 mode DOLLAR_SLASHY_GSTRING_MODE;
-    DOLLAR_SLASHY_GSTRING_END: '/$' -> type(GSTRING_END), popMode ;
+    DOLLAR_SLASHY_GSTRING_END: RDSQ -> type(GSTRING_END), popMode ;
     DOLLAR_SLASHY_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
     DOLLAR_SLASHY_GSTRING_ELEMENT: DOLLAR_SLASHY_STRING_ELEMENT -> more ;
 
 mode GSTRING_TYPE_SELECTOR_MODE ; // We drop here after exiting curved brace?
     GSTRING_BRACE_L: '{' { pushBrace(Brace.CURVE); tlePos = tokenIndex + 1; } -> type(LCURVE), popMode, pushMode(DEFAULT_MODE) ;
-    GSTRING_ID: JavaLetterInGString JavaLetterOrDigitInGString* -> type(IDENTIFIER), popMode, pushMode(GSTRING_PATH) ;
+    GSTRING_ID: IDENTIFIER_IN_GSTRING -> type(IDENTIFIER), popMode, pushMode(GSTRING_PATH) ;
 
 mode GSTRING_PATH ;
-    GSTRING_PATH_PART: '.' JavaLetterInGString JavaLetterOrDigitInGString* ;
+    GSTRING_PATH_PART: '.' IDENTIFIER_IN_GSTRING ;
     ROLLBACK_ONE: . -> popMode, channel(HIDDEN) ; // This magic is for exit this state if
 
 mode DEFAULT_MODE ;
@@ -314,6 +316,7 @@ IGNORE_NEWLINE : '\r'? '\n' { topBrace == Brace.ROUND || topBrace == Brace.SQUAR
 NL: '\r'? '\n';
 
 IDENTIFIER: JavaLetter JavaLetterOrDigit*; // reference https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4
+IDENTIFIER_IN_GSTRING: JavaLetterInGString JavaLetterOrDigitInGString*;
 
 fragment
 JavaLetter
@@ -329,13 +332,13 @@ JavaLetterOrDigit
 
 fragment
 JavaLetterInGString
-	:	[a-zA-Z_] // these are the "java letters" below 0x7F
+	:	[a-zA-Z_]
 	|	JavaUnicodeChar
 	;
 
 fragment
 JavaLetterOrDigitInGString
-	:	[a-zA-Z0-9_] // these are the "java letters or digits" below 0x7F
+	:	[a-zA-Z0-9_]
 	|   JavaUnicodeChar
 	;
 
