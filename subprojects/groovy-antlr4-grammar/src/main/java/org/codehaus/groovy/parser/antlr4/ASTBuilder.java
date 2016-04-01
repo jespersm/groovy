@@ -120,11 +120,15 @@ public class ASTBuilder {
                 // packageName is actually a className in this case
                 ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
                 moduleNode.addStaticStarImport(DefaultGroovyMethods.last(qualifiedClassName).getText(), type, annotations);
+
+                node = DefaultGroovyMethods.last(moduleNode.getStaticStarImports().values());
             } else {
                 // import is like "import foo.*"
                 moduleNode.addStarImport(DefaultGroovyMethods.join(qualifiedClassName, ".") + ".", annotations);
+
+                node = DefaultGroovyMethods.last(moduleNode.getStarImports());
             }
-            node = DefaultGroovyMethods.last(moduleNode.getStarImports());
+
             if (alias != null) throw new GroovyBugError(
                 "imports like 'import foo.* as Bar' are not " +
                     "supported and should be caught by the grammar");
@@ -135,6 +139,8 @@ public class ASTBuilder {
                 String fieldName = DefaultGroovyMethods.pop(qualifiedClassName).getText();
                 ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
                 moduleNode.addStaticImport(type, fieldName, alias != null ? alias : fieldName, annotations);
+
+                node = DefaultGroovyMethods.last(moduleNode.getStaticImports().values());
             } else {
                 // import is like "import foo.Bar"
                 ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
@@ -142,11 +148,15 @@ public class ASTBuilder {
                     alias = DefaultGroovyMethods.last(qualifiedClassName).getText();
                 }
                 moduleNode.addImport(alias, type, annotations);
+
+                node = DefaultGroovyMethods.last(moduleNode.getImports());
             }
-            node = DefaultGroovyMethods.last(moduleNode.getImports());
+
         }
+
         setupNodeLocation(node, ctx);
     }
+
 
     public void parsePackageDefinition(@NotNull GroovyParser.PackageDefinitionContext ctx) {
         moduleNode.setPackageName(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".") + ".");
