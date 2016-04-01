@@ -104,13 +104,13 @@ RCURVE : '}' { popBrace(); } -> popMode ;
 
 
 MULTILINE_STRING:
-    ('\'\'\'' TSQ_STRING_ELEMENT*? '\'\'\''
-    | '"""' TDQ_STRING_ELEMENT*? '"""'
+    (TSQ TSQ_STRING_ELEMENT*? TSQ
+    | TDQ TDQ_STRING_ELEMENT*? TDQ
     )  -> type(STRING)
 ;
 
 
-MULTILINE_GSTRING_START : '"""' TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
+MULTILINE_GSTRING_START : TDQ TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
 
 
 SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
@@ -127,8 +127,8 @@ DOLLAR_SLASHY_GSTRING_START: '$/' { isSlashyStringAllowed() }? DOLLAR_SLASHY_STR
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
 fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
-                                       | '/' { _input.LA(1) == '$' }?
-                                       | ~('$')
+                                       | '/' { _input.LA(1) != '$' }?
+                                       | ~('/' | '$')
                                        )
                                        ;
 fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
@@ -143,9 +143,12 @@ fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE
                             | ~('\\' | '"' | '$')
                             )
                             ;
+fragment TSQ: '\'\'\'';
+fragment TDQ: '"""';
+
 
 mode TRIPLE_QUOTED_GSTRING_MODE ;
-    MULTILINE_GSTRING_END: '"""' -> type(GSTRING_END), popMode ;
+    MULTILINE_GSTRING_END: TDQ -> type(GSTRING_END), popMode ;
     MULTILINE_GSTRING_PART: '$' -> type(GSTRING_PART), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
     MULTILINE_GSTRING_ELEMENT: TDQ_STRING_ELEMENT  -> more ;
 
