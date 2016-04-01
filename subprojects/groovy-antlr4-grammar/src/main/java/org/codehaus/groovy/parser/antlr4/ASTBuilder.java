@@ -185,11 +185,11 @@ public class ASTBuilder {
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration")
-    private MethodNode parseMethod(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, Closure<MethodNode> createMethodNode) {
+    private MethodNode parseMethodDeclaration(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, Closure<MethodNode> createMethodNode) {
         //noinspection GroovyAssignabilityCheck
         final Iterator<Object> iterator = parseModifiers(ctx.memberModifier(), Opcodes.ACC_PUBLIC).iterator();
-        int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : null));
-        boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : null));
+        int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : Opcodes.ACC_PUBLIC));
+        boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : false));
 
         innerClassesDefinedInMethod.add(new ArrayList());
         Statement statement = asBoolean(ctx.methodBody())
@@ -222,7 +222,7 @@ public class ASTBuilder {
     @SuppressWarnings("GroovyUnusedDeclaration")
     public MethodNode parseScriptMethod(final GroovyParser.MethodDeclarationContext ctx) {
 
-        return parseMethod(null, ctx, new Closure<MethodNode>(this, this) {
+        return parseMethodDeclaration(null, ctx, new Closure<MethodNode>(this, this) {
                                                 public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
 
                                                     final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
@@ -367,7 +367,7 @@ public class ASTBuilder {
 
     @SuppressWarnings("GroovyUnusedDeclaration")
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
-        return parseMethod(classNode, ctx, new Closure<MethodNode>(this, this) {
+        return parseMethodDeclaration(classNode, ctx, new Closure<MethodNode>(this, this) {
                     public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
                         modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
 
