@@ -123,6 +123,7 @@ class MainTest extends Specification {
         "Tuples_issue13.groovy" | _
         "Dollar_Slashy_Strings.groovy" | _
         "Dollar_Slashy_GStrings.groovy" | _
+        "SyntheticPublic_issue19.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
