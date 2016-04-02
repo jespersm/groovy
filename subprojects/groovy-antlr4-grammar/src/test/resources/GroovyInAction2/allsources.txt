@@ -16,7 +16,7 @@
 [PASS]	./chap01/snippet0101_printPackageNamesGpath.groovy
 [PASS]	./chap01/snippet0102_printGroovyWebSiteCount.groovy
 [PASS]	./chap01/snippet0103_googleIpAdr.groovy
-[TODO]	./chap02/Book.groovy
+[PASS]	./chap02/Book.groovy
 [PASS]	./chap02/Listing_02_01_Assertions.groovy
 [SKIP]	./chap02/Listing_02_02_Book.txt
 [TODO]	./chap02/Listing_02_03_BookScript.groovy
@@ -24,7 +24,7 @@
 [PASS]	./chap02/Listing_02_05_ImmutableBook.groovy
 [TODO]	./chap02/Listing_02_06_Grab.groovy
 [TODO]	./chap02/Listing_02_07_Clinks.groovy
-[TODO]	./chap02/Listing_02_08_ControlStructures.groovy
+[PASS]	./chap02/Listing_02_08_ControlStructures.groovy
 [TODO]	./chap02/snippet0201_comments.groovy
 [PASS]	./chap02/snippet0202_failing_assert.groovy
 [PASS]	./chap02/snippet0202_failing_assertion_error.txt

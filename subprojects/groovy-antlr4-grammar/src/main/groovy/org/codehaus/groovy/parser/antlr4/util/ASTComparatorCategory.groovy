@@ -143,7 +143,7 @@ class ASTComparatorCategory {
         }
 
         if (difference)
-            log.warning("Difference was found! ${a.class}.$difference.name:: ${ a."$difference.name" } != ${ b."$difference.name" }")
+            log.warning(" !!!! DIFFERENCE WAS FOUND! [${a.text}][${a.class}][${difference.name}]:: ${ a."$difference.name" } != ${ b."$difference.name" }")
         else
             log.info(" ==== Exit ${ a.getClass() } ${ a.hashCode() } ====== ")
 

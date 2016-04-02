@@ -184,12 +184,47 @@ public class ASTBuilder {
         }
     }
 
+    /**
+     *
+     * @param isAnnotationDeclaration   whether the method is defined in an annotation
+     * @param hasAnnotation             whether the method declaration has annotations
+     * @param hasVisibilityModifier     whether the method declaration contains visibility modifier(e.g. public, protected, private)
+     * @param hasModifier               whether the method declaration has modifier(e.g. visibility modifier, final, static and so on)
+     * @param hasReturnType             whether the method declaration has an return type(e.g. String, generic types)
+     * @return                          the result
+     *
+     */
+    private boolean isSyntheticPublic(boolean isAnnotationDeclaration, boolean hasAnnotation, boolean hasVisibilityModifier, boolean hasModifier, boolean hasReturnType) {
+
+        if (hasVisibilityModifier) {
+            return false;
+        }
+
+        if (isAnnotationDeclaration) {
+            return true;
+        }
+
+        if (hasModifier || hasAnnotation || !hasReturnType) {
+            return true;
+        }
+
+        return false;
+    }
+
     @SuppressWarnings("GroovyUnusedDeclaration")
     private MethodNode parseMethodDeclaration(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, Closure<MethodNode> createMethodNode) {
         //noinspection GroovyAssignabilityCheck
         final Iterator<Object> iterator = parseModifiers(ctx.memberModifier(), Opcodes.ACC_PUBLIC).iterator();
         int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : Opcodes.ACC_PUBLIC));
+
+        boolean isAnnotationDeclaration = null != classNode
+                                                && ClassHelper.Annotation_TYPE.equals(classNode.getInterfaces().length > 0 ? classNode.getInterfaces()[0] : null);
         boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : false));
+        boolean hasModifier = 0 != ctx.memberModifier().size();
+        boolean hasAnnotation = 0 != ctx.annotationClause().size();
+        boolean hasReturnType = (asBoolean(ctx.typeDeclaration()) && !"def".equals(ctx.typeDeclaration().getText()))
+                                    || asBoolean(ctx.genericClassNameExpression());
+
 
         innerClassesDefinedInMethod.add(new ArrayList());
         Statement statement = asBoolean(ctx.methodBody())
@@ -214,7 +249,9 @@ public class ASTBuilder {
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
-        methodNode.setSyntheticPublic(!hasVisibilityModifier);
+        methodNode.setSyntheticPublic(isSyntheticPublic(isAnnotationDeclaration, hasAnnotation, hasVisibilityModifier, hasModifier, hasReturnType));
+        methodNode.setSynthetic(false); // user-defined method are not synthetic
+
         return methodNode;
     }
 
