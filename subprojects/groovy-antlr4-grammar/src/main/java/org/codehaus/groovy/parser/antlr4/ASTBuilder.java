@@ -1578,7 +1578,15 @@ public class ASTBuilder {
         return new org.codehaus.groovy.syntax.Token(type, token.getText(), token.getLine(), token.getCharPositionInLine());
     }
 
-    private DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx) {
+    public VariableExpression parseTupleVariableDeclaration(GroovyParser.TupleVariableDeclarationContext ctx) {
+        ClassNode type = asBoolean(ctx.genericClassNameExpression())
+                ? parseExpression(ctx.genericClassNameExpression())
+                : ClassHelper.OBJECT_TYPE;
+
+        return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText(), type), ctx);
+    }
+
+    public DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx) {
         // tuple must have an initial value.
         if (null == ctx.expression()) {
             throw new RuntimeException("tuple declaration must have an initial value.");
@@ -1587,11 +1595,7 @@ public class ASTBuilder {
         List<Expression> variables = new LinkedList<Expression>();
 
         for (GroovyParser.TupleVariableDeclarationContext tupleVariableDeclarationContext : ctx.tupleVariableDeclaration()) {
-            ClassNode type = asBoolean(tupleVariableDeclarationContext.genericClassNameExpression())
-                                ? setupNodeLocation(parseExpression(tupleVariableDeclarationContext.genericClassNameExpression()), ctx)
-                                : ClassHelper.OBJECT_TYPE;
-
-            variables.add(new VariableExpression(tupleVariableDeclarationContext.IDENTIFIER().getText(), type));
+            variables.add(parseTupleVariableDeclaration(tupleVariableDeclarationContext));
         }
 
         ArgumentListExpression argumentListExpression = new ArgumentListExpression(variables);

@@ -22,13 +22,7 @@ import org.codehaus.groovy.ast.FieldNode
 import org.codehaus.groovy.ast.GenericsType
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.PropertyNode
-import org.codehaus.groovy.ast.stmt.AssertStatement
-import org.codehaus.groovy.ast.stmt.BreakStatement
-import org.codehaus.groovy.ast.stmt.ExpressionStatement
-import org.codehaus.groovy.ast.stmt.ForStatement
-import org.codehaus.groovy.ast.stmt.IfStatement
-import org.codehaus.groovy.ast.stmt.ReturnStatement
-import org.codehaus.groovy.ast.stmt.WhileStatement
+import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.control.ErrorCollector
 import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
 import org.codehaus.groovy.parser.antlr4.util.ASTWriter
