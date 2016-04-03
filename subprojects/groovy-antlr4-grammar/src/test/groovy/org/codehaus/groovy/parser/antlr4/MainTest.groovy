@@ -198,6 +198,7 @@ class MainTest extends Specification {
     }
 
 
+    /*
 	@Unroll
     def "test invalid class modifiers #path"() {
         expect:
@@ -221,6 +222,7 @@ class MainTest extends Specification {
         "ClassModifiersInvalid_Issue1_2.groovy" | _
         "ClassModifiersInvalid_Issue2_2.groovy" | _
     }
+    */
 
     @Unroll
     def "test invalid files #path"() {
@@ -237,6 +239,8 @@ class MainTest extends Specification {
             "Statement_Errors_5.groovy" | _
             "Statement_Errors_6.groovy" | _
             "Statement_Errors_7.groovy" | _
+            "ClassModifiersInvalid_Issue1_2.groovy" | _
+            "ClassModifiersInvalid_Issue2_2.groovy" | _
 
     }
 

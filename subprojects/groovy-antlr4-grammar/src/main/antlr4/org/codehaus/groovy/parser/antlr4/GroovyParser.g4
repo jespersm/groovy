@@ -21,6 +21,7 @@ parser grammar GroovyParser;
 options { tokenVocab = GroovyLexer; }
 
 @header {
+    import java.util.Arrays;
     import java.util.Set;
     import java.util.HashSet;
 }
@@ -39,8 +40,42 @@ options { tokenVocab = GroovyLexer; }
         declarationRuleInExpressionEnabled = false;
     }
 
-    private String createErrorMessageForStrictCheck(String keyword) {
-        return "duplicated " + keyword + " is not allowed.";
+    private static String createErrorMessageForStrictCheck(Set<String> s, String keyword) {
+        if (VISIBILITY_MODIFIER_SET.contains(keyword)) {
+            StringBuilder sb = new StringBuilder();
+            for (String m : s) {
+                if (VISIBILITY_MODIFIER_SET.contains(m)) {
+                    sb.append(m + ", ");
+                }
+            }
+
+            return sb.append(keyword) + " are not allowed to duplicate or define in the same time.";
+        } else {
+            return "duplicated " + keyword + " is not allowed.";
+        }
+    }
+
+    public static final Set<String> VISIBILITY_MODIFIER_SET = new HashSet<String>(Arrays.asList("public", "protected", "private"));
+    public static final String VISIBILITY_MODIFIER_STR = "VISIBILITY_MODIFIER";
+    private static void collectModifier(Set<String> s, String modifier) {
+        s.add(modifier);
+    }
+    private static boolean checkModifierDuplication(Set<String> s, String modifier) {
+        if (VISIBILITY_MODIFIER_SET.contains(modifier)) {
+            modifier = VISIBILITY_MODIFIER_STR;
+
+            for (String m : s) {
+                m = VISIBILITY_MODIFIER_SET.contains(m) ? VISIBILITY_MODIFIER_STR : m;
+
+                if (m.equals(modifier)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } else {
+            return s.contains(modifier);
+        }
     }
 }
 
@@ -55,10 +90,20 @@ packageDefinition:
     (annotationClause (NL | annotationClause)*)? KW_PACKAGE (IDENTIFIER (DOT IDENTIFIER)*);
 importStatement:
     (annotationClause (NL | annotationClause)*)? KW_IMPORT KW_STATIC? (IDENTIFIER (DOT IDENTIFIER)* (DOT MULT)?) (KW_AS IDENTIFIER)?;
-classDeclaration:
-    ((annotationClause | classModifier) (NL | annotationClause | classModifier)*)? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE) IDENTIFIER { currentClassName = $IDENTIFIER.text; } genericDeclarationList? extendsClause? implementsClause? (NL)* classBody ;
-enumDeclaration:
-    ((annotationClause | classModifier) (NL | annotationClause | classModifier)*)? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* LCURVE (enumMember | NL | SEMICOLON)* RCURVE ;
+classDeclaration
+locals [Set<String> modifierSet = new HashSet<String>()]
+:
+    (
+        (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
+        (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
+    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE) IDENTIFIER { currentClassName = $IDENTIFIER.text; } genericDeclarationList? extendsClause? implementsClause? (NL)* classBody ;
+enumDeclaration
+locals [Set<String> modifierSet = new HashSet<String>()]
+:
+    (
+        (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
+        (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
+    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* LCURVE (enumMember | NL | SEMICOLON)* RCURVE ;
 classMember:
     constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration | enumDeclaration ;
 enumMember:
@@ -73,8 +118,8 @@ methodDeclaration
 locals [Set<String> modifierAndDefSet = new HashSet<String>()]
 :
     (
-        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
-        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* (
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* (
             (genericDeclarationList genericClassNameExpression) | typeDeclaration
         )?
     |
@@ -91,8 +136,8 @@ fieldDeclaration
 locals [Set<String> modifierAndDefSet = new HashSet<String>()]
 :
     (
-        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
-        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* genericClassNameExpression?
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* genericClassNameExpression?
         | genericClassNameExpression)
     singleDeclaration ( COMMA singleDeclaration)*
 ;
@@ -283,7 +328,7 @@ mapEntry:
     | INTEGER COLON expression
 ;
 
-classModifier: //JSL7 8.1 FIXME Now gramar allows modifier duplication. It's possible to make it more strict listing all 24 permutations.
+classModifier:
 VISIBILITY_MODIFIER | KW_STATIC | (KW_ABSTRACT | KW_FINAL) | KW_STRICTFP ;
 
 memberModifier:
