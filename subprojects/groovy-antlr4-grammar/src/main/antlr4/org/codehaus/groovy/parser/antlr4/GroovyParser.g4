@@ -38,6 +38,10 @@ options { tokenVocab = GroovyLexer; }
     private void disableDeclarationRuleInExpression() {
         declarationRuleInExpressionEnabled = false;
     }
+
+    private String createErrorMessageForStrictCheck(String keyword) {
+        return "duplicated " + keyword + " is not allowed.";
+    }
 }
 
 compilationUnit: SHEBANG_COMMENT? (NL*) packageDefinition? (NL | SEMICOLON)* (importStatement (NL | SEMICOLON)*)* (NL | SEMICOLON)* (classDeclaration | enumDeclaration | NL)* (NL | SEMICOLON)* (scriptPart (NL | SEMICOLON)+)* (scriptPart)? (NL | SEMICOLON)* EOF;
@@ -69,8 +73,8 @@ methodDeclaration
 locals [Set<String> modifierAndDefSet = new HashSet<String>()]
 :
     (
-        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={"duplicated " + $memberModifier.text + " is not allowed."}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={"duplicated " + $KW_DEF.text + " is not allowed."}> {$modifierAndDefSet.add($KW_DEF.text);})
-        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={"duplicated " + $memberModifier.text + " is not allowed."}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={"duplicated " + $KW_DEF.text + " is not allowed."}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* (
+        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* (
             (genericDeclarationList genericClassNameExpression) | typeDeclaration
         )?
     |
@@ -83,9 +87,12 @@ methodBody:
     LCURVE blockStatement? RCURVE
 ;
 
-fieldDeclaration:
+fieldDeclaration
+locals [Set<String> modifierAndDefSet = new HashSet<String>()]
+:
     (
-        (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* genericClassNameExpression?
+        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={createErrorMessageForStrictCheck($memberModifier.text)}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* genericClassNameExpression?
         | genericClassNameExpression)
     singleDeclaration ( COMMA singleDeclaration)*
 ;
