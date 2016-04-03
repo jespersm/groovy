@@ -20,6 +20,11 @@ parser grammar GroovyParser;
 
 options { tokenVocab = GroovyLexer; }
 
+@header {
+    import java.util.Set;
+    import java.util.HashSet;
+}
+
 @members {
     private String currentClassName = null; // Used for correct constructor recognition.
     private boolean declarationRuleInExpressionEnabled = false;
@@ -59,10 +64,13 @@ enumMember:
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
 extendsClause:  KW_EXTENDS genericClassNameExpression ;
 
-// Members // FIXME Make more strict check for def keyword. It can't repeat.
-methodDeclaration:
+// Members
+methodDeclaration
+locals [Set<String> modifierAndDefSet = new HashSet<String>()]
+:
     (
-        (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* (
+        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={"duplicated " + $memberModifier.text + " is not allowed."}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={"duplicated " + $KW_DEF.text + " is not allowed."}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!$modifierAndDefSet.contains($memberModifier.text)}?<fail={"duplicated " + $memberModifier.text + " is not allowed."}> {$modifierAndDefSet.add($memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={"duplicated " + $KW_DEF.text + " is not allowed."}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* (
             (genericDeclarationList genericClassNameExpression) | typeDeclaration
         )?
     |

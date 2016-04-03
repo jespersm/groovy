@@ -233,6 +233,8 @@ class MainTest extends Specification {
             "Statement_Errors_1.groovy" | _
             "Statement_Errors_2.groovy" | _
             "Statement_Errors_3.groovy" | _
+            "Statement_Errors_4.groovy" | _
+            "Statement_Errors_5.groovy" | _
 
     }
 
