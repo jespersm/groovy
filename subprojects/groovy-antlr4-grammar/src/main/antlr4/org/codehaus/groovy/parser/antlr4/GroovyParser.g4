@@ -20,6 +20,12 @@ parser grammar GroovyParser;
 
 options { tokenVocab = GroovyLexer; }
 
+@header {
+    import java.util.Arrays;
+    import java.util.Set;
+    import java.util.HashSet;
+}
+
 @members {
     private String currentClassName = null; // Used for correct constructor recognition.
     private boolean declarationRuleInExpressionEnabled = false;
@@ -32,6 +38,44 @@ options { tokenVocab = GroovyLexer; }
     }
     private void disableDeclarationRuleInExpression() {
         declarationRuleInExpressionEnabled = false;
+    }
+
+    private static String createErrorMessageForStrictCheck(Set<String> s, String keyword) {
+        if (VISIBILITY_MODIFIER_SET.contains(keyword)) {
+            StringBuilder sb = new StringBuilder();
+            for (String m : s) {
+                if (VISIBILITY_MODIFIER_SET.contains(m)) {
+                    sb.append(m + ", ");
+                }
+            }
+
+            return sb.append(keyword) + " are not allowed to duplicate or define in the same time.";
+        } else {
+            return "duplicated " + keyword + " is not allowed.";
+        }
+    }
+
+    public static final Set<String> VISIBILITY_MODIFIER_SET = new HashSet<String>(Arrays.asList("public", "protected", "private"));
+    public static final String VISIBILITY_MODIFIER_STR = "VISIBILITY_MODIFIER";
+    private static void collectModifier(Set<String> s, String modifier) {
+        s.add(modifier);
+    }
+    private static boolean checkModifierDuplication(Set<String> s, String modifier) {
+        if (VISIBILITY_MODIFIER_SET.contains(modifier)) {
+            modifier = VISIBILITY_MODIFIER_STR;
+
+            for (String m : s) {
+                m = VISIBILITY_MODIFIER_SET.contains(m) ? VISIBILITY_MODIFIER_STR : m;
+
+                if (m.equals(modifier)) {
+                    return true;
+                }
+            }
+
+            return false;
+        } else {
+            return s.contains(modifier);
+        }
     }
 }
 
@@ -46,10 +90,20 @@ packageDefinition:
     (annotationClause (NL | annotationClause)*)? KW_PACKAGE (IDENTIFIER (DOT IDENTIFIER)*);
 importStatement:
     (annotationClause (NL | annotationClause)*)? KW_IMPORT KW_STATIC? (IDENTIFIER (DOT IDENTIFIER)* (DOT MULT)?) (KW_AS IDENTIFIER)?;
-classDeclaration:
-    ((annotationClause | classModifier) (NL | annotationClause | classModifier)*)? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE) IDENTIFIER { currentClassName = $IDENTIFIER.text; } genericDeclarationList? extendsClause? implementsClause? (NL)* classBody ;
-enumDeclaration:
-    ((annotationClause | classModifier) (NL | annotationClause | classModifier)*)? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* LCURVE (enumMember | NL | SEMICOLON)* RCURVE ;
+classDeclaration
+locals [Set<String> modifierSet = new HashSet<String>()]
+:
+    (
+        (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
+        (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
+    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE) IDENTIFIER { currentClassName = $IDENTIFIER.text; } genericDeclarationList? extendsClause? implementsClause? (NL)* classBody ;
+enumDeclaration
+locals [Set<String> modifierSet = new HashSet<String>()]
+:
+    (
+        (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
+        (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
+    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* LCURVE (enumMember | NL | SEMICOLON)* RCURVE ;
 classMember:
     constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration | enumDeclaration ;
 enumMember:
@@ -59,10 +113,13 @@ enumMember:
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
 extendsClause:  KW_EXTENDS genericClassNameExpression ;
 
-// Members // FIXME Make more strict check for def keyword. It can't repeat.
-methodDeclaration:
+// Members
+methodDeclaration
+locals [Set<String> modifierAndDefSet = new HashSet<String>()]
+:
     (
-        (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* (
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* (
             (genericDeclarationList genericClassNameExpression) | typeDeclaration
         )?
     |
@@ -75,9 +132,12 @@ methodBody:
     LCURVE blockStatement? RCURVE
 ;
 
-fieldDeclaration:
+fieldDeclaration
+locals [Set<String> modifierAndDefSet = new HashSet<String>()]
+:
     (
-        (memberModifier | annotationClause | KW_DEF) (memberModifier | annotationClause | KW_DEF | NL)* genericClassNameExpression?
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
+        (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* genericClassNameExpression?
         | genericClassNameExpression)
     singleDeclaration ( COMMA singleDeclaration)*
 ;
@@ -113,14 +173,18 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule: annotationClause* typeDeclaration singleDeclaration ( COMMA singleDeclaration)*;
+declarationRule: annotationClause* ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
+                                   | KW_DEF tupleDeclaration
+                                   );
 singleDeclaration: IDENTIFIER (ASSIGN expression)?;
+tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN expression)?;
+tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
 classBody: LCURVE (classMember | NL | SEMICOLON)* RCURVE ;
 
 statement:
-    declarationRule #declarationStatement
+      declarationRule #declarationStatement
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
     | KW_FOR LPAREN {enableDeclarationRuleInExpression();} (expression)? {disableDeclarationRuleInExpression();} SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
@@ -182,8 +246,7 @@ annotationParameter:
 ;
 
 expression:
-      {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
-    | newArrayRule #newArrayExpression
+      newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
     | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
@@ -231,6 +294,8 @@ expression:
     | expression ELVIS NL* expression #elvisExpression
     | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
+    |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN expression #assignmentExpression
+    | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
     | STRING #constantExpression
     | gstring #gstringExpression
     | DECIMAL #constantDecimalExpression
@@ -263,7 +328,7 @@ mapEntry:
     | INTEGER COLON expression
 ;
 
-classModifier: //JSL7 8.1 FIXME Now gramar allows modifier duplication. It's possible to make it more strict listing all 24 permutations.
+classModifier:
 VISIBILITY_MODIFIER | KW_STATIC | (KW_ABSTRACT | KW_FINAL) | KW_STRICTFP ;
 
 memberModifier:
