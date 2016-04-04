@@ -2,7 +2,7 @@
 
 [PASS]	./appD/Listing_D_01_GStrings.groovy
 [PASS]	./appD/Listing_D_02_Lists.groovy
-[PASS]	./appD/Listing_D_03_Closures.groovy  // FIXME ISSUE#18(Fail to parse the call expression when the callee is not a path expression)
+[FIXME]	./appD/Listing_D_03_Closures.groovy             // FIXME ISSUE#18(Fail to parse the call expression when the callee is not a path expression)
 [PASS]	./appD/Listing_D_04_Regex.groovy
 [TODO]	./appD/Listing_D_05_GPath.groovy
 [SKIP]	./chap01/customers.xml
@@ -19,7 +19,7 @@
 [PASS]	./chap02/Book.groovy
 [PASS]	./chap02/Listing_02_01_Assertions.groovy
 [SKIP]	./chap02/Listing_02_02_Book.txt
-[TODO]	./chap02/Listing_02_03_BookScript.groovy
+[PASS]	./chap02/Listing_02_03_BookScript.groovy
 [PASS]	./chap02/Listing_02_04_BookBean.groovy
 [PASS]	./chap02/Listing_02_05_ImmutableBook.groovy
 [TODO]	./chap02/Listing_02_06_Grab.groovy
