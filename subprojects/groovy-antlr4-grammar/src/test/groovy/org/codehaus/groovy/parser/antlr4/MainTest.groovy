@@ -118,6 +118,7 @@ class MainTest extends Specification {
         "Dollar_Slashy_Strings.groovy" | _
         "Dollar_Slashy_GStrings.groovy" | _
         "SyntheticPublic_issue19.groovy" | _
+        "Traits_issue21.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
@@ -239,6 +240,7 @@ class MainTest extends Specification {
             "Statement_Errors_5.groovy" | _
             "Statement_Errors_6.groovy" | _
             "Statement_Errors_7.groovy" | _
+            "Statement_Errors_8.groovy" | _
             "ClassModifiersInvalid_Issue1_2.groovy" | _
             "ClassModifiersInvalid_Issue2_2.groovy" | _
 

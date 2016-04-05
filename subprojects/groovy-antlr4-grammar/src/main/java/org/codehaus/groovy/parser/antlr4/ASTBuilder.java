@@ -55,6 +55,9 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
 @SuppressWarnings("ALL")
 public class ASTBuilder {
 
+    public static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
+    public static final String ABSTRACT = "abstract";
+
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
         this.sourceUnit = sourceUnit;
@@ -321,6 +324,11 @@ public class ASTBuilder {
 
         setupNodeLocation(classNode, ctx);
         attachAnnotations(classNode, ctx.annotationClause());
+
+        if (asBoolean(ctx.KW_TRAIT())) {
+            attachTraitTransformAnnotation(classNode);
+        }
+
         moduleNode.addClass(classNode);
         if (asBoolean(ctx.extendsClause()))
             (classNode).setSuperClass(parseExpression(ctx.extendsClause().genericClassNameExpression()));
@@ -402,8 +410,19 @@ public class ASTBuilder {
 
     }
 
+    private boolean isTrait(ClassNode classNode) {
+        return classNode.getAnnotations(ClassHelper.make(GROOVY_TRANSFORM_TRAIT)).size() > 0;
+    }
+
+
     @SuppressWarnings("GroovyUnusedDeclaration")
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
+        if (isTrait(classNode)) {
+            if (null == ctx.methodBody() && !ctx.modifierAndDefSet.contains(ABSTRACT)) {
+                throw new InvalidSyntaxException("You defined a method without body. Try adding a body, or declare it abstract.", ctx);
+            }
+        }
+
         return parseMethodDeclaration(classNode, ctx, new Closure<MethodNode>(this, this) {
                     public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
                         modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
@@ -545,7 +564,7 @@ public class ASTBuilder {
             return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
         if (ctx instanceof GroovyParser.AssertStatementContext)
             return parseStatement((GroovyParser.AssertStatementContext)ctx);
-        throw new RuntimeException("Unsupported statement type! " + ctx.getText());
+        throw new InvalidSyntaxException("Unsupported statement type! " + ctx.getText(), ctx);
     }
 
     public Statement parseStatement(GroovyParser.BlockStatementContext ctx) {
@@ -604,7 +623,7 @@ public class ASTBuilder {
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Statement parseStatement(GroovyParser.ForColonStatementContext ctx) {
         if (!asBoolean(ctx.typeDeclaration()))
-            throw new RuntimeException("Classic for statement require type to be declared.");
+            throw new InvalidSyntaxException("Classic for statement require type to be declared.", ctx);
         Parameter parameter = new Parameter(parseTypeDeclaration(ctx.typeDeclaration()), ctx.IDENTIFIER().getText());
         parameter = setupNodeLocation(parameter, ctx.IDENTIFIER().getSymbol());
 
@@ -844,7 +863,7 @@ public class ASTBuilder {
         if (ctx instanceof GroovyParser.SpreadExpressionContext)
             return parseExpression((GroovyParser.SpreadExpressionContext)ctx);
 
-        throw new RuntimeException("Unsupported expression type! " + String.valueOf(ctx));
+        throw new InvalidSyntaxException("Unsupported expression type! " + String.valueOf(ctx), ctx);
     }
 
     @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.NewArrayExpressionContext ctx) {
@@ -894,7 +913,7 @@ public class ASTBuilder {
                 } else if (asBoolean(ctx.DECIMAL())) {
                     keyExpr = parseDecimal(ctx.DECIMAL().getText(), ctx);
                 } else {
-                    throw new RuntimeException("Unsupported map key type! " + String.valueOf(ctx));
+                    throw new InvalidSyntaxException("Unsupported map key type! " + String.valueOf(ctx), ctx);
                 }
             }
         } else {
@@ -1589,7 +1608,7 @@ public class ASTBuilder {
     public DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx) {
         // tuple must have an initial value.
         if (null == ctx.expression()) {
-            throw new RuntimeException("tuple declaration must have an initial value.");
+            throw new InvalidSyntaxException("tuple declaration must have an initial value.", ctx);
         }
 
         List<Expression> variables = new LinkedList<Expression>();
@@ -1649,7 +1668,10 @@ public class ASTBuilder {
             AnnotationNode annotation = parseAnnotation(ctx);
             node.addAnnotation(annotation);
         }
+    }
 
+    private void attachTraitTransformAnnotation(ClassNode classNode) {
+        classNode.addAnnotation(new AnnotationNode(ClassHelper.make(GROOVY_TRANSFORM_TRAIT)));
     }
 
     public List<AnnotationNode> parseAnnotations(List<GroovyParser.AnnotationClauseContext> ctxs) {

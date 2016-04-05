@@ -204,6 +204,7 @@ fragment DECIMAL_ONLY_TYPE_MODIFIER: ( 'D' | 'F' | 'd' | 'f') ;
 
 KW_CLASS: 'class' ;
 KW_INTERFACE: 'interface' ;
+KW_TRAIT: 'trait' ;
 KW_ENUM: 'enum' ;
 
 KW_PACKAGE: 'package' ;
