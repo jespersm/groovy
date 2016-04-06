@@ -23,13 +23,16 @@ import org.codehaus.groovy.ast.GenericsType
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.PropertyNode
 import org.codehaus.groovy.ast.stmt.*
-import org.codehaus.groovy.control.ErrorCollector
+import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
 import org.codehaus.groovy.parser.antlr4.util.ASTWriter
 import spock.lang.Specification
 import spock.lang.Unroll
 
+import java.util.logging.Logger
+
 class MainTest extends Specification {
+    private Logger log = Logger.getLogger(MainTest.class.getName());
     public static final String DEFAULT_RESOURCES_PATH = 'subprojects/groovy-antlr4-grammar/src/test/resources';
     public static final String RESOURCES_PATH = new File(DEFAULT_RESOURCES_PATH).exists() ? DEFAULT_RESOURCES_PATH : 'src/test/resources';
 
@@ -118,6 +121,7 @@ class MainTest extends Specification {
         "Dollar_Slashy_Strings.groovy" | _
         "Dollar_Slashy_GStrings.groovy" | _
         "SyntheticPublic_issue19.groovy" | _
+        "Traits_issue21.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
@@ -185,16 +189,22 @@ class MainTest extends Specification {
 
     }
 
-    def addIgnore(Class aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
-        c = c ?: ASTComparatorCategory.DEFAULT_CONFIGURATION.clone() as Map<Class, List<String>>;
-        c[aClass].addAll(ignore)
-        c
-    }
+    @Unroll
+    def "test by evaluating script: #path"() {
+        def filename = path;
 
-    def addIgnore(Collection<Class> aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
-        c = c ?: ASTComparatorCategory.DEFAULT_CONFIGURATION.clone() as Map<Class, List<String>>;
-        aClass.each { c[it].addAll(ignore) }
-        c
+        setup:
+        def file = new File("$RESOURCES_PATH/$path")
+        def gsh = createGroovyShell(compilerConfiguration)
+
+
+        expect:
+        assertScript(gsh, file);
+
+        where:
+        path | compilerConfiguration
+        "Assert_issue9.groovy" | CompilerConfiguration.DEFAULT
+
     }
 
 
@@ -239,15 +249,50 @@ class MainTest extends Specification {
             "Statement_Errors_5.groovy" | _
             "Statement_Errors_6.groovy" | _
             "Statement_Errors_7.groovy" | _
+            "Statement_Errors_8.groovy" | _
             "ClassModifiersInvalid_Issue1_2.groovy" | _
             "ClassModifiersInvalid_Issue2_2.groovy" | _
 
     }
 
 
+    def addIgnore(Class aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
+        c = c ?: ASTComparatorCategory.DEFAULT_CONFIGURATION.clone() as Map<Class, List<String>>;
+        c[aClass].addAll(ignore)
+        c
+    }
+
+    def addIgnore(Collection<Class> aClass, ArrayList<String> ignore, Map<Class, List<String>> c = null) {
+        c = c ?: ASTComparatorCategory.DEFAULT_CONFIGURATION.clone() as Map<Class, List<String>>;
+        aClass.each { c[it].addAll(ignore) }
+        c
+    }
+
     boolean canLoad(File file, Configuration config) {
         def module = new Main(config).process(file)
         return module != null && ! module.context.errorCollector.hasErrors()
     }
 
+    def createGroovyShell(CompilerConfiguration c) {
+        CompilerConfiguration configuration = new CompilerConfiguration(c)
+        configuration.pluginFactory = new Antlrv4PluginFactory()
+
+        return new GroovyShell(configuration);
+    }
+
+    def assertScript(gsh, file) {
+        def content = file.text;
+        try {
+            gsh.evaluate(content);
+
+            log.info("Evaluated $file")
+
+            return true;
+        } catch (Throwable t) {
+            log.info("Failed $file: ${t.getMessage()}");
+
+            return false;
+        }
+    }
 }
+
