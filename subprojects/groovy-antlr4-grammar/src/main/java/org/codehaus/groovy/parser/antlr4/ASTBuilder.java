@@ -691,12 +691,7 @@ public class ASTBuilder {
     @SuppressWarnings("GroovyUnusedDeclaration")
     public Statement parseStatement(GroovyParser.AssertStatementContext ctx) {
         Expression conditionExpression = parseExpression(ctx.expression(0));
-        BooleanExpression booleanConditionExpression =
-            conditionExpression instanceof BooleanExpression
-                ?
-                    (BooleanExpression)conditionExpression
-                :
-                    new BooleanExpression(conditionExpression);
+        BooleanExpression booleanConditionExpression = new BooleanExpression(conditionExpression);
 
         if (ctx.expression().size() == 1) {
             return setupNodeLocation(new AssertStatement(booleanConditionExpression), ctx);
@@ -1019,7 +1014,8 @@ public class ASTBuilder {
         }
     }
 
-    @SuppressWarnings("GroovyUnusedDeclaration") public Expression parseExpression(GroovyParser.UnaryExpressionContext ctx) {
+    @SuppressWarnings("GroovyUnusedDeclaration")
+    public Expression parseExpression(GroovyParser.UnaryExpressionContext ctx) {
         Object node = null;
         TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(0), TerminalNode.class);
         if (DefaultGroovyMethods.isCase("-", op.getText())) {

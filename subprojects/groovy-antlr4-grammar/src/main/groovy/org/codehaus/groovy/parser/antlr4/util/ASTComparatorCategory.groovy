@@ -118,6 +118,11 @@ class ASTComparatorCategory {
      * @return
      */
     static reflexiveEquals(a, b, ignore = []) {
+        if (a.getClass() != b.getClass()) {
+            log.warning(" !!!! DIFFERENCE WAS FOUND! ${a.getClass()} != ${b.getClass()}")
+            return false;
+        }
+
         def objects = [a, b]
         Boolean res = this.objects[objects]
         if (res != null) {
@@ -133,12 +138,15 @@ class ASTComparatorCategory {
         log.info("Equals was called for ${ a.getClass() } ${ a.hashCode() }, $lastName")
         if (a.is(b))
             return true
+
         def difference = a.metaClass.properties.find { MetaBeanProperty p ->
             if (!p.getter)
                 return false
 
             def name = p.name
             lastName = "$name :::: ${ a.getClass() } ${ a.hashCode() }"
+
+
             !(name in ignore) && name != 'nodeMetaData' && a."$name" != b."$name"
         }
 
