@@ -121,24 +121,31 @@ SLASHY_GSTRING_START: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '
 DOLLAR_SLASHY_GSTRING_START: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(DOLLAR_SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 
-fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
+fragment SLASHY_STRING_ELEMENT:         SLASHY_ESCAPE
+                                       | ~('/' | '$' | '\n')
+                                       ;
 fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
                                        | '/' { _input.LA(1) != '$' }?
                                        | ~('/' | '$')
                                        )
                                        ;
-fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE
+fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
                              |  '\'' { !(_input.LA(1) == '\'' && _input.LA(2) == '\'') }?
                              | ~('\\' | '\'')
                              )
                              ;
-fragment SQ_STRING_ELEMENT: ESC_SEQUENCE | ~('\'' | '\\') ;
-fragment DQ_STRING_ELEMENT: ESC_SEQUENCE | ~('"' | '\\' | '$') ;
-fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE
-                            |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
-                            | ~('\\' | '"' | '$')
-                            )
-                            ;
+fragment SQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
+                             | ~('\'' | '\\')
+                             ;
+fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
+                             |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
+                             | ~('\\' | '"' | '$')
+                             )
+                             ;
+fragment DQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
+                             | ~('"' | '\\' | '$')
+                             ;
+
 fragment TSQ: '\'\'\'';
 fragment TDQ: '"""';
 fragment LDS: '$/';
@@ -175,6 +182,7 @@ mode GSTRING_PATH ;
 mode DEFAULT_MODE ;
 
 fragment SLASHY_ESCAPE: '\\' '/' ;
+fragment DOLLAR_ESCAPE: '\\' '$' ;
 fragment ESC_SEQUENCE: '\\' [btnfr"'\\] | OCTAL_ESC_SEQ | UNICODE_ESCAPE;
 fragment OCTAL_ESC_SEQ: '\\' [0-3]? ZERO_TO_SEVEN? ZERO_TO_SEVEN ;
 fragment UNICODE_ESCAPE: '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;

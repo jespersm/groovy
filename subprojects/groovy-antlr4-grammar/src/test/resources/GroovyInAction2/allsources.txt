@@ -38,7 +38,7 @@
 [PASS]	./chap02/snippet0204_evaluate_jdk8_only.groovy
 [PASS]	./chap02/snippet0204_failing_typechecked.groovy
 [SKIP]	./chap03/ArrayListSummer.java
-[FIXME]	./chap03/extra_escaped_characters_table36.groovy
+[PASS]	./chap03/extra_escaped_characters_table36.groovy
 [FIXME]	./chap03/extra_method_operators_table34.groovy
 [FIXME]	./chap03/extra_numeric_literals_table32.groovy
 [PASS]	./chap03/extra_numerical_coercion_table310.groovy
