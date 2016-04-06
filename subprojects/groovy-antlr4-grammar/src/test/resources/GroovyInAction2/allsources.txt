@@ -22,7 +22,7 @@
 [PASS]	./chap02/Listing_02_03_BookScript.groovy
 [PASS]	./chap02/Listing_02_04_BookBean.groovy
 [PASS]	./chap02/Listing_02_05_ImmutableBook.groovy
-[TODO]	./chap02/Listing_02_06_Grab.groovy
+[PASS]	./chap02/Listing_02_06_Grab.groovy
 [TODO]	./chap02/Listing_02_07_Clinks.groovy
 [PASS]	./chap02/Listing_02_08_ControlStructures.groovy
 [PASS]	./chap02/snippet0201_comments.groovy
@@ -32,7 +32,7 @@
 [PASS]	./chap02/snippet0203_gstring.groovy
 [PASS]	./chap02/snippet0203_int_usage.groovy
 [PASS]	./chap02/snippet0203_map_usage.groovy
-[TODO]	./chap02/snippet0203_range_usage.groovy
+[PASS]	./chap02/snippet0203_range_usage.groovy
 [PASS]	./chap02/snippet0203_roman.groovy
 [PASS]	./chap02/snippet0204_evaluate_jdk7_only.groovy
 [PASS]	./chap02/snippet0204_evaluate_jdk8_only.groovy
