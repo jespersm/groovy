@@ -72,7 +72,8 @@ public class ASTBuilder {
         GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
         GroovyParser parser = new GroovyParser(new CommonTokenStream(lexer));
 
-        this.setUpErrorListener(parser);
+
+        this.setupErrorListener(parser);
 
         this.startParsing(parser);
     }
@@ -2034,7 +2035,7 @@ public class ASTBuilder {
     }
 
 
-    private void setUpErrorListener(GroovyParser parser) {
+    private void setupErrorListener(GroovyParser parser) {
         parser.removeErrorListeners();
         parser.addErrorListener(new ANTLRErrorListener() {
             @Override
@@ -2130,7 +2131,6 @@ public class ASTBuilder {
     private ModuleNode moduleNode;
     private SourceUnit sourceUnit;
     private ClassLoader classLoader;
-    private ASTBuilder instance;
     private Stack<ClassNode> classes = new Stack<ClassNode>();
     private Stack<List<InnerClassNode>> innerClassesDefinedInMethod = new Stack<List<InnerClassNode>>();
     private int anonymousClassesCount = 0;
