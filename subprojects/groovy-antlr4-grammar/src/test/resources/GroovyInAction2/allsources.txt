@@ -25,7 +25,7 @@
 [TODO]	./chap02/Listing_02_06_Grab.groovy
 [TODO]	./chap02/Listing_02_07_Clinks.groovy
 [PASS]	./chap02/Listing_02_08_ControlStructures.groovy
-[TODO]	./chap02/snippet0201_comments.groovy
+[PASS]	./chap02/snippet0201_comments.groovy
 [PASS]	./chap02/snippet0202_failing_assert.groovy
 [PASS]	./chap02/snippet0202_failing_assertion_error.txt
 [PASS]	./chap02/snippet0203_clinks_java.groovy

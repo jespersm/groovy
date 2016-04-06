@@ -16,6 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
+
 package org.codehaus.groovy.parser.antlr4;
 
 import groovy.lang.Closure;
@@ -77,11 +78,44 @@ public class ASTBuilder {
         this.startParsing(parser);
     }
 
+    // comments are treated as NL
+    public static final Set<Integer> EMPTY_CONTENT_TOKEN_TYPE_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.NL, GroovyParser.EOF, GroovyParser.SEMICOLON));
+
+
+    /**
+     * Check whether the source file just contains newlines, comments and semi colon
+     *
+     * @param tree
+     * @return
+     */
+    public boolean isEmpty(GroovyParser.CompilationUnitContext tree) {
+        for(ParseTree parseTree : tree.children) {
+            if (!(parseTree instanceof TerminalNode)) {
+                return false;
+            }
+
+            if (parseTree instanceof TerminalNode) {
+                int tokenType = ((TerminalNode) parseTree).getSymbol().getType();
+
+                if (!EMPTY_CONTENT_TOKEN_TYPE_SET.contains(tokenType)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void startParsing(GroovyParser parser) {
         GroovyParser.CompilationUnitContext tree = parser.compilationUnit();
 
         if (log.isLoggable(Level.FINE)) {
             this.logTreeStr(tree);
+        }
+
+        if (isEmpty(tree)) {
+            moduleNode.addStatement(new ReturnStatement(new ConstantExpression(null)));
+            return;
         }
 
         try {
@@ -1162,7 +1196,7 @@ public class ASTBuilder {
         return setupNodeLocation(cleanConstantStringLiteral(ctx.getText()), ctx);
     }
 
-    public ConstantExpression parseConstantStringToken(org.antlr.v4.runtime.Token token) {
+    public ConstantExpression parseConstantStringToken(Token token) {
         return setupNodeLocation(cleanConstantStringLiteral(token.getText()), token);
     }
 
@@ -1882,7 +1916,7 @@ public class ASTBuilder {
      * @param ctxList                   modifiers list.
      * @param defaultVisibilityModifier Default visibility modifier. Can be null. Applied if providen, and no visibility modifier exists in the ctxList.
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
-     * @see #checkModifierDuplication(int, int, org.antlr.v4.runtime.tree.TerminalNode)
+     * @see #checkModifierDuplication(int, int, TerminalNode)
      */
     public ArrayList<Object> parseModifiers(List<GroovyParser.MemberModifierContext> ctxList, Integer defaultVisibilityModifier) {
         int modifiers = 0;
@@ -1928,7 +1962,7 @@ public class ASTBuilder {
      * @param ctxList                   modifiers list.
      * @param defaultVisibilityModifier Default visibility modifier. Can be null. Applied if providen, and no visibility modifier exists in the ctxList.
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
-     * @see #checkModifierDuplication(int, int, org.antlr.v4.runtime.tree.TerminalNode)
+     * @see #checkModifierDuplication(int, int, TerminalNode)
      */
     public ArrayList<Object> parseModifiers(List<GroovyParser.MemberModifierContext> ctxList) {
         return parseModifiers(ctxList, null);
