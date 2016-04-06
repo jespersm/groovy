@@ -56,7 +56,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
 public class ASTBuilder {
 
     public static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
-    public static final String ABSTRACT = "abstract";
+    public static final String KW_ABSTRACT_STR = "abstract";
 
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
@@ -419,7 +419,7 @@ public class ASTBuilder {
     @SuppressWarnings("GroovyUnusedDeclaration")
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
         if (isTrait(classNode)) {
-            if (null == ctx.methodBody() && !ctx.modifierAndDefSet.contains(ABSTRACT)) {
+            if (null == ctx.methodBody() && !ctx.modifierAndDefSet.contains(KW_ABSTRACT_STR)) {
                 throw new InvalidSyntaxException("You defined a method without body. Try adding a body, or declare it abstract.", ctx);
             }
         }

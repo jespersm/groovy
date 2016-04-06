@@ -27,7 +27,7 @@ lexer grammar GroovyLexer;
 }
 
 @members {
-    public static final Set<Integer> ALLOWED_OP_SET = new HashSet<Integer>(Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR)); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
+    public static final Set<Integer> ALLOWED_OP_SET = new HashSet<Integer>(Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR, KW_ASSERT)); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
 
     private static enum Brace {
        ROUND,
@@ -107,22 +107,18 @@ MULTILINE_STRING:
     (TSQ TSQ_STRING_ELEMENT*? TSQ
     | TDQ TDQ_STRING_ELEMENT*? TDQ
     )  -> type(STRING)
-;
-
+    ;
 
 MULTILINE_GSTRING_START : TDQ TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
 
 
-SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
-DOLLAR_SLASHY_STRING: LDS DOLLAR_SLASHY_STRING_ELEMENT*? RDS -> type(STRING) ;
 STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
-
+SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
+DOLLAR_SLASHY_STRING: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? RDS -> type(STRING) ;
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-SLASHY_GSTRING_START:        '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
-
-
-DOLLAR_SLASHY_GSTRING_START: LDS DOLLAR_SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(DOLLAR_SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+SLASHY_GSTRING_START: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
+DOLLAR_SLASHY_GSTRING_START: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? '$' -> type(GSTRING_START), pushMode(DOLLAR_SLASHY_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
 
 
 fragment SLASHY_STRING_ELEMENT: SLASHY_ESCAPE | ~('$' | '/' | '\n') ;
