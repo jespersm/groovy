@@ -262,6 +262,7 @@ expression:
     | (PLUS | MINUS) expression #unaryExpression
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     | expression POWER expression #binaryExpression
     | expression MULT expression #binaryExpression
     | expression DIV expression #binaryExpression
@@ -292,7 +293,6 @@ expression:
     | expression OR expression #binaryExpression
     |<assoc=right> expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression ELVIS NL* expression #elvisExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN expression #assignmentExpression
     | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
