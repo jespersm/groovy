@@ -274,16 +274,16 @@ expression:
     | expression GT GT GT expression #binaryExpression
     | expression RANGE expression #binaryExpression
     | expression ORANGE expression #binaryExpression
+    | expression KW_IN expression #binaryExpression
+    | expression KW_AS genericClassNameExpression #binaryExpression
+    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
+    | expression SPACESHIP expression #binaryExpression
     | expression GT expression #binaryExpression
     | expression GTE expression #binaryExpression
     | expression LT expression #binaryExpression
     | expression LTE expression #binaryExpression
-    | expression KW_IN expression #binaryExpression
-    | expression KW_AS genericClassNameExpression #binaryExpression
-    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
     | expression EQUAL expression #binaryExpression
     | expression UNEQUAL expression #binaryExpression
-    | expression SPACESHIP expression #binaryExpression
     | expression FIND expression #binaryExpression
     | expression MATCH expression #binaryExpression
     | expression BAND expression #binaryExpression
