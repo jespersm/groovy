@@ -103,16 +103,17 @@ LCURVE : '{' { pushBrace(Brace.CURVE); tlePos = tokenIndex + 1; } -> pushMode(DE
 RCURVE : '}' { popBrace(); } -> popMode ;
 
 
-MULTILINE_STRING:
-    (TSQ TSQ_STRING_ELEMENT*? TSQ
-    | TDQ TDQ_STRING_ELEMENT*? TDQ
-    )  -> type(STRING)
-    ;
+MULTILINE_STRING:   (TSQ TSQ_STRING_ELEMENT*? TSQ
+                    | TDQ TDQ_STRING_ELEMENT*? TDQ
+                    )  -> type(STRING)
+                    ;
 
 MULTILINE_GSTRING_START : TDQ TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), pushMode(TRIPLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE);
 
 
-STRING: '"' DQ_STRING_ELEMENT*? '"'  | '\'' SQ_STRING_ELEMENT*? '\'' ;
+STRING:   '"' DQ_STRING_ELEMENT*? '"'
+        | '\'' SQ_STRING_ELEMENT*? '\''
+        ;
 SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
 DOLLAR_SLASHY_STRING: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? RDS -> type(STRING) ;
 
@@ -131,7 +132,7 @@ fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
                                        ;
 fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
                              |  '\'' { !(_input.LA(1) == '\'' && _input.LA(2) == '\'') }?
-                             | ~('\\' | '\'')
+                             | ~('\'' | '\\')
                              )
                              ;
 fragment SQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
@@ -139,11 +140,11 @@ fragment SQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
                              ;
 fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
                              |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
-                             | ~('\\' | '"' | '$')
+                             | ~('"'  | '\\' | '$')
                              )
                              ;
 fragment DQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
-                             | ~('"' | '\\' | '$')
+                             | ~('"'  | '\\' | '$')
                              ;
 
 fragment TSQ: '\'\'\'';

@@ -1296,9 +1296,8 @@ public class ASTBuilder {
                     if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
 
                         MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
-                        copyNodeLocation(expression, methodCallExpression);
 
-                        expressions.add(methodCallExpression);
+                        expressions.add(setupNodeLocation(methodCallExpression, expression));
                         return expressions;
                     }
 
@@ -1736,7 +1735,6 @@ public class ASTBuilder {
 
     /**
      * @param node
-     * @param cardinality Used for handling GT ">" operator, which can be repeated to give bitwise shifts >> or >>>
      * @return
      */
     public org.codehaus.groovy.syntax.Token createToken(TerminalNode node) {
@@ -1808,17 +1806,6 @@ public class ASTBuilder {
         }
 
         return methodNode;
-    }
-
-    private <T extends ASTNode> void copyNodeLocation(T srcNode, T destNode) {
-        if (null == srcNode || null == destNode) {
-            throw new IllegalArgumentException("srcNode[" + srcNode + "] and destNode[" + destNode + "] should not be null");
-        }
-
-        destNode.setLineNumber(srcNode.getLineNumber());
-        destNode.setColumnNumber(srcNode.getColumnNumber());
-        destNode.setLastLineNumber(srcNode.getLastLineNumber());
-        destNode.setLastColumnNumber(srcNode.getLastColumnNumber());
     }
 
     /**
