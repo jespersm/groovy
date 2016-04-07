@@ -317,28 +317,21 @@ public class ASTBuilder {
         attachAnnotations(classNode, ctx.annotationClause());
         moduleNode.addClass(classNode);
 
+
         classNode.setModifiers(parseClassModifiers(ctx.classModifier()) | Opcodes.ACC_ENUM | Opcodes.ACC_FINAL);
         classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
         classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
 
-        List<TerminalNode> enumConstants = collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<TerminalNode>(this, this) {
-            public TerminalNode doCall(GroovyParser.EnumMemberContext e) {return e.IDENTIFIER();}
 
-        }), new Closure<TerminalNode>(this, this) {
-            public TerminalNode doCall(GroovyParser.EnumMemberContext it) {return it.IDENTIFIER();}
-        });
-        List<GroovyParser.ClassMemberContext> classMembers = collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<GroovyParser.ClassMemberContext>(this, this) {
-            public GroovyParser.ClassMemberContext doCall(GroovyParser.EnumMemberContext e) {return e.classMember();}
+        parseEnumBody(ctx.enumBody(), classNode);
+    }
 
-        }), new Closure<GroovyParser.ClassMemberContext>(this, this) {
-            public GroovyParser.ClassMemberContext doCall(GroovyParser.EnumMemberContext it) {return it.classMember();}
-        });
-        DefaultGroovyMethods.each(enumConstants, new Closure<FieldNode>(this, this) {
-            public FieldNode doCall(TerminalNode it) {
-                return setupNodeLocation(EnumHelper.addEnumConstant(classNode, it.getText(), null), it.getSymbol());
-            }
-        });
-        parseMembers(classNode, classMembers);
+    public void parseEnumBody(@NotNull GroovyParser.EnumBodyContext ctx, ClassNode classNode) {
+        for(TerminalNode node : ctx.IDENTIFIER()) {
+            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.getText(), null), node.getSymbol());
+        }
+
+        parseMembers(classNode, ctx.classMember());
     }
 
     public ClassNode parseClassDeclaration(@NotNull final GroovyParser.ClassDeclarationContext ctx) {
@@ -1946,7 +1939,6 @@ public class ASTBuilder {
      * Traverse through modifiers, and combine them in one int value. Raise an error if there is multiple occurrences of same modifier.
      *
      * @param ctxList                   modifiers list.
-     * @param defaultVisibilityModifier Default visibility modifier. Can be null. Applied if providen, and no visibility modifier exists in the ctxList.
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
      * @see #checkModifierDuplication(int, int, TerminalNode)
      */

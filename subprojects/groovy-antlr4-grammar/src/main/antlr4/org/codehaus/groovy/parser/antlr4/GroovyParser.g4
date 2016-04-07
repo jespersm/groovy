@@ -103,13 +103,13 @@ locals [Set<String> modifierSet = new HashSet<String>()]
     (
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* LCURVE (enumMember | NL | SEMICOLON)* RCURVE ;
+    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* enumBody ;
 classMember:
     constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration | enumDeclaration ;
-enumMember:
-    IDENTIFIER (COMMA | NL)
-    | classMember
-;
+
+classBody: LCURVE                                                       (classMember | NL | SEMICOLON)* RCURVE;
+enumBody : LCURVE NL* (IDENTIFIER NL* COMMA NL*)* IDENTIFIER NL* COMMA? (classMember | NL | SEMICOLON)* RCURVE;
+
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
 extendsClause:  KW_EXTENDS genericClassNameExpression ;
 
@@ -181,7 +181,6 @@ tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaratio
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
-classBody: LCURVE (classMember | NL | SEMICOLON)* RCURVE ;
 
 statement:
       declarationRule #declarationStatement
