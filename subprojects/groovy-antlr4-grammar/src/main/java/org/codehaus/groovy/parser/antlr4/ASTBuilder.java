@@ -77,11 +77,44 @@ public class ASTBuilder {
         this.startParsing(parser);
     }
 
+    // comments are treated as NL
+    public static final Set<Integer> EMPTY_CONTENT_TOKEN_TYPE_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.NL, GroovyParser.EOF, GroovyParser.SEMICOLON));
+
+
+    /**
+     * Check whether the source file just contains newlines, comments and semi colon
+     *
+     * @param tree
+     * @return
+     */
+    public boolean isEmpty(GroovyParser.CompilationUnitContext tree) {
+        for(ParseTree parseTree : tree.children) {
+            if (!(parseTree instanceof TerminalNode)) {
+                return false;
+            }
+
+            if (parseTree instanceof TerminalNode) {
+                int tokenType = ((TerminalNode) parseTree).getSymbol().getType();
+
+                if (!EMPTY_CONTENT_TOKEN_TYPE_SET.contains(tokenType)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void startParsing(GroovyParser parser) {
         GroovyParser.CompilationUnitContext tree = parser.compilationUnit();
 
         if (log.isLoggable(Level.FINE)) {
             this.logTreeStr(tree);
+        }
+
+        if (isEmpty(tree)) {
+            moduleNode.addStatement(new ReturnStatement(new ConstantExpression(null)));
+            return;
         }
 
         try {
@@ -284,28 +317,21 @@ public class ASTBuilder {
         attachAnnotations(classNode, ctx.annotationClause());
         moduleNode.addClass(classNode);
 
+
         classNode.setModifiers(parseClassModifiers(ctx.classModifier()) | Opcodes.ACC_ENUM | Opcodes.ACC_FINAL);
         classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
         classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
 
-        List<TerminalNode> enumConstants = collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<TerminalNode>(this, this) {
-            public TerminalNode doCall(GroovyParser.EnumMemberContext e) {return e.IDENTIFIER();}
 
-        }), new Closure<TerminalNode>(this, this) {
-            public TerminalNode doCall(GroovyParser.EnumMemberContext it) {return it.IDENTIFIER();}
-        });
-        List<GroovyParser.ClassMemberContext> classMembers = collect(DefaultGroovyMethods.grep(ctx.enumMember(), new Closure<GroovyParser.ClassMemberContext>(this, this) {
-            public GroovyParser.ClassMemberContext doCall(GroovyParser.EnumMemberContext e) {return e.classMember();}
+        parseEnumBody(ctx.enumBody(), classNode);
+    }
 
-        }), new Closure<GroovyParser.ClassMemberContext>(this, this) {
-            public GroovyParser.ClassMemberContext doCall(GroovyParser.EnumMemberContext it) {return it.classMember();}
-        });
-        DefaultGroovyMethods.each(enumConstants, new Closure<FieldNode>(this, this) {
-            public FieldNode doCall(TerminalNode it) {
-                return setupNodeLocation(EnumHelper.addEnumConstant(classNode, it.getText(), null), it.getSymbol());
-            }
-        });
-        parseMembers(classNode, classMembers);
+    public void parseEnumBody(@NotNull GroovyParser.EnumBodyContext ctx, ClassNode classNode) {
+        for(TerminalNode node : ctx.IDENTIFIER()) {
+            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.getText(), null), node.getSymbol());
+        }
+
+        parseMembers(classNode, ctx.classMember());
     }
 
     public ClassNode parseClassDeclaration(@NotNull final GroovyParser.ClassDeclarationContext ctx) {
@@ -1162,7 +1188,7 @@ public class ASTBuilder {
         return setupNodeLocation(cleanConstantStringLiteral(ctx.getText()), ctx);
     }
 
-    public ConstantExpression parseConstantStringToken(org.antlr.v4.runtime.Token token) {
+    public ConstantExpression parseConstantStringToken(Token token) {
         return setupNodeLocation(cleanConstantStringLiteral(token.getText()), token);
     }
 
@@ -1263,9 +1289,8 @@ public class ASTBuilder {
                     if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
 
                         MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
-                        copyNodeLocation(expression, methodCallExpression);
 
-                        expressions.add(methodCallExpression);
+                        expressions.add(setupNodeLocation(methodCallExpression, expression));
                         return expressions;
                     }
 
@@ -1703,7 +1728,6 @@ public class ASTBuilder {
 
     /**
      * @param node
-     * @param cardinality Used for handling GT ">" operator, which can be repeated to give bitwise shifts >> or >>>
      * @return
      */
     public org.codehaus.groovy.syntax.Token createToken(TerminalNode node) {
@@ -1775,17 +1799,6 @@ public class ASTBuilder {
         }
 
         return methodNode;
-    }
-
-    private <T extends ASTNode> void copyNodeLocation(T srcNode, T destNode) {
-        if (null == srcNode || null == destNode) {
-            throw new IllegalArgumentException("srcNode[" + srcNode + "] and destNode[" + destNode + "] should not be null");
-        }
-
-        destNode.setLineNumber(srcNode.getLineNumber());
-        destNode.setColumnNumber(srcNode.getColumnNumber());
-        destNode.setLastLineNumber(srcNode.getLastLineNumber());
-        destNode.setLastColumnNumber(srcNode.getLastColumnNumber());
     }
 
     /**
@@ -1882,7 +1895,7 @@ public class ASTBuilder {
      * @param ctxList                   modifiers list.
      * @param defaultVisibilityModifier Default visibility modifier. Can be null. Applied if providen, and no visibility modifier exists in the ctxList.
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
-     * @see #checkModifierDuplication(int, int, org.antlr.v4.runtime.tree.TerminalNode)
+     * @see #checkModifierDuplication(int, int, TerminalNode)
      */
     public ArrayList<Object> parseModifiers(List<GroovyParser.MemberModifierContext> ctxList, Integer defaultVisibilityModifier) {
         int modifiers = 0;
@@ -1926,9 +1939,8 @@ public class ASTBuilder {
      * Traverse through modifiers, and combine them in one int value. Raise an error if there is multiple occurrences of same modifier.
      *
      * @param ctxList                   modifiers list.
-     * @param defaultVisibilityModifier Default visibility modifier. Can be null. Applied if providen, and no visibility modifier exists in the ctxList.
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
-     * @see #checkModifierDuplication(int, int, org.antlr.v4.runtime.tree.TerminalNode)
+     * @see #checkModifierDuplication(int, int, TerminalNode)
      */
     public ArrayList<Object> parseModifiers(List<GroovyParser.MemberModifierContext> ctxList) {
         return parseModifiers(ctxList, null);

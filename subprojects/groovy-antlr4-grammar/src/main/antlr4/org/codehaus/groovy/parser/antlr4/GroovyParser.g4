@@ -103,13 +103,13 @@ locals [Set<String> modifierSet = new HashSet<String>()]
     (
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* LCURVE (enumMember | NL | SEMICOLON)* RCURVE ;
+    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* enumBody ;
 classMember:
     constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration | enumDeclaration ;
-enumMember:
-    IDENTIFIER (COMMA | NL)
-    | classMember
-;
+
+classBody: LCURVE                                                       (classMember | NL | SEMICOLON)* RCURVE;
+enumBody : LCURVE NL* (IDENTIFIER NL* COMMA NL*)* IDENTIFIER NL* COMMA? (classMember | NL | SEMICOLON)* RCURVE;
+
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
 extendsClause:  KW_EXTENDS genericClassNameExpression ;
 
@@ -181,7 +181,6 @@ tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaratio
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
-classBody: LCURVE (classMember | NL | SEMICOLON)* RCURVE ;
 
 statement:
       declarationRule #declarationStatement
@@ -262,6 +261,7 @@ expression:
     | (PLUS | MINUS) expression #unaryExpression
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     | expression POWER expression #binaryExpression
     | expression MULT expression #binaryExpression
     | expression DIV expression #binaryExpression
@@ -273,16 +273,16 @@ expression:
     | expression GT GT GT expression #binaryExpression
     | expression RANGE expression #binaryExpression
     | expression ORANGE expression #binaryExpression
+    | expression KW_IN expression #binaryExpression
+    | expression KW_AS genericClassNameExpression #binaryExpression
+    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
+    | expression SPACESHIP expression #binaryExpression
     | expression GT expression #binaryExpression
     | expression GTE expression #binaryExpression
     | expression LT expression #binaryExpression
     | expression LTE expression #binaryExpression
-    | expression KW_IN expression #binaryExpression
-    | expression KW_AS genericClassNameExpression #binaryExpression
-    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
     | expression EQUAL expression #binaryExpression
     | expression UNEQUAL expression #binaryExpression
-    | expression SPACESHIP expression #binaryExpression
     | expression FIND expression #binaryExpression
     | expression MATCH expression #binaryExpression
     | expression BAND expression #binaryExpression
@@ -292,7 +292,6 @@ expression:
     | expression OR expression #binaryExpression
     |<assoc=right> expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression ELVIS NL* expression #elvisExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
     |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN expression #assignmentExpression
     | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression

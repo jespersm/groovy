@@ -26,3 +26,13 @@ interface I {
     String methodB()
     int propertyField
 }
+
+enum Cfg1 {
+    OLD,
+    NEW}
+enum Cfg2 {
+    OLD,
+    NEW,}
+enum Cfg3 {OLD,
+    NEW,}
+enum Cfg4 {OLD, NEW}
