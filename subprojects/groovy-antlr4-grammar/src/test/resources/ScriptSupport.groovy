@@ -6,6 +6,13 @@
  */
 /* More fun */
 
+println "Script before classes"
+
+def wazzup() {
+}
+
+int thisWorksMNow = 2
+
 class B {
     String memberA = 'B', memberC, memberD
 
