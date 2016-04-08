@@ -165,7 +165,7 @@ genericsDeclarationElement: genericClassNameExpression (KW_EXTENDS genericClassN
 throwsClause: KW_THROWS classNameExpression (COMMA classNameExpression)*;
 
 argumentDeclarationList:
-    argumentDeclaration (COMMA argumentDeclaration)* | /* EMPTY ARGUMENT LIST */ ;
+    argumentDeclaration (COMMA NL* argumentDeclaration)* | /* EMPTY ARGUMENT LIST */ ;
 argumentDeclaration:
     annotationClause* typeDeclaration? IDENTIFIER (ASSIGN expression)? ;
 
@@ -220,7 +220,7 @@ cmdExpressionRule: pathExpression ( argumentList IDENTIFIER)* argumentList IDENT
 pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
-closureExpressionRule: LCURVE (argumentDeclarationList CLOSURE_ARG_SEPARATOR)? blockStatement? RCURVE ;
+closureExpressionRule: LCURVE NL* (argumentDeclarationList NL* CLOSURE_ARG_SEPARATOR NL*)? blockStatement? RCURVE ;
 gstringExpressionBody:( gstringPathExpression
                       | LCURVE expression? RCURVE
                       | closureExpressionRule
