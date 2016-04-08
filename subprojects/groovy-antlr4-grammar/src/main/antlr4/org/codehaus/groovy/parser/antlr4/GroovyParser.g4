@@ -109,17 +109,6 @@ locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum=false]
     implementsClause? (NL)*
     classBody[$isEnum];
 
-/*
-enumDeclaration
-locals [Set<String> modifierSet = new HashSet<String>()]
-:
-    (
-        (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
-        (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)*
-    enumBody ;
-*/
-
 classMember:
     constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration ;
 
@@ -130,11 +119,6 @@ classBody[boolean isEnum]
       )
       (classMember | NL | SEMICOLON)*
       RCURVE;
-/*
-classBody: LCURVE                                                       (classMember | NL | SEMICOLON)* RCURVE;
-
-enumBody : LCURVE NL* (IDENTIFIER NL* COMMA NL*)* IDENTIFIER NL* COMMA? (classMember | NL | SEMICOLON)* RCURVE;
-*/
 
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
 extendsClause:  KW_EXTENDS genericClassNameExpression ;
