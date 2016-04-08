@@ -79,7 +79,12 @@ options { tokenVocab = GroovyLexer; }
     }
 }
 
-compilationUnit: SHEBANG_COMMENT? (NL*) packageDefinition? (NL | SEMICOLON)* (importStatement (NL | SEMICOLON)*)* (NL | SEMICOLON)* (scriptPart (NL | SEMICOLON) | classDeclaration | enumDeclaration | NL)* (NL | SEMICOLON)* (scriptPart (NL | SEMICOLON)+)* (scriptPart)? (NL | SEMICOLON)* EOF;
+compilationUnit: SHEBANG_COMMENT? (NL*)
+                 packageDefinition? (NL | SEMICOLON)*
+                 (importStatement (NL | SEMICOLON)*)* (NL | SEMICOLON)*
+                 (scriptPart (NL | SEMICOLON) | classDeclaration | NL)* (NL | SEMICOLON)*
+                 (scriptPart (NL | SEMICOLON)+)* (scriptPart)? (NL | SEMICOLON)*
+                 EOF;
 
 scriptPart:
     methodDeclaration
@@ -90,25 +95,46 @@ packageDefinition:
     (annotationClause (NL | annotationClause)*)? KW_PACKAGE (IDENTIFIER (DOT IDENTIFIER)*);
 importStatement:
     (annotationClause (NL | annotationClause)*)? KW_IMPORT KW_STATIC? (IDENTIFIER (DOT IDENTIFIER)* (DOT MULT)?) (KW_AS IDENTIFIER)?;
+
 classDeclaration
-locals [Set<String> modifierSet = new HashSet<String>()]
+locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum=false]
 :
     (
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE | KW_TRAIT) IDENTIFIER { currentClassName = $IDENTIFIER.text; } genericDeclarationList? extendsClause? implementsClause? (NL)* classBody ;
+    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE | KW_TRAIT | KW_ENUM {$isEnum=true;}) IDENTIFIER { currentClassName = $IDENTIFIER.text; }
+    ({!$isEnum}? genericDeclarationList? extendsClause?
+    |
+    )
+    implementsClause? (NL)*
+    classBody[$isEnum];
+
+/*
 enumDeclaration
 locals [Set<String> modifierSet = new HashSet<String>()]
 :
     (
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)* enumBody ;
-classMember:
-    constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration | enumDeclaration ;
+    )? KW_ENUM IDENTIFIER { currentClassName = $IDENTIFIER.text; } implementsClause? (NL)*
+    enumBody ;
+*/
 
+classMember:
+    constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration ;
+
+classBody[boolean isEnum]
+    : LCURVE NL*
+      ({$isEnum}? (IDENTIFIER NL* COMMA NL*)* IDENTIFIER NL* COMMA?
+      |
+      )
+      (classMember | NL | SEMICOLON)*
+      RCURVE;
+/*
 classBody: LCURVE                                                       (classMember | NL | SEMICOLON)* RCURVE;
+
 enumBody : LCURVE NL* (IDENTIFIER NL* COMMA NL*)* IDENTIFIER NL* COMMA? (classMember | NL | SEMICOLON)* RCURVE;
+*/
 
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
 extendsClause:  KW_EXTENDS genericClassNameExpression ;
@@ -179,7 +205,7 @@ declarationRule: annotationClause* ( typeDeclaration singleDeclaration ( COMMA s
 singleDeclaration: IDENTIFIER (ASSIGN expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
-newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody)?;
+newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody[false])?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
 
 statement:

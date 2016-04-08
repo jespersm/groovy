@@ -121,9 +121,7 @@ public class ASTBuilder {
             DefaultGroovyMethods.each(tree.importStatement(), new MethodClosure(this, "parseImportStatement"));
             DefaultGroovyMethods.each(tree.children, new Closure<ClassNode>(this, this) {
                 public ClassNode doCall(ParseTree it) {
-                    if (it instanceof GroovyParser.EnumDeclarationContext)
-                        parseEnumDeclaration((GroovyParser.EnumDeclarationContext)it);
-                    else if (it instanceof GroovyParser.ClassDeclarationContext)
+                    if (it instanceof GroovyParser.ClassDeclarationContext)
                         return parseClassDeclaration((GroovyParser.ClassDeclarationContext)it);
                     else if (it instanceof GroovyParser.PackageDefinitionContext)
                         parsePackageDefinition((GroovyParser.PackageDefinitionContext)it);
@@ -261,7 +259,7 @@ public class ASTBuilder {
                                     || asBoolean(ctx.genericClassNameExpression());
 
 
-        innerClassesDefinedInMethod.add(new ArrayList());
+        innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
         Statement statement = asBoolean(ctx.methodBody())
                 ? parseStatement(ctx.methodBody().blockStatement())
                 : null;
@@ -306,43 +304,24 @@ public class ASTBuilder {
         );
     }
 
-    public void parseEnumDeclaration(@NotNull GroovyParser.EnumDeclarationContext ctx) {
-        List list = asBoolean(ctx.implementsClause())
-                    ? collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
-            public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
-        }) : new ArrayList();
-        ClassNode[] interfaces = (ClassNode[])list.toArray(new ClassNode[list.size()]);
-        final ClassNode classNode = EnumHelper.makeEnumNode(ctx.IDENTIFIER().getText(), Modifier.PUBLIC, interfaces, null);// FIXME merge with class declaration.
-        setupNodeLocation(classNode, ctx);
-        attachAnnotations(classNode, ctx.annotationClause());
-        moduleNode.addClass(classNode);
-
-
-        classNode.setModifiers(parseClassModifiers(ctx.classModifier()) | Opcodes.ACC_ENUM | Opcodes.ACC_FINAL);
-        classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
-        classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
-
-
-        parseEnumBody(ctx.enumBody(), classNode);
-    }
-
-    public void parseEnumBody(@NotNull GroovyParser.EnumBodyContext ctx, ClassNode classNode) {
-        for(TerminalNode node : ctx.IDENTIFIER()) {
-            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.getText(), null), node.getSymbol());
-        }
-
-        parseMembers(classNode, ctx.classMember());
-    }
-
     public ClassNode parseClassDeclaration(@NotNull final GroovyParser.ClassDeclarationContext ctx) {
-        ClassNode classNode;
+        boolean isEnum = asBoolean(ctx.KW_ENUM());
+
         final ClassNode parentClass = asBoolean(classes) ? classes.peek() : null;
+        ClassNode[] interfaces = asBoolean(ctx.implementsClause())
+                                        ? DefaultGroovyMethods.asType(collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
+                                              public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
+                                          }), ClassNode[].class)
+                                        : new ClassNode[0];
+
+        ClassNode classNode;
         if (parentClass != null) {
             String string = parentClass.getName() + "$" + String.valueOf(ctx.IDENTIFIER());
             classNode = new InnerClassNode(parentClass, string, Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
         } else {
             final String name = moduleNode.getPackageName();
-            classNode = new ClassNode((name != null && asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
+            classNode = isEnum ? EnumHelper.makeEnumNode(ctx.IDENTIFIER().getText(), Modifier.PUBLIC, interfaces, null)
+                               : new ClassNode((name != null && asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
         }
 
 
@@ -356,20 +335,30 @@ public class ASTBuilder {
         moduleNode.addClass(classNode);
         if (asBoolean(ctx.extendsClause()))
             (classNode).setSuperClass(parseExpression(ctx.extendsClause().genericClassNameExpression()));
-        if (asBoolean(ctx.implementsClause()))
-            (classNode).setInterfaces(DefaultGroovyMethods.asType(collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
-                public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
-            }), ClassNode[].class));
 
-        (classNode).setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
-        (classNode).setUsingGenerics((classNode.getGenericsTypes() != null && classNode.getGenericsTypes().length != 0) || (classNode).getSuperClass().isUsingGenerics() || DefaultGroovyMethods.any(classNode.getInterfaces(), new Closure<Boolean>(this, this) {
-            public Boolean doCall(ClassNode it) {return it.isUsingGenerics();}
-        }));
-        classNode.setModifiers(parseClassModifiers(ctx.classModifier()) | (asBoolean(ctx.KW_INTERFACE())
-                                                                           ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT
-                                                                           : 0));
+        if (asBoolean(ctx.implementsClause()))
+            (classNode).setInterfaces(interfaces);
+
+        if (!isEnum) {
+            (classNode).setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
+            (classNode).setUsingGenerics((classNode.getGenericsTypes() != null && classNode.getGenericsTypes().length != 0) || (classNode).getSuperClass().isUsingGenerics() || DefaultGroovyMethods.any(classNode.getInterfaces(), new Closure<Boolean>(this, this) {
+                public Boolean doCall(ClassNode it) {return it.isUsingGenerics();}
+            }));
+        }
+
+
+        classNode.setModifiers(parseClassModifiers(ctx.classModifier()) |
+                                    (isEnum ? (Opcodes.ACC_ENUM | Opcodes.ACC_FINAL)
+                                            : ((asBoolean(ctx.KW_INTERFACE())
+                                                    ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT
+                                                    : 0)
+                                                )
+                                    )
+                               );
+
         classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
         classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
+
 
         if (asBoolean(ctx.AT())) {
             classNode.addInterface(ClassHelper.Annotation_TYPE);
@@ -378,7 +367,7 @@ public class ASTBuilder {
 
 
         classes.add(classNode);
-        parseMembers(classNode, ctx.classBody().classMember());
+        parseClassBody(classNode, ctx.classBody());
         classes.pop();
 
         if (classNode.isInterface()) { // FIXME why interface has null mixin
@@ -398,6 +387,14 @@ public class ASTBuilder {
         return classNode;
     }
 
+    public void parseClassBody(@NotNull ClassNode classNode, GroovyParser.ClassBodyContext ctx) {
+        for(TerminalNode node : ctx.IDENTIFIER()) {
+            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.getText(), null), node.getSymbol());
+        }
+
+        parseMembers(classNode, ctx.classMember());
+    }
+
     public void parseMembers(ClassNode classNode, List<GroovyParser.ClassMemberContext> ctx) {
         for (GroovyParser.ClassMemberContext member : ctx) {
             ParseTree memberContext = DefaultGroovyMethods.last(member.children);
@@ -405,8 +402,6 @@ public class ASTBuilder {
             ASTNode memberNode = null;
             if (memberContext instanceof GroovyParser.ClassDeclarationContext)
                 memberNode = parseClassDeclaration(DefaultGroovyMethods.asType(memberContext, GroovyParser.ClassDeclarationContext.class));
-            else if (memberContext instanceof GroovyParser.EnumDeclarationContext)
-                parseEnumDeclaration(DefaultGroovyMethods.asType(memberContext, GroovyParser.EnumDeclarationContext.class));
             else if (memberContext instanceof GroovyParser.ConstructorDeclarationContext)
                 memberNode = parseMember(classNode, (GroovyParser.ConstructorDeclarationContext)memberContext);
             else if (memberContext instanceof GroovyParser.MethodDeclarationContext)
@@ -1766,7 +1761,7 @@ public class ASTBuilder {
             DefaultGroovyMethods.last(this.innerClassesDefinedInMethod).add(classNode);
             this.moduleNode.addClass(classNode);
             this.classes.add(classNode);
-            this.parseMembers(classNode, ctx.classBody().classMember());
+            parseClassBody(classNode, ctx.classBody());
             this.classes.pop();
         }
 
