@@ -19,37 +19,36 @@
 package org.codehaus.groovy.parser.antlr4.builders.nodes;
 
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.stmt.ForStatement;
+import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.control.CompilationFailedException;
-import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.parser.antlr4.GroovyParser;
-import org.codehaus.groovy.parser.antlr4.InvalidSyntaxException;
 import org.codehaus.groovy.parser.antlr4.builders.ASTBuilder;
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.asBoolean;
 
 /**
  * Created by Daniel on 2016/4/9.
  */
-public class BuildableForColonStatementContext extends BuildableBaseNode {
-    private GroovyParser.ForColonStatementContext ctx;
+public class BuildableClosureExpressionRuleContext extends BuildableBaseNode {
+    private GroovyParser.ClosureExpressionRuleContext ctx;
 
-    public BuildableForColonStatementContext(ASTBuilder astBuilder, GroovyParser.ForColonStatementContext ctx) {
+    public BuildableClosureExpressionRuleContext(ASTBuilder astBuilder, GroovyParser.ClosureExpressionRuleContext ctx) {
         super(astBuilder);
 
         this.ctx = ctx;
     }
 
     @Override
-    public Statement build() {
-        if (!asBoolean(ctx.typeDeclaration()))
-            throw new CompilationFailedException(CompilePhase.PARSING.getPhaseNumber(), astBuilder.sourceUnit,
-                        new InvalidSyntaxException("Classic for statement require type to be declared.", ctx));
+    public Expression build() {
+        final Parameter[] parameters1 = astBuilder.parseParameters(ctx.argumentDeclarationList());
+        Parameter[] parameters = asBoolean(ctx.argumentDeclarationList()) ? (
+                asBoolean(parameters1)
+                        ? parameters1
+                        : null) : (new Parameter[0]);
 
-        Parameter parameter = new Parameter(astBuilder.parseTypeDeclaration(ctx.typeDeclaration()), ctx.IDENTIFIER().getText());
-        parameter = astBuilder.setupNodeLocation(parameter, ctx.IDENTIFIER().getSymbol());
-
-        return astBuilder.setupNodeLocation(new ForStatement(parameter, astBuilder.parseExpression(ctx.expression()), astBuilder.parse(ctx.statementBlock())), ctx);
+        Statement statement = astBuilder.parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class));
+        return astBuilder.setupNodeLocation(new ClosureExpression(parameters, statement), ctx);
     }
 }

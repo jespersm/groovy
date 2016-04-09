@@ -44,10 +44,11 @@ class MainTest extends Specification {
 
         setup:
         def file = new File("$RESOURCES_PATH/$path")
-        def moduleNodeNew = new Main(Configuration.NEW).process(file)
-        def moduleNodeOld = new Main(Configuration.OLD).process(file)
-        def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
+        def (moduleNodeNew,  costedTimeNew) = profile({new Main(Configuration.NEW).process(file)})
+        def (moduleNodeOld,  costedTimeOld) = profile({new Main(Configuration.OLD).process(file)})
+        def (moduleNodeOld2, costedTimeOld2) = profile({new Main(Configuration.OLD).process(file)})
         config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
+        log.info("[COMPARE COSTED TIME] $file: $costedTimeNew VS $costedTimeOld(${costedTimeNew - costedTimeOld})")
 
         expect:
         moduleNodeNew
@@ -135,10 +136,11 @@ class MainTest extends Specification {
 
         setup:
         def file = new File("$RESOURCES_PATH/GroovyInAction2/$path")
-        def moduleNodeNew = new Main(Configuration.NEW).process(file)
-        def moduleNodeOld = new Main(Configuration.OLD).process(file)
-        def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
+        def (moduleNodeNew,  costedTimeNew) = profile({new Main(Configuration.NEW).process(file)})
+        def (moduleNodeOld,  costedTimeOld) = profile({new Main(Configuration.OLD).process(file)})
+        def (moduleNodeOld2, costedTimeOld2) = profile({new Main(Configuration.OLD).process(file)})
         config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
+        log.info("[COMPARE COSTED TIME] $file: $costedTimeNew VS $costedTimeOld(${costedTimeNew - costedTimeOld})")
 
         expect:
         moduleNodeNew
@@ -320,6 +322,14 @@ class MainTest extends Specification {
 
             return false;
         }
+    }
+
+    def profile = { c ->
+        long beginTime = System.currentTimeMillis();
+        def result = c();
+        long endTime = System.currentTimeMillis();
+
+        return [result, (endTime - beginTime)];
     }
 }
 
