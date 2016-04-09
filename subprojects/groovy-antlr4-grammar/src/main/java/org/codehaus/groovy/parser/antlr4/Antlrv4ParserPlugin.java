@@ -4,6 +4,7 @@ import org.codehaus.groovy.ast.ModuleNode;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.ParserPlugin;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.parser.antlr4.builders.ASTBuilder;
 import org.codehaus.groovy.syntax.ParserException;
 import org.codehaus.groovy.syntax.Reduction;
 

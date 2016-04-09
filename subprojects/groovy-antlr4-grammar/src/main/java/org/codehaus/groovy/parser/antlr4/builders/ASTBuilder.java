@@ -16,7 +16,7 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.codehaus.groovy.parser.antlr4;
+package org.codehaus.groovy.parser.antlr4.builders;
 
 import groovy.lang.Closure;
 import groovy.lang.IntRange;
@@ -29,11 +29,18 @@ import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.antlr.EnumHelper;
 import org.codehaus.groovy.ast.*;
 import org.codehaus.groovy.ast.expr.*;
-import org.codehaus.groovy.ast.stmt.*;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SyntaxErrorMessage;
+import org.codehaus.groovy.parser.antlr4.GroovyLexer;
+import org.codehaus.groovy.parser.antlr4.GroovyParser;
+import org.codehaus.groovy.parser.antlr4.InvalidSyntaxException;
+import org.codehaus.groovy.parser.antlr4.builders.nodes.Buildable;
 import org.codehaus.groovy.parser.antlr4.util.StringUtil;
 import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 import org.codehaus.groovy.runtime.MethodClosure;
@@ -46,7 +53,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.logging.Level;
@@ -210,7 +219,7 @@ public class ASTBuilder {
         }
     }
 
-    private void unpackStatement(BlockStatement destination, Statement stmt) {
+    public void unpackStatement(BlockStatement destination, Statement stmt) {
         if (stmt instanceof DeclarationList) {
             for (DeclarationExpression decl : ((DeclarationList)stmt).declarations) {
                 destination.addStatement(setupNodeLocation(new ExpressionStatement(decl), decl));
@@ -539,253 +548,27 @@ public class ASTBuilder {
         return constructorNode;
     }
 
-    private static class DeclarationList extends Statement{
+    public static class DeclarationList extends Statement {
         List<DeclarationExpression> declarations;
 
-        DeclarationList(List<DeclarationExpression> declarations) {
+        public DeclarationList(List<DeclarationExpression> declarations) {
             this.declarations = declarations;
         }
     }
 
+
     public Statement parseStatement(GroovyParser.StatementContext ctx) {
-        if (ctx instanceof GroovyParser.ForColonStatementContext)
-            parseStatement((GroovyParser.ForColonStatementContext)ctx);
-        if (ctx instanceof GroovyParser.IfStatementContext)
-            return parseStatement((GroovyParser.IfStatementContext)ctx);
-        if (ctx instanceof GroovyParser.NewArrayStatementContext)
-            return parseStatement((GroovyParser.NewArrayStatementContext)ctx);
-        if (ctx instanceof GroovyParser.TryCatchFinallyStatementContext)
-            return parseStatement((GroovyParser.TryCatchFinallyStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ThrowStatementContext)
-            return parseStatement((GroovyParser.ThrowStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ClassicForStatementContext)
-            return parseStatement((GroovyParser.ClassicForStatementContext)ctx);
-        if (ctx instanceof GroovyParser.DeclarationStatementContext)
-            return parseStatement((GroovyParser.DeclarationStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ReturnStatementContext)
-            return parseStatement((GroovyParser.ReturnStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ExpressionStatementContext)
-            return parseStatement((GroovyParser.ExpressionStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ForInStatementContext)
-            return parseStatement((GroovyParser.ForInStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ForColonStatementContext)
-            return parseStatement((GroovyParser.ForColonStatementContext)ctx);
-        if (ctx instanceof GroovyParser.SwitchStatementContext)
-            return parseStatement((GroovyParser.SwitchStatementContext)ctx);
-        if (ctx instanceof GroovyParser.WhileStatementContext)
-            return parseStatement((GroovyParser.WhileStatementContext)ctx);
-        if (ctx instanceof GroovyParser.ControlStatementContext)
-            return parseStatement((GroovyParser.ControlStatementContext)ctx);
-        if (ctx instanceof GroovyParser.CommandExpressionStatementContext)
-            return parseStatement((GroovyParser.CommandExpressionStatementContext)ctx);
-        if (ctx instanceof GroovyParser.NewInstanceStatementContext)
-            return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
-        if (ctx instanceof GroovyParser.AssertStatementContext)
-            return parseStatement((GroovyParser.AssertStatementContext)ctx);
-        throw new InvalidSyntaxException("Unsupported statement type! " + ctx.getText(), ctx);
+        return (Statement) createBuildableNode(ctx).build();
     }
 
     public Statement parseStatement(GroovyParser.BlockStatementContext ctx) {
-        final BlockStatement statement = new BlockStatement();
-        if (!asBoolean(ctx)) return statement;
-
-        DefaultGroovyMethods.each(ctx.statement(), new Closure<Object>(null, null) {
-            public void doCall(GroovyParser.StatementContext it) {
-                unpackStatement(statement, parseStatement(it));
-            }
-        });
-        return setupNodeLocation(statement, ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.ExpressionStatementContext ctx) {
-        return setupNodeLocation(new ExpressionStatement(parseExpression(ctx.expression())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.IfStatementContext ctx) {
-        Statement trueBranch = parse(ctx.statementBlock(0));
-        Statement falseBranch = asBoolean(ctx.KW_ELSE())
-                                ? parse(ctx.statementBlock(1))
-                                : EmptyStatement.INSTANCE;
-        BooleanExpression expression = new BooleanExpression(parseExpression(ctx.expression()));
-        return setupNodeLocation(new IfStatement(expression, trueBranch, falseBranch), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.WhileStatementContext ctx) {
-        return setupNodeLocation(new WhileStatement(new BooleanExpression(parseExpression(ctx.expression())), parse(ctx.statementBlock())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.ClassicForStatementContext ctx) {
-        ClosureListExpression expression = new ClosureListExpression();
-
-        Boolean captureNext = false;
-        for (ParseTree c : ctx.children) {
-            // FIXME terrible logic.
-            Boolean isSemicolon = c instanceof TerminalNode && (((TerminalNode)c).getSymbol().getText().equals(";") || ((TerminalNode)c).getSymbol().getText().equals("(") || ((TerminalNode)c).getSymbol().getText().equals(")"));
-            if (captureNext && isSemicolon) expression.addExpression(EmptyExpression.INSTANCE);
-            else if (captureNext && c instanceof GroovyParser.ExpressionContext)
-                expression.addExpression(parseExpression((GroovyParser.ExpressionContext)c));
-            captureNext = isSemicolon;
-        }
-
-
-        Parameter parameter = ForStatement.FOR_LOOP_DUMMY;
-        return setupNodeLocation(new ForStatement(parameter, expression, parse(ctx.statementBlock())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.ForInStatementContext ctx) {
-        Parameter parameter = new Parameter(parseTypeDeclaration(ctx.typeDeclaration()), ctx.IDENTIFIER().getText());
-        parameter = setupNodeLocation(parameter, ctx.IDENTIFIER().getSymbol());
-
-        return setupNodeLocation(new ForStatement(parameter, parseExpression(ctx.expression()), parse(ctx.statementBlock())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.ForColonStatementContext ctx) {
-        if (!asBoolean(ctx.typeDeclaration()))
-            throw new InvalidSyntaxException("Classic for statement require type to be declared.", ctx);
-        Parameter parameter = new Parameter(parseTypeDeclaration(ctx.typeDeclaration()), ctx.IDENTIFIER().getText());
-        parameter = setupNodeLocation(parameter, ctx.IDENTIFIER().getSymbol());
-
-        return setupNodeLocation(new ForStatement(parameter, parseExpression(ctx.expression()), parse(ctx.statementBlock())), ctx);
+        return (Statement) createBuildableNode(ctx).build(new BlockStatement());
     }
 
     public Statement parse(GroovyParser.StatementBlockContext ctx) {
         if (asBoolean(ctx.statement()))
             return setupNodeLocation(parseStatement(ctx.statement()), ctx.statement());
         else return parseStatement(ctx.blockStatement());
-    }
-
-    public Statement parseStatement(GroovyParser.SwitchStatementContext ctx) {
-        List<CaseStatement> caseStatements = new ArrayList<CaseStatement>();
-        for (GroovyParser.CaseStatementContext caseStmt : ctx.caseStatement()) {
-            BlockStatement stmt = new BlockStatement();// #BSC
-            for (GroovyParser.StatementContext st : caseStmt.statement()) {
-                unpackStatement (stmt, parseStatement(st));
-            }
-            caseStatements.add(setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), stmt), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
-        }
-
-
-        Statement defaultStatement;
-        if (asBoolean(ctx.KW_DEFAULT())) {
-            defaultStatement = new BlockStatement();// #BSC
-            for (GroovyParser.StatementContext stmt : ctx.statement())
-                unpackStatement((BlockStatement)defaultStatement,parseStatement(stmt));
-        } else defaultStatement = EmptyStatement.INSTANCE;// TODO Refactor empty stataements and expressions.
-
-        return new SwitchStatement(parseExpression(ctx.expression()), caseStatements, defaultStatement);
-    }
-
-    public Statement parseStatement(GroovyParser.DeclarationStatementContext ctx) {
-        List<DeclarationExpression> declarations = parseDeclaration(ctx.declarationRule());
-        return setupNodeLocation(new DeclarationList(declarations), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.NewArrayStatementContext ctx) {
-        return setupNodeLocation(new ExpressionStatement(parse(ctx.newArrayRule())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.NewInstanceStatementContext ctx) {
-        return setupNodeLocation(new ExpressionStatement(parse(ctx.newInstanceRule())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.ControlStatementContext ctx) {
-        // TODO check validity. Labeling support.
-        // Fake inspection result should be suppressed.
-        //noinspection GroovyConditionalWithIdenticalBranches
-        return setupNodeLocation(asBoolean(ctx.KW_BREAK())
-                                 ? new BreakStatement()
-                                 : new ContinueStatement(), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.ReturnStatementContext ctx) {
-        GroovyParser.ExpressionContext expression = ctx.expression();
-        return setupNodeLocation(new ReturnStatement(asBoolean(expression)
-                                                     ? parseExpression(expression)
-                                                     : EmptyExpression.INSTANCE), ctx);
-    }
-
-
-    public Statement parseStatement(GroovyParser.AssertStatementContext ctx) {
-        Expression conditionExpression = parseExpression(ctx.expression(0));
-        BooleanExpression booleanConditionExpression = new BooleanExpression(conditionExpression);
-
-        if (ctx.expression().size() == 1) {
-            return setupNodeLocation(new AssertStatement(booleanConditionExpression), ctx);
-        } else {
-            Expression errorMessage = parseExpression(ctx.expression(1));
-            return setupNodeLocation(new AssertStatement(booleanConditionExpression, errorMessage), ctx);
-        }
-    }
-
-    public Statement parseStatement(GroovyParser.ThrowStatementContext ctx) {
-        return setupNodeLocation(new ThrowStatement(parseExpression(ctx.expression())), ctx);
-    }
-
-    public Statement parseStatement(GroovyParser.TryCatchFinallyStatementContext ctx) {
-        Object finallyStatement;
-
-        GroovyParser.BlockStatementContext finallyBlockStatement = ctx.finallyBlock() != null ? ctx.finallyBlock().blockStatement() : null;
-        if (finallyBlockStatement != null) {
-            BlockStatement fbs = new BlockStatement();
-            unpackStatement(fbs, parseStatement(finallyBlockStatement));
-            finallyStatement = setupNodeLocation(fbs, finallyBlockStatement);
-
-        } else finallyStatement = EmptyStatement.INSTANCE;
-
-        final TryCatchStatement statement = new TryCatchStatement(parseStatement(DefaultGroovyMethods.asType(ctx.tryBlock().blockStatement(), GroovyParser.BlockStatementContext.class)), (Statement)finallyStatement);
-        DefaultGroovyMethods.each(ctx.catchBlock(), new Closure<List<GroovyParser.ClassNameExpressionContext>>(null, null) {
-            public List<GroovyParser.ClassNameExpressionContext> doCall(GroovyParser.CatchBlockContext it) {
-                final Statement catchBlock = parseStatement(DefaultGroovyMethods.asType(it.blockStatement(), GroovyParser.BlockStatementContext.class));
-                final String var = it.IDENTIFIER().getText();
-
-                List<GroovyParser.ClassNameExpressionContext> classNameExpression = it.classNameExpression();
-                if (!asBoolean(classNameExpression))
-                    statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(ClassHelper.OBJECT_TYPE, var), catchBlock), it));
-                else {
-                    DefaultGroovyMethods.each(classNameExpression, new Closure<Object>(null, null) {
-                        public void doCall(GroovyParser.ClassNameExpressionContext it) {
-                            statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(parseExpression(DefaultGroovyMethods.asType(it, GroovyParser.ClassNameExpressionContext.class)), var), catchBlock), it));
-                        }
-                    });
-                }
-                return null;
-            }
-        });
-        return statement;
-    }
-
-    public Statement parseStatement(GroovyParser.CommandExpressionStatementContext ctx) {
-        Expression expression = null;
-        List<List<ParseTree>> list = DefaultGroovyMethods.collate(ctx.cmdExpressionRule().children, 2);
-        for (List<ParseTree> c : list) {
-            final Iterator<ParseTree> iterator = c.iterator();
-            ParseTree c1 = iterator.hasNext() ? iterator.next() : null;
-            ParseTree c0 = iterator.hasNext() ? iterator.next() : null;
-
-            if (c.size() == 1) expression = new PropertyExpression(expression, c1.getText());
-            else {
-                assert c0 instanceof GroovyParser.ArgumentListContext;
-                if (c1 instanceof TerminalNode) {
-                    expression = new MethodCallExpression(expression, ((TerminalNode)c1).getText(), createArgumentList((GroovyParser.ArgumentListContext)c0));
-                    ((MethodCallExpression)expression).setImplicitThis(false);
-                } else if (c1 instanceof GroovyParser.PathExpressionContext) {
-                    String methodName;
-                    boolean implicitThis;
-                    ArrayList<Object> objects = parsePathExpression((GroovyParser.PathExpressionContext)c1);
-                    expression = (Expression)objects.get(0);
-                    methodName = (String)objects.get(1);
-                    implicitThis = (Boolean)objects.get(2);
-
-                    expression = new MethodCallExpression(expression, methodName, createArgumentList((GroovyParser.ArgumentListContext)c0));
-                    ((MethodCallExpression)expression).setImplicitThis(implicitThis);
-                }
-
-            }
-
-        }
-
-
-        return setupNodeLocation(new ExpressionStatement(expression), ctx);
     }
 
     /**
@@ -896,10 +679,10 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.MapConstructorContext ctx) {
-        final List collect = collect(ctx.mapEntry(), new MethodClosure(this, "parseExpression"));
+        final List<MapEntryExpression> collect = collect(ctx.mapEntry(), new MethodClosure(this, "parseExpression"));
         return setupNodeLocation(new MapExpression(asBoolean(collect)
                                                    ? collect
-                                                   : new ArrayList()), ctx);
+                                                   : new ArrayList<MapEntryExpression>()), ctx);
     }
 
     public MapEntryExpression parseExpression(GroovyParser.MapEntryContext ctx) {
@@ -1627,7 +1410,7 @@ public class ASTBuilder {
         return setupNodeLocation(declarationExpression, ctx);
     }
 
-    private Expression createArgumentList(GroovyParser.ArgumentListContext ctx) {
+    public Expression createArgumentList(GroovyParser.ArgumentListContext ctx) {
         final List<MapEntryExpression> mapArgs = new ArrayList<MapEntryExpression>();
         final List<Expression> expressions = new ArrayList<Expression>();
         if (ctx != null) {
@@ -2115,6 +1898,40 @@ public class ASTBuilder {
         }
 
         return sw.toString();
+    }
+
+    public final Buildable createBuildableNode(ParserRuleContext ctx) {
+        String buildableClazzName;
+
+        if (null == ctx) {
+            buildableClazzName = "org.codehaus.groovy.parser.antlr4.builders.nodes.BuildableNullNode";
+        } else {
+            buildableClazzName = "org.codehaus.groovy.parser.antlr4.builders.nodes.Buildable" + ctx.getClass().getSimpleName();
+        }
+
+        Class clazz = null;
+
+        try {
+            clazz = Class.forName(buildableClazzName);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        Constructor<?>[] constructors = clazz.getConstructors();
+
+        if (constructors.length > 0) {
+            try {
+                return (Buildable) constructors[0].newInstance(this, ctx);
+            } catch (InstantiationException e) {
+                throw new RuntimeException(e);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            } catch (InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            throw new RuntimeException(buildableClazzName + " does not have constructors");
+        }
     }
 
     public ModuleNode getModuleNode() {
