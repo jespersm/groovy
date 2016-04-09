@@ -44,6 +44,8 @@ import org.objectweb.asm.Opcodes;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -376,12 +378,10 @@ public class ASTBuilder {
                 Field field = classNode.getClass().getDeclaredField("mixins");
                 field.setAccessible(true);
                 field.set(classNode, null);
-            }
-            catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            catch (NoSuchFieldException e) {
-                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                log.warning(createExceptionMessage(e));
+            } catch (NoSuchFieldException e) {
+                log.warning(createExceptionMessage(e));
             }
         }
         return classNode;
@@ -2011,7 +2011,7 @@ public class ASTBuilder {
                     new BufferedReader(
                             sourceUnit.getSource().getReader()));
         } catch (IOException e) {
-            e.printStackTrace();
+            log.severe(createExceptionMessage(e));
             throw new RuntimeException("Error occurred when reading source code.", e);
         }
 
@@ -2102,6 +2102,19 @@ public class ASTBuilder {
         log.fine("\nLexer TOKENS:\n\t" + DefaultGroovyMethods.join(collect(lexer.getAllTokens(), new Closure<String>(this, this) {
             public String doCall(Token it) { return String.valueOf(it.getLine()) + ", " + String.valueOf(it.getStartIndex()) + ":" + String.valueOf(it.getStopIndex()) + " " + GroovyLexer.tokenNames[it.getType()] + " " + it.getText(); }
         }), "\n\t") + multiply("=", 60));
+    }
+
+    private String createExceptionMessage(Throwable t) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+
+        try {
+            t.printStackTrace(pw);
+        } finally {
+            pw.close();
+        }
+
+        return sw.toString();
     }
 
     public ModuleNode getModuleNode() {

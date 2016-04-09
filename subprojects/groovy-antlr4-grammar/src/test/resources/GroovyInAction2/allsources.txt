@@ -4,7 +4,7 @@
 [PASS]	./appD/Listing_D_02_Lists.groovy
 [FIXME]	./appD/Listing_D_03_Closures.groovy             // FIXME ISSUE#18(Fail to parse the call expression when the callee is not a path expression)
 [PASS]	./appD/Listing_D_04_Regex.groovy
-[FIXME]	./appD/Listing_D_05_GPath.groovy
+[PASS]	./appD/Listing_D_05_GPath.groovy
 [SKIP]	./chap01/customers.xml
 [SKIP]	./chap01/data.txt
 [SKIP]	./chap01/groovysh.txt
@@ -39,7 +39,7 @@
 [PASS]	./chap02/snippet0204_failing_typechecked.groovy
 [SKIP]	./chap03/ArrayListSummer.java
 [PASS]	./chap03/extra_escaped_characters_table36.groovy
-[FIXME]	./chap03/extra_method_operators_table34.groovy
+[PASS]	./chap03/extra_method_operators_table34.groovy
 [FIXME]	./chap03/extra_numeric_literals_table32.groovy
 [PASS]	./chap03/extra_numerical_coercion_table310.groovy
 [FIXME]	./chap03/extra_optional_typing_table33.groovy
