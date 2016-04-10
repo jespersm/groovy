@@ -137,8 +137,10 @@ public class ASTBuilder {
                     moduleNode.addMethod(parseScriptMethod(part.methodDeclaration()));
                 }
             }
-        } catch (CompilationFailedException ignored) {
-            // Compilation failed.
+        } catch (CompilationFailedException e) {
+            log.severe(createExceptionMessage(e));
+
+            throw e;
         }
     }
 
@@ -437,7 +439,7 @@ public class ASTBuilder {
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
         if (isTrait(classNode)) {
             if (null == ctx.methodBody() && !ctx.modifierAndDefSet.contains(KW_ABSTRACT_STR)) {
-                throw new InvalidSyntaxException("You defined a method without body. Try adding a body, or declare it abstract.", ctx);
+                throw createParsingFailedException(new InvalidSyntaxException("You defined a method without body. Try adding a body, or declare it abstract.", ctx));
             }
         }
 
@@ -582,7 +584,7 @@ public class ASTBuilder {
             return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
         if (ctx instanceof GroovyParser.AssertStatementContext)
             return parseStatement((GroovyParser.AssertStatementContext)ctx);
-        throw new InvalidSyntaxException("Unsupported statement type! " + ctx.getText(), ctx);
+        throw createParsingFailedException(new InvalidSyntaxException("Unsupported statement type! " + ctx.getText(), ctx));
     }
 
     public Statement parseStatement(GroovyParser.BlockStatementContext ctx) {
@@ -641,7 +643,8 @@ public class ASTBuilder {
 
     public Statement parseStatement(GroovyParser.ForColonStatementContext ctx) {
         if (!asBoolean(ctx.typeDeclaration()))
-            throw new InvalidSyntaxException("Classic for statement require type to be declared.", ctx);
+            throw createParsingFailedException(new InvalidSyntaxException("Classic for statement require type to be declared.", ctx));
+
         Parameter parameter = new Parameter(parseTypeDeclaration(ctx.typeDeclaration()), ctx.IDENTIFIER().getText());
         parameter = setupNodeLocation(parameter, ctx.IDENTIFIER().getSymbol());
 
@@ -875,7 +878,7 @@ public class ASTBuilder {
         if (ctx instanceof GroovyParser.SpreadExpressionContext)
             return parseExpression((GroovyParser.SpreadExpressionContext)ctx);
 
-        throw new InvalidSyntaxException("Unsupported expression type! " + String.valueOf(ctx), ctx);
+        throw createParsingFailedException(new InvalidSyntaxException("Unsupported expression type! " + String.valueOf(ctx), ctx));
     }
 
     public Expression parseExpression(GroovyParser.NewArrayExpressionContext ctx) {
@@ -924,7 +927,7 @@ public class ASTBuilder {
                 } else if (asBoolean(ctx.DECIMAL())) {
                     keyExpr = parseDecimal(ctx.DECIMAL().getText(), ctx);
                 } else {
-                    throw new InvalidSyntaxException("Unsupported map key type! " + String.valueOf(ctx), ctx);
+                    throw createParsingFailedException(new InvalidSyntaxException("Unsupported map key type! " + String.valueOf(ctx), ctx));
                 }
             }
         } else {
@@ -1075,7 +1078,7 @@ public class ASTBuilder {
         } else if (ctx instanceof GroovyParser.AnnotationParamStringExpressionContext) {
             return parseExpression((GroovyParser.AnnotationParamStringExpressionContext)ctx);
         }
-        throw new CompilationFailedException(CompilePhase.PARSING.getPhaseNumber(), this.sourceUnit, new IllegalStateException(String.valueOf(ctx) + " is prohibited inside annotations."));
+        throw createParsingFailedException(new IllegalStateException(String.valueOf(ctx) + " is prohibited inside annotations."));
     }
 
     public Expression parseExpression(GroovyParser.VariableExpressionContext ctx) {
@@ -1607,7 +1610,7 @@ public class ASTBuilder {
     public DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx) {
         // tuple must have an initial value.
         if (null == ctx.expression()) {
-            throw new InvalidSyntaxException("tuple declaration must have an initial value.", ctx);
+            throw createParsingFailedException(new InvalidSyntaxException("tuple declaration must have an initial value.", ctx));
         }
 
         List<Expression> variables = new LinkedList<Expression>();
@@ -2102,6 +2105,10 @@ public class ASTBuilder {
         log.fine("\nLexer TOKENS:\n\t" + DefaultGroovyMethods.join(collect(lexer.getAllTokens(), new Closure<String>(this, this) {
             public String doCall(Token it) { return String.valueOf(it.getLine()) + ", " + String.valueOf(it.getStartIndex()) + ":" + String.valueOf(it.getStopIndex()) + " " + GroovyLexer.tokenNames[it.getType()] + " " + it.getText(); }
         }), "\n\t") + multiply("=", 60));
+    }
+
+    private CompilationFailedException createParsingFailedException(Throwable cause) {
+        return new CompilationFailedException(CompilePhase.PARSING.getPhaseNumber(), this.sourceUnit, cause);
     }
 
     private String createExceptionMessage(Throwable t) {
