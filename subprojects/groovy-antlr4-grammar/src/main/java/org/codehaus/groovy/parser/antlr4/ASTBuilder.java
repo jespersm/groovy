@@ -389,9 +389,28 @@ public class ASTBuilder {
         return classNode;
     }
 
+    private Expression createEnumConstantInitExpression(GroovyParser.ArgumentListContext ctx) {
+        if (!asBoolean(ctx)) {
+            return null;
+        }
+
+        TupleExpression argumentListExpression = (TupleExpression) createArgumentList(ctx);
+        List<Expression> expressions = argumentListExpression.getExpressions();
+
+        if (expressions.size() == 1) {
+            return expressions.get(0);
+        }
+
+        ListExpression listExpression = new ListExpression(expressions);
+        listExpression.setWrapped(true);
+
+        return listExpression;
+    }
+
     public void parseClassBody(@NotNull ClassNode classNode, GroovyParser.ClassBodyContext ctx) {
-        for(TerminalNode node : ctx.IDENTIFIER()) {
-            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.getText(), null), node.getSymbol());
+        for(GroovyParser.EnumConstantContext node : ctx.enumConstant()) {
+
+            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.IDENTIFIER().getText(), createEnumConstantInitExpression(node.argumentList())), node.IDENTIFIER().getSymbol());
         }
 
         parseMembers(classNode, ctx.classMember());

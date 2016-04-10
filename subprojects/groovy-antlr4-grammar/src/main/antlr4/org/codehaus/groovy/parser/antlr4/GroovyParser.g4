@@ -112,9 +112,11 @@ locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum=false]
 classMember:
     constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration ;
 
+enumConstant: IDENTIFIER (LPAREN argumentList RPAREN)?;
+
 classBody[boolean isEnum]
     : LCURVE NL*
-      ({$isEnum}? (IDENTIFIER NL* COMMA NL*)* IDENTIFIER NL* COMMA?
+      ({$isEnum}? (enumConstant NL* COMMA NL*)* enumConstant NL* COMMA?
       |
       )
       (classMember | NL | SEMICOLON)*
