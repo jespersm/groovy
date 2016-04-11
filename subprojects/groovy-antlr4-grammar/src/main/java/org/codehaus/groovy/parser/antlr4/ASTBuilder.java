@@ -569,8 +569,6 @@ public class ASTBuilder {
     }
 
     public Statement parseStatement(GroovyParser.StatementContext ctx) {
-        if (ctx instanceof GroovyParser.ForColonStatementContext)
-            parseStatement((GroovyParser.ForColonStatementContext)ctx);
         if (ctx instanceof GroovyParser.IfStatementContext)
             return parseStatement((GroovyParser.IfStatementContext)ctx);
         if (ctx instanceof GroovyParser.NewArrayStatementContext)
