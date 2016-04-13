@@ -684,9 +684,8 @@ public class ASTBuilder {
                 unpackStatement (stmt, parseStatement(st));
             }
 
-            caseStatements.add(setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), stmt), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
+            caseStatements.add(setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), asBoolean(stmt.getStatements()) ? stmt : EmptyStatement.INSTANCE), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
         }
-
 
         Statement defaultStatement;
         if (asBoolean(ctx.KW_DEFAULT())) {
