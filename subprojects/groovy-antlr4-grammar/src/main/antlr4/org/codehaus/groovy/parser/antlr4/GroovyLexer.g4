@@ -89,7 +89,7 @@ lexer grammar GroovyLexer;
 
 
 
-LINE_COMMENT: '//' .*? '\r'? '\n' -> type(NL) ;
+LINE_COMMENT: '//' .*?  ('\n' | EOF) -> type(NL) ;
 BLOCK_COMMENT: '/*' .*? '*/' -> type(NL) ;
 SHEBANG_COMMENT: { tokenIndex == 0 }? '#!' .*? '\n' -> skip ;
 
@@ -114,7 +114,7 @@ MULTILINE_GSTRING_START : TDQ TDQ_STRING_ELEMENT*? '$'  -> type(GSTRING_START), 
 STRING:   '"' DQ_STRING_ELEMENT*? '"'
         | '\'' SQ_STRING_ELEMENT*? '\''
         ;
-SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT*? '/' -> type(STRING) ;
+SLASHY_STRING: '/' { isSlashyStringAllowed() }? SLASHY_STRING_ELEMENT+? '/' -> type(STRING) ;
 DOLLAR_SLASHY_STRING: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRING_ELEMENT*? RDS -> type(STRING) ;
 
 GSTRING_START: '"' DQ_STRING_ELEMENT*? '$' -> pushMode(DOUBLE_QUOTED_GSTRING_MODE), pushMode(GSTRING_TYPE_SELECTOR_MODE) ;
@@ -123,7 +123,7 @@ DOLLAR_SLASHY_GSTRING_START: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRI
 
 
 fragment SLASHY_STRING_ELEMENT:         SLASHY_ESCAPE
-                                       | ~('/' | '$' | '\n')
+                                       | ~('/' | '$' | '\u0000' | '\n')
                                        ;
 fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
                                        | '/' { _input.LA(1) != '$' }?
