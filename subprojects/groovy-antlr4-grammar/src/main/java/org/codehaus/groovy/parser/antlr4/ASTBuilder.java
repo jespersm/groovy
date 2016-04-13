@@ -1471,7 +1471,7 @@ public class ASTBuilder {
             method.setSafe(op.getSymbol().getType() == GroovyParser.SAFE_DOT);
         }
 
-        return method;
+        return setupNodeLocation(method, ctx);
     }
 
     public Expression parseImplicitThisCallExpression(GroovyParser.ImplicitThisCallExpressionContext ctx) {
@@ -1479,9 +1479,6 @@ public class ASTBuilder {
         Expression method = methodSelector != null ? new ConstantExpression(methodSelector.getText()) : (
             ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
         );
-//        Expression method = ctx.IDENTIFIER() != null ? new ConstantExpression(ctx.IDENTIFIER().getText()) : (
-//                ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
-//        );
 
 
         TupleExpression argumentListExpression = (TupleExpression) createArgumentList(ctx.argumentList());
@@ -1504,7 +1501,7 @@ public class ASTBuilder {
 
         MethodCallExpression expression = new MethodCallExpression(VariableExpression.THIS_EXPRESSION, method, argumentListExpression);
         expression.setImplicitThis(implicitThis);
-        return expression;
+        return setupNodeLocation(expression, ctx);
     }
 
     public ConstructorCallExpression parseExpression(GroovyParser.ConstructorCallExpressionContext ctx) {
