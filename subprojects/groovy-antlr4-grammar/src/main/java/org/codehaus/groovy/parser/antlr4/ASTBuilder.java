@@ -54,6 +54,7 @@ import java.util.logging.Logger;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
 
+@SuppressWarnings("all")
 public class ASTBuilder {
 
     public static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
@@ -677,20 +678,24 @@ public class ASTBuilder {
     public Statement parseStatement(GroovyParser.SwitchStatementContext ctx) {
         List<CaseStatement> caseStatements = new ArrayList<CaseStatement>();
         for (GroovyParser.CaseStatementContext caseStmt : ctx.caseStatement()) {
-            BlockStatement stmt = new BlockStatement();// #BSC
+
+            BlockStatement stmt =  new BlockStatement();// #BSC
             for (GroovyParser.StatementContext st : caseStmt.statement()) {
                 unpackStatement (stmt, parseStatement(st));
             }
+
             caseStatements.add(setupNodeLocation(new CaseStatement(parseExpression(caseStmt.expression()), stmt), caseStmt.KW_CASE().getSymbol()));// There only 'case' kw was highlighted in parser old version.
         }
 
 
         Statement defaultStatement;
         if (asBoolean(ctx.KW_DEFAULT())) {
+
             defaultStatement = new BlockStatement();// #BSC
             for (GroovyParser.StatementContext stmt : ctx.statement())
                 unpackStatement((BlockStatement)defaultStatement,parseStatement(stmt));
-        } else defaultStatement = EmptyStatement.INSTANCE;// TODO Refactor empty stataements and expressions.
+        } else
+            defaultStatement = EmptyStatement.INSTANCE;// TODO Refactor empty stataements and expressions.
 
         return new SwitchStatement(parseExpression(ctx.expression()), caseStatements, defaultStatement);
     }
@@ -852,8 +857,8 @@ public class ASTBuilder {
             return parseExpression((GroovyParser.ConstantDecimalExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.TernaryExpressionContext)
             return parseExpression((GroovyParser.TernaryExpressionContext)ctx);
-        else if (ctx instanceof GroovyParser.MethodCallExpressionContext)
-            return parseExpression((GroovyParser.MethodCallExpressionContext)ctx);
+        else if (ctx instanceof GroovyParser.CallExpressionContext)
+            return parseExpression((GroovyParser.CallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.CastExpressionContext)
             return parseExpression((GroovyParser.CastExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.DeclarationExpressionContext)
@@ -880,8 +885,6 @@ public class ASTBuilder {
             return parseExpression((GroovyParser.NewInstanceExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.BoolExpressionContext)
             return parseExpression((GroovyParser.BoolExpressionContext)ctx);
-        else if (ctx instanceof GroovyParser.CallExpressionContext)
-            return parseExpression((GroovyParser.CallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.ConstructorCallExpressionContext)
             return parseExpression((GroovyParser.ConstructorCallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.UnaryExpressionContext)
@@ -1072,6 +1075,7 @@ public class ASTBuilder {
         SpreadExpression expression = new SpreadExpression(parseExpression(ctx.expression()));
         return setupNodeLocation(expression, ctx);
     }
+
 
     public Expression parseExpression(GroovyParser.AnnotationParameterContext ctx) {
         if (ctx instanceof GroovyParser.AnnotationParamArrayExpressionContext) {
@@ -1376,40 +1380,6 @@ public class ASTBuilder {
         }
     }
 
-    public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {
-
-        Object methodNode;
-        //FIXME in log a, b; a is treated as path expression and became a method call instead of variable
-        if (!asBoolean(ctx.LPAREN()) && ctx.closureExpressionRule().size() == 0)
-            return collectPathExpression(ctx.pathExpression());
-
-        // Collect closure's in argumentList expression.
-        final Expression argumentListExpression = createArgumentList(ctx.argumentList());
-        DefaultGroovyMethods.each(ctx.closureExpressionRule(), new Closure<Object>(null, null) {
-            public Object doCall(GroovyParser.ClosureExpressionRuleContext it) {return DefaultGroovyMethods.invokeMethod(argumentListExpression, "addExpression", new Object[]{ parseExpression(it) });}
-        });
-
-        //noinspection GroovyAssignabilityCheck
-        List<Object> iterator = parsePathExpression(ctx.pathExpression());
-        Expression expression = (Expression)iterator.get(0);
-        String methodName = (String)iterator.get(1);
-        boolean implicitThis = (Boolean)iterator.get(2);
-
-        if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(methodName)) {
-            // Actually a constructor call
-            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpression);
-            return setupNodeLocation(call, ctx);
-//        } else if (implicitThis && VariableExpression.SUPER_EXPRESSION.getText().equals(methodName)) {
-//            // Use this once path expression is refac'ed
-//            // Actually a constructor call
-//            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.SUPER, argumentListExpression);
-//            return setupNodeLocation(call, ctx);
-        }
-        // OK, just a normal call
-        methodNode = new MethodCallExpression(expression, methodName, argumentListExpression);
-        ((MethodCallExpression)methodNode).setImplicitThis(implicitThis);
-        return (Expression)methodNode;
-    }
 
     public Expression collectPathExpression(GroovyParser.PathExpressionContext ctx) {
         List<TerminalNode> identifiers = ctx.IDENTIFIER();
@@ -1481,18 +1451,59 @@ public class ASTBuilder {
         return setupNodeLocation(binaryExpression, ctx);
     }
 
+    public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {
+        boolean implicitThis = !asBoolean(ctx.expression());
+        Expression objectExpression = implicitThis ? VariableExpression.THIS_EXPRESSION : parseExpression(ctx.expression());
 
-    public MethodCallExpression parseExpression(GroovyParser.MethodCallExpressionContext ctx) {
+        Expression expression = parseImplicitThisCallExpression(ctx.implicitThisCallExpression());
+
+        if (expression instanceof ConstructorCallExpression) {
+            return expression;
+        }
+
+        MethodCallExpression method = (MethodCallExpression) expression;
+        method.setObjectExpression(objectExpression);
+        method.setImplicitThis(implicitThis);
+
+        if (!implicitThis) {
+            TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
+            method.setSpreadSafe(op.getSymbol().getType() == GroovyParser.STAR_DOT);
+            method.setSafe(op.getSymbol().getType() == GroovyParser.SAFE_DOT);
+        }
+
+        return method;
+    }
+
+    public Expression parseImplicitThisCallExpression(GroovyParser.ImplicitThisCallExpressionContext ctx) {
         GroovyParser.SelectorNameContext methodSelector = ctx.selectorName();
         Expression method = methodSelector != null ? new ConstantExpression(methodSelector.getText()) : (
             ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
         );
-        Expression argumentListExpression = createArgumentList(ctx.argumentList());
-        MethodCallExpression expression = new MethodCallExpression(parseExpression(ctx.expression()), method, argumentListExpression);
-        expression.setImplicitThis(false);
-        TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
-        expression.setSpreadSafe(op.getSymbol().getType() == GroovyParser.STAR_DOT);
-        expression.setSafe(op.getSymbol().getType() == GroovyParser.SAFE_DOT);
+//        Expression method = ctx.IDENTIFIER() != null ? new ConstantExpression(ctx.IDENTIFIER().getText()) : (
+//                ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
+//        );
+
+
+        TupleExpression argumentListExpression = (TupleExpression) createArgumentList(ctx.argumentList());
+
+        for (GroovyParser.ClosureExpressionRuleContext closureExpressionRuleContext : ctx.closureExpressionRule()) {
+            argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
+        }
+
+        boolean implicitThis = true;
+        if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(method.getText())) {
+            // Actually a constructor call
+            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpression);
+            return setupNodeLocation(call, ctx);
+//        } else if (implicitThis && VariableExpression.SUPER_EXPRESSION.getText().equals(methodName)) {
+//            // Use this once path expression is refac'ed
+//            // Actually a constructor call
+//            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.SUPER, argumentListExpression);
+//            return setupNodeLocation(call, ctx);
+        }
+
+        MethodCallExpression expression = new MethodCallExpression(VariableExpression.THIS_EXPRESSION, method, argumentListExpression);
+        expression.setImplicitThis(implicitThis);
         return expression;
     }
 

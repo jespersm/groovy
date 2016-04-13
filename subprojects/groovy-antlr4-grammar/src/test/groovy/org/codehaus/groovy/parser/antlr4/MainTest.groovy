@@ -125,6 +125,7 @@ class MainTest extends Specification {
         "EmptyScript.groovy" | _
         "SemiColonScript.groovy" | _
         "Enums_issue31.groovy" | _
+        "CallExpression_issue33_1.groovy" | _
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }

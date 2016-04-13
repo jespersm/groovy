@@ -39,13 +39,7 @@ public class Debugger {
     }
 
     private void showParseTree(File sourceFile, boolean isGUI) {
-        String text = null;
-        try {
-            text = StringUtil.replaceHexEscapes(sourceFile.text);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Smth went wrong.", e);
-        }
+        String text = sourceFile.text;
 
         GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
         CommonTokenStream tokens = new CommonTokenStream(lexer);

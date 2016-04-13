@@ -27,7 +27,9 @@ options { tokenVocab = GroovyLexer; }
 }
 
 @members {
+    public static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(KW_ABSTRACT, KW_AS, KW_ASSERT, KW_BREAK, KW_CASE, KW_CATCH, KW_CLASS, KW_CONTINUE, KW_DEF, KW_DEFAULT, KW_ELSE, KW_ENUM, KW_EXTENDS, KW_FALSE, KW_FINAL, KW_FINALLY, KW_FOR, KW_IF, KW_IMPLEMENTS, KW_IMPORT, KW_IN, KW_INSTANCEOF, KW_INTERFACE, KW_NATIVE, KW_NEW, KW_NULL, KW_PACKAGE, KW_RETURN, KW_STATIC, KW_STRICTFP, KW_SUPER, KW_SWITCH, KW_SYNCHRONIZED, KW_THROW, KW_THROWS, KW_TRANSIENT, KW_TRUE, KW_TRY, KW_VOLATILE, KW_WHILE, VISIBILITY_MODIFIER));
     private String currentClassName = null; // Used for correct constructor recognition.
+
     private boolean declarationRuleInExpressionEnabled = false;
 
     private boolean isDeclarationRuleInExpressionEnabled() {
@@ -39,6 +41,7 @@ options { tokenVocab = GroovyLexer; }
     private void disableDeclarationRuleInExpression() {
         declarationRuleInExpressionEnabled = false;
     }
+
 
     private static String createErrorMessageForStrictCheck(Set<String> s, String keyword) {
         if (VISIBILITY_MODIFIER_SET.contains(keyword)) {
@@ -77,6 +80,7 @@ options { tokenVocab = GroovyLexer; }
             return s.contains(modifier);
         }
     }
+
 }
 
 compilationUnit: SHEBANG_COMMENT? (NL*)
@@ -206,15 +210,15 @@ statement:
     | KW_SWITCH LPAREN expression RPAREN NL* LCURVE
         (
           (caseStatement | NL)*
-          (KW_DEFAULT COLON (statement | SEMICOLON | NL)*)?
+          (KW_DEFAULT COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)+)?
         )
       RCURVE #switchStatement
     |  tryBlock ((catchBlock+ finallyBlock?) | finallyBlock) #tryCatchFinallyStatement
     | (KW_CONTINUE | KW_BREAK) #controlStatement
     | KW_RETURN expression? #returnStatement
     | KW_THROW expression #throwStatement
-    | expression #expressionStatement
     | KW_ASSERT expression ((COLON|COMMA) NL* expression)? #assertStatement
+    | expression #expressionStatement
     | cmdExpressionRule #commandExpressionStatement
 ;
 
@@ -226,7 +230,7 @@ tryBlock: KW_TRY NL* LCURVE blockStatement? RCURVE NL*;
 catchBlock: KW_CATCH NL* LPAREN ((classNameExpression (BOR classNameExpression)* IDENTIFIER) | IDENTIFIER) RPAREN NL* LCURVE blockStatement? RCURVE NL*;
 finallyBlock: KW_FINALLY NL* LCURVE blockStatement? RCURVE;
 
-caseStatement: (KW_CASE expression COLON (statement | SEMICOLON | NL)* );
+caseStatement: (KW_CASE expression COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)* );
 
 cmdExpressionRule: pathExpression ( argumentList IDENTIFIER)* argumentList IDENTIFIER? ;
 pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
@@ -257,29 +261,44 @@ annotationParameter:
 ;
 
 expression:
-      newArrayRule #newArrayExpression
+      STRING  #constantExpression
+    | gstring #gstringExpression
+    | DECIMAL #constantDecimalExpression
+    | INTEGER #constantIntegerExpression
+    | KW_NULL #nullExpression
+    | (KW_TRUE | KW_FALSE) #boolExpression
+    | IDENTIFIER #variableExpression
+    | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
+    | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
     | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) COMMA?) RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
     | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
-    | pathExpression (LPAREN argumentList? RPAREN)? closureExpressionRule* #callExpression
     | LPAREN expression RPAREN #parenthesisExpression
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
-    | (NOT | BNOT) expression #unaryExpression
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
-    | (PLUS | MINUS) expression #unaryExpression
-    | (DECREMENT | INCREMENT) expression #prefixExpression
+
+    | PLUS expression #unaryExpression
+    | MINUS expression #unaryExpression
+    | DECREMENT expression #prefixExpression
+    | INCREMENT expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT) (selectorName | STRING | gstring) ((LPAREN argumentList? RPAREN)| argumentList) #methodCallExpression
+
+    | {!KW_SET.contains(_input.LT(1).getType())}? implicitThisCallExpression #callExpression
+    | expression (DOT | SAFE_DOT | STAR_DOT) implicitThisCallExpression     #callExpression
+
+
+    | (NOT | BNOT) expression #unaryExpression
     | expression POWER expression #binaryExpression
     | expression MULT expression #binaryExpression
     | expression DIV expression #binaryExpression
     | expression MOD expression #binaryExpression
     | expression PLUS expression #binaryExpression
     | expression MINUS expression #binaryExpression
+
     | expression LSHIFT expression #binaryExpression
     | expression GT GT expression #binaryExpression
     | expression GT GT GT expression #binaryExpression
@@ -288,6 +307,7 @@ expression:
     | expression KW_IN expression #binaryExpression
     | expression KW_AS genericClassNameExpression #binaryExpression
     | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
+
     | expression SPACESHIP expression #binaryExpression
     | expression GT expression #binaryExpression
     | expression GTE expression #binaryExpression
@@ -304,17 +324,15 @@ expression:
     | expression OR expression #binaryExpression
     |<assoc=right> expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression ELVIS NL* expression #elvisExpression
+
     |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN expression #assignmentExpression
-    | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
-    | STRING #constantExpression
-    | gstring #gstringExpression
-    | DECIMAL #constantDecimalExpression
-    | INTEGER #constantIntegerExpression
-    | KW_NULL #nullExpression
-    | (KW_TRUE | KW_FALSE) #boolExpression
-    | IDENTIFIER #variableExpression
 ;
+
+implicitThisCallExpression: (selectorName | STRING | gstring) (LPAREN argumentList? RPAREN)
+                          | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring) argumentList
+                          | (selectorName | STRING | gstring) (LPAREN argumentList? RPAREN | argumentList?) closureExpressionRule+
+                          ;
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? IDENTIFIER (DOT IDENTIFIER)* ;
 
@@ -347,17 +365,20 @@ memberModifier:
 
 argumentList: ( (closureExpressionRule)+ | argument (COMMA argument)*) ;
 
-argument:
-    mapEntry
-    | expression
-;
+argument: mapEntry
+        | expression
+        ;
 
-selectorName:
-    IDENTIFIER | KW_ABSTRACT | KW_AS | KW_ASSERT | KW_BREAK | KW_CASE | KW_CATCH | KW_CLASS | KW_CONTINUE
-     | KW_DEF | KW_DEFAULT | KW_ELSE | KW_ENUM | KW_EXTENDS | KW_FALSE | KW_FINAL | KW_FINALLY
-     | KW_FOR | KW_IF | KW_IMPLEMENTS | KW_IMPORT | KW_IN | KW_INSTANCEOF | KW_INTERFACE
-     | KW_NATIVE | KW_NEW | KW_NULL | KW_PACKAGE
-     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THROW
-     | KW_THROWS | KW_TRANSIENT | KW_TRUE | KW_TRY | KW_VOLATILE | KW_WHILE
-     | VISIBILITY_MODIFIER /* in place of KW_PRIVATE | KW_PROTECTED | KW_PUBLIC */
+selectorName
+        : IDENTIFIER
+        | kwSelectorName
+        ;
+
+kwSelectorName: KW_ABSTRACT | KW_AS | KW_ASSERT | KW_BREAK | KW_CASE | KW_CATCH | KW_CLASS | KW_CONTINUE
+                     | KW_DEF | KW_DEFAULT | KW_ELSE | KW_ENUM | KW_EXTENDS | KW_FALSE | KW_FINAL | KW_FINALLY
+                     | KW_FOR | KW_IF | KW_IMPLEMENTS | KW_IMPORT | KW_IN | KW_INSTANCEOF | KW_INTERFACE
+                     | KW_NATIVE | KW_NEW | KW_NULL | KW_PACKAGE
+                     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THROW
+                     | KW_THROWS | KW_TRANSIENT | KW_TRUE | KW_TRY | KW_VOLATILE | KW_WHILE
+                     | VISIBILITY_MODIFIER /* in place of KW_PRIVATE | KW_PROTECTED | KW_PUBLIC */
 ;
