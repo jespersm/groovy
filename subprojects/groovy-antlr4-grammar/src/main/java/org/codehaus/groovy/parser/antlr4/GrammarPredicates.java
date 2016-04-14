@@ -22,8 +22,11 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class GrammarPredicates {
+    public static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.KW_ABSTRACT, GroovyParser.KW_AS, GroovyParser.KW_ASSERT, GroovyParser.KW_BREAK, GroovyParser.KW_CASE, GroovyParser.KW_CATCH, GroovyParser.KW_CLASS, GroovyParser.KW_CONTINUE, GroovyParser.KW_DEF, GroovyParser.KW_DEFAULT, GroovyParser.KW_ELSE, GroovyParser.KW_ENUM, GroovyParser.KW_EXTENDS, GroovyParser.KW_FALSE, GroovyParser.KW_FINAL, GroovyParser.KW_FINALLY, GroovyParser.KW_FOR, GroovyParser.KW_IF, GroovyParser.KW_IMPLEMENTS, GroovyParser.KW_IMPORT, GroovyParser.KW_IN, GroovyParser.KW_INSTANCEOF, GroovyParser.KW_INTERFACE, GroovyParser.KW_NATIVE, GroovyParser.KW_NEW, GroovyParser.KW_NULL, GroovyParser.KW_PACKAGE, GroovyParser.KW_RETURN, GroovyParser.KW_STATIC, GroovyParser.KW_STRICTFP, GroovyParser.KW_SUPER, GroovyParser.KW_SWITCH, GroovyParser.KW_SYNCHRONIZED, GroovyParser.KW_THROW, GroovyParser.KW_THROWS, GroovyParser.KW_TRANSIENT, GroovyParser.KW_TRUE, GroovyParser.KW_TRY, GroovyParser.KW_VOLATILE, GroovyParser.KW_WHILE, GroovyParser.VISIBILITY_MODIFIER));
     private static final String[] primitiveClassNames = new String[] {
         "boolean", "byte", "char", "double",
         "float", "int", "long", "short", "void"
@@ -60,4 +63,11 @@ public class GrammarPredicates {
         return tokenStream.LT(index + 1).getType() == GroovyParser.LPAREN;
     }
 
+    public static boolean isKeyword(TokenStream tokenStream) {
+        return KW_SET.contains(tokenStream.LT(1).getType());
+    }
+
+    public static boolean isCurrentClassName(TokenStream tokenStream, String currentClassName) {
+        return tokenStream.LT(tokenStream.LT(1).getType() == GroovyParser.VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName);
+    }
 }

@@ -27,7 +27,6 @@ options { tokenVocab = GroovyLexer; }
 }
 
 @members {
-    public static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(KW_ABSTRACT, KW_AS, KW_ASSERT, KW_BREAK, KW_CASE, KW_CATCH, KW_CLASS, KW_CONTINUE, KW_DEF, KW_DEFAULT, KW_ELSE, KW_ENUM, KW_EXTENDS, KW_FALSE, KW_FINAL, KW_FINALLY, KW_FOR, KW_IF, KW_IMPLEMENTS, KW_IMPORT, KW_IN, KW_INSTANCEOF, KW_INTERFACE, KW_NATIVE, KW_NEW, KW_NULL, KW_PACKAGE, KW_RETURN, KW_STATIC, KW_STRICTFP, KW_SUPER, KW_SWITCH, KW_SYNCHRONIZED, KW_THROW, KW_THROWS, KW_TRANSIENT, KW_TRUE, KW_TRY, KW_VOLATILE, KW_WHILE, VISIBILITY_MODIFIER));
     private String currentClassName = null; // Used for correct constructor recognition.
 
     private boolean declarationRuleInExpressionEnabled = false;
@@ -157,7 +156,7 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
         | genericClassNameExpression)
     singleDeclaration ( COMMA singleDeclaration)*
 ;
-constructorDeclaration: { _input.LT(_input.LT(1).getType() == VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName) }?
+constructorDeclaration: { GrammarPredicates.isCurrentClassName(_input, currentClassName) }?
     VISIBILITY_MODIFIER? IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? LCURVE blockStatement? RCURVE ; // Inner NL 's handling.
 objectInitializer: LCURVE blockStatement? RCURVE ;
 classInitializer: KW_STATIC LCURVE blockStatement? RCURVE ;
@@ -287,7 +286,7 @@ expression:
     | INCREMENT expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    | {!KW_SET.contains(_input.LT(1).getType())}? implicitThisCallExpression #callExpression
+    | { !GrammarPredicates.isKeyword(_input) }? implicitThisCallExpression #callExpression
     | expression (DOT | SAFE_DOT | STAR_DOT) implicitThisCallExpression     #callExpression
 
 
