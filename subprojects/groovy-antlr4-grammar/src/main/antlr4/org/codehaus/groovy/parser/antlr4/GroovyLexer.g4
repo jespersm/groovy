@@ -41,14 +41,6 @@ lexer grammar GroovyLexer;
     private long tlePos = 0;
 
     @Override
-    public Token nextToken() {
-        if (!(_interp instanceof PositionAdjustingLexerATNSimulator))
-            _interp = new PositionAdjustingLexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
-
-        return super.nextToken();
-    }
-
-    @Override
     public void emit(Token token) {
         tokenIndex++;
 

@@ -71,8 +71,8 @@ public class ASTBuilder {
             this.logTokens(text);
         }
 
-        GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
-        GroovyParser parser = new GroovyParser(new CommonTokenStream(lexer));
+        GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
+        GroovyParser parser = new GroovyParser(new CommonTokenStream(scanner));
 
 
         this.setupErrorListener(parser);
