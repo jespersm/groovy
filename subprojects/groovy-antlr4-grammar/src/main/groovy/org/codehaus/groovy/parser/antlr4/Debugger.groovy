@@ -21,7 +21,6 @@ package org.codehaus.groovy.parser.antlr4
 import org.antlr.v4.gui.TreeViewer
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
-import org.codehaus.groovy.parser.antlr4.util.StringUtil
 
 import javax.swing.*
 
@@ -41,8 +40,8 @@ public class Debugger {
     private void showParseTree(File sourceFile, boolean isGUI) {
         String text = sourceFile.text;
 
-        GroovyLexer lexer = new GroovyLexer(new ANTLRInputStream(text));
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
+        CommonTokenStream tokens = new CommonTokenStream(scanner);
 
         GroovyParser parser = new GroovyParser(tokens);
 

@@ -51,11 +51,14 @@ lexer grammar GroovyLexer;
 
         //System.out.println("EM: " + tokenNames[lastTokenType != -1 ? lastTokenType : 0] + ": " + lastTokenType + " TLE = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex + " " + token.getText());
         if (tokenType == ROLLBACK_ONE) {
-           ((PositionAdjustingLexerATNSimulator)getInterpreter()).resetAcceptPosition(getInputStream(), _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine - 1);
+            this.resetAcceptPosition();
         }
 
         super.emit(token);
     }
+
+    // just a hook, which will be overrided by GroovyScanner
+    protected void resetAcceptPosition() {}
 
     public void pushBrace(Brace b) {
         braceStack.push(b);
