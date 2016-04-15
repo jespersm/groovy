@@ -2,7 +2,7 @@
 
 [PASS]	./appD/Listing_D_01_GStrings.groovy
 [PASS]	./appD/Listing_D_02_Lists.groovy
-[FIXME]	./appD/Listing_D_03_Closures.groovy             // FIXME ISSUE#18(Fail to parse the call expression when the callee is not a path expression)
+[PASS]	./appD/Listing_D_03_Closures.groovy
 [PASS]	./appD/Listing_D_04_Regex.groovy
 [PASS]	./appD/Listing_D_05_GPath.groovy
 [SKIP]	./chap01/customers.xml
@@ -23,7 +23,7 @@
 [PASS]	./chap02/Listing_02_04_BookBean.groovy
 [PASS]	./chap02/Listing_02_05_ImmutableBook.groovy
 [PASS]	./chap02/Listing_02_06_Grab.groovy
-[TODO]	./chap02/Listing_02_07_Clinks.groovy
+[PASS]	./chap02/Listing_02_07_Clinks.groovy
 [PASS]	./chap02/Listing_02_08_ControlStructures.groovy
 [PASS]	./chap02/snippet0201_comments.groovy
 [PASS]	./chap02/snippet0202_failing_assert.groovy
@@ -40,14 +40,14 @@
 [SKIP]	./chap03/ArrayListSummer.java
 [PASS]	./chap03/extra_escaped_characters_table36.groovy
 [PASS]	./chap03/extra_method_operators_table34.groovy
-[FIXME]	./chap03/extra_numeric_literals_table32.groovy
+[PASS]	./chap03/extra_numeric_literals_table32.groovy
 [PASS]	./chap03/extra_numerical_coercion_table310.groovy
-[FIXME]	./chap03/extra_optional_typing_table33.groovy
+[PASS]	./chap03/extra_optional_typing_table33.groovy
 [PASS]	./chap03/extra_primitive_values_table31.groovy
-[FIXME]	./chap03/Listing_03_01_PrimitiveMethodsObjectOperators.groovy
-[FIXME]	./chap03/Listing_03_02_ListMapCast.groovy
+[PASS]	./chap03/Listing_03_01_PrimitiveMethodsObjectOperators.groovy
+[PASS]	./chap03/Listing_03_02_ListMapCast.groovy
 [PASS]	./chap03/Listing_03_03_DefiningOperators.groovy
-[FIXME]	./chap03/Listing_03_04_DefiningGStrings.groovy
+[PASS]	./chap03/Listing_03_04_DefiningGStrings.groovy
 [PASS]	./chap03/Listing_03_05_StringOperations.groovy
 [FIXME]	./chap03/Listing_03_06_RegexGStrings.groovy
 [PASS]	./chap03/Listing_03_07_RegularExpressions.groovy

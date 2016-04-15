@@ -158,7 +158,7 @@ public class ASTBuilder {
                 // import is like "import static foo.Bar.*"
                 // packageName is actually a className in this case
                 ClassNode type = ClassHelper.make(DefaultGroovyMethods.join(qualifiedClassName, "."));
-                moduleNode.addStaticStarImport(DefaultGroovyMethods.last(qualifiedClassName).getText(), type, annotations);
+                moduleNode.addStaticStarImport(type.getText(), type, annotations);
 
                 node = DefaultGroovyMethods.last(moduleNode.getStaticStarImports().values());
             } else {
