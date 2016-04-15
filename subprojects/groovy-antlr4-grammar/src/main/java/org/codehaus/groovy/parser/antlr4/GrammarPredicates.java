@@ -26,22 +26,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GrammarPredicates {
-    public static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.KW_ABSTRACT, GroovyParser.KW_AS, GroovyParser.KW_ASSERT, GroovyParser.KW_BREAK, GroovyParser.KW_CASE, GroovyParser.KW_CATCH, GroovyParser.KW_CLASS, GroovyParser.KW_CONTINUE, GroovyParser.KW_DEF, GroovyParser.KW_DEFAULT, GroovyParser.KW_ELSE, GroovyParser.KW_ENUM, GroovyParser.KW_EXTENDS, GroovyParser.KW_FALSE, GroovyParser.KW_FINAL, GroovyParser.KW_FINALLY, GroovyParser.KW_FOR, GroovyParser.KW_IF, GroovyParser.KW_IMPLEMENTS, GroovyParser.KW_IMPORT, GroovyParser.KW_IN, GroovyParser.KW_INSTANCEOF, GroovyParser.KW_INTERFACE, GroovyParser.KW_NATIVE, GroovyParser.KW_NEW, GroovyParser.KW_NULL, GroovyParser.KW_PACKAGE, GroovyParser.KW_RETURN, GroovyParser.KW_STATIC, GroovyParser.KW_STRICTFP, GroovyParser.KW_SUPER, GroovyParser.KW_SWITCH, GroovyParser.KW_SYNCHRONIZED, GroovyParser.KW_THROW, GroovyParser.KW_THROWS, GroovyParser.KW_TRANSIENT, GroovyParser.KW_TRUE, GroovyParser.KW_TRY, GroovyParser.KW_VOLATILE, GroovyParser.KW_WHILE, GroovyParser.VISIBILITY_MODIFIER));
-    private static final String[] primitiveClassNames = new String[] {
-        "boolean", "byte", "char", "double",
-        "float", "int", "long", "short", "void"
-    };
+    public static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.KW_ABSTRACT, GroovyParser.KW_AS, GroovyParser.KW_ASSERT, GroovyParser.KW_BREAK, GroovyParser.KW_CASE, GroovyParser.KW_CATCH, GroovyParser.KW_CLASS, GroovyParser.KW_CONST, GroovyParser.KW_CONTINUE, GroovyParser.KW_DEF, GroovyParser.KW_DEFAULT, GroovyParser.KW_DO, GroovyParser.KW_ELSE, GroovyParser.KW_ENUM, GroovyParser.KW_EXTENDS, GroovyParser.KW_FALSE, GroovyParser.KW_FINAL, GroovyParser.KW_FINALLY, GroovyParser.KW_FOR, GroovyParser.KW_GOTO, GroovyParser.KW_IF, GroovyParser.KW_IMPLEMENTS, GroovyParser.KW_IMPORT, GroovyParser.KW_IN, GroovyParser.KW_INSTANCEOF, GroovyParser.KW_INTERFACE, GroovyParser.KW_NATIVE, GroovyParser.KW_NEW, GroovyParser.KW_NULL, GroovyParser.KW_PACKAGE, GroovyParser.KW_RETURN, GroovyParser.KW_STATIC, GroovyParser.KW_STRICTFP, GroovyParser.KW_SUPER, GroovyParser.KW_SWITCH, GroovyParser.KW_SYNCHRONIZED, GroovyParser.KW_THREADSAFE, GroovyParser.KW_THROW, GroovyParser.KW_THROWS, GroovyParser.KW_TRANSIENT, GroovyParser.KW_TRUE, GroovyParser.KW_TRY, GroovyParser.KW_VOLATILE, GroovyParser.KW_WHILE, GroovyParser.BUILT_IN_TYPE, GroovyParser.VISIBILITY_MODIFIER));
 
     public static boolean isClassName(TokenStream nameOrPath) {
         int index = 1;
         Token token = nameOrPath.LT(index);
+
         while (nameOrPath.LT(index+1).getType() == GroovyParser.DOT) {
             index += 2;
             token = nameOrPath.LT(index);
         }
-        String tokenText = token.getText();
-        if (Arrays.binarySearch(primitiveClassNames, tokenText) >= 0) return true;
-        return Character.isUpperCase(tokenText.codePointAt(0));
+
+        return GroovyParser.BUILT_IN_TYPE == token.getType() || Character.isUpperCase(token.getText().codePointAt(0));
     }
 
     /**

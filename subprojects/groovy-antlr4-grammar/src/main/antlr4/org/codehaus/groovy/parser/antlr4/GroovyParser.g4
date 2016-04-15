@@ -333,7 +333,7 @@ implicitThisCallExpression: (selectorName | STRING | gstring) (LPAREN argumentLi
                           | (selectorName | STRING | gstring) (LPAREN argumentList? RPAREN | argumentList?) closureExpressionRule+
                           ;
 
-classNameExpression: { GrammarPredicates.isClassName(_input) }? IDENTIFIER (DOT IDENTIFIER)* ;
+classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
 
 genericClassNameExpression: classNameExpression (genericList | (LBRACK RBRACK))?;
 
@@ -373,11 +373,11 @@ selectorName
         | kwSelectorName
         ;
 
-kwSelectorName: KW_ABSTRACT | KW_AS | KW_ASSERT | KW_BREAK | KW_CASE | KW_CATCH | KW_CLASS | KW_CONTINUE
-                     | KW_DEF | KW_DEFAULT | KW_ELSE | KW_ENUM | KW_EXTENDS | KW_FALSE | KW_FINAL | KW_FINALLY
-                     | KW_FOR | KW_IF | KW_IMPLEMENTS | KW_IMPORT | KW_IN | KW_INSTANCEOF | KW_INTERFACE
+kwSelectorName: KW_ABSTRACT | KW_AS | KW_ASSERT | KW_BREAK | KW_CASE | KW_CATCH | KW_CLASS | KW_CONST | KW_CONTINUE
+                     | KW_DEF | KW_DEFAULT | KW_DO | KW_ELSE | KW_ENUM | KW_EXTENDS | KW_FALSE | KW_FINAL | KW_FINALLY
+                     | KW_FOR | KW_GOTO | KW_IF | KW_IMPLEMENTS | KW_IMPORT | KW_IN | KW_INSTANCEOF | KW_INTERFACE
                      | KW_NATIVE | KW_NEW | KW_NULL | KW_PACKAGE
-                     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THROW
+                     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THREADSAFE | KW_THROW
                      | KW_THROWS | KW_TRANSIENT | KW_TRUE | KW_TRY | KW_VOLATILE | KW_WHILE
-                     | VISIBILITY_MODIFIER /* in place of KW_PRIVATE | KW_PROTECTED | KW_PUBLIC */
+                     | BUILT_IN_TYPE | VISIBILITY_MODIFIER /* in place of KW_PRIVATE | KW_PROTECTED | KW_PUBLIC */
 ;

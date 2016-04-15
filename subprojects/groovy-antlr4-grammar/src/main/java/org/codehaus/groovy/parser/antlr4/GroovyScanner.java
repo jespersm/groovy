@@ -35,7 +35,7 @@ public class GroovyScanner extends GroovyLexer {
     }
 
     @Override
-    public void resetAcceptPosition() {
+    protected void rollbackOneChar() {
         ((PositionAdjustingLexerATNSimulator)getInterpreter()).resetAcceptPosition(getInputStream(), _tokenStartCharIndex - 1, _tokenStartLine, _tokenStartCharPositionInLine - 1);
     }
 

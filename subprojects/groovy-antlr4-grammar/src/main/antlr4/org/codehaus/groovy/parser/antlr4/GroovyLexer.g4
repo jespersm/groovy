@@ -51,14 +51,14 @@ lexer grammar GroovyLexer;
 
         //System.out.println("EM: " + tokenNames[lastTokenType != -1 ? lastTokenType : 0] + ": " + lastTokenType + " TLE = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex + " " + token.getText());
         if (tokenType == ROLLBACK_ONE) {
-            this.resetAcceptPosition();
+            this.rollbackOneChar();
         }
 
         super.emit(token);
     }
 
     // just a hook, which will be overrided by GroovyScanner
-    protected void resetAcceptPosition() {}
+    protected void rollbackOneChar() {}
 
     public void pushBrace(Brace b) {
         braceStack.push(b);
@@ -225,6 +225,7 @@ KW_IN: 'in' ;
 KW_FOR: 'for' ;
 KW_IF: 'if' ;
 KW_ELSE: 'else' ;
+KW_DO: 'do' ;
 KW_WHILE: 'while' ;
 KW_SWITCH: 'switch' ;
 KW_CASE: 'case' ;
@@ -238,6 +239,10 @@ KW_FINALLY: 'finally' ;
 KW_THROW: 'throw' ;
 KW_THROWS: 'throws' ;
 KW_ASSERT: 'assert' ;
+
+KW_CONST:   'const';
+KW_GOTO: 'goto';
+
 
 RUSHIFT_ASSIGN: '>>>=' ;
 RSHIFT_ASSIGN: '>>=' ;
@@ -296,6 +301,8 @@ QUESTION: '?' ;
 KW_AS: 'as' ;
 KW_INSTANCEOF: 'instanceof' ;
 
+BUILT_IN_TYPE: 'void' | 'boolean' | 'byte' | 'char' | 'short' | 'int' | 'float' | 'long' | 'double';
+
 // Modifiers
 VISIBILITY_MODIFIER: (KW_PUBLIC | KW_PROTECTED | KW_PRIVATE) ;
 fragment KW_PUBLIC: 'public' ;
@@ -310,6 +317,7 @@ KW_NATIVE: 'native' ; // Methods and fields, as fields are accesors in Groovy.
 KW_VOLATILE: 'volatile' ; // Fields only
 KW_SYNCHRONIZED: 'synchronized' ; // Methods and fields.
 KW_STRICTFP: 'strictfp';
+KW_THREADSAFE: 'threadsafe';
 
 /** Nested newline within a (..) or [..] are ignored. */
 IGNORE_NEWLINE : '\r'? '\n' { topBrace == Brace.ROUND || topBrace == Brace.SQUARE }? -> skip ;

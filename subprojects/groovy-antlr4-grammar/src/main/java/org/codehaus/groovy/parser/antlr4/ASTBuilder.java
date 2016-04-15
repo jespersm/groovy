@@ -1510,7 +1510,15 @@ public class ASTBuilder {
     }
 
     public ClassNode parseExpression(GroovyParser.ClassNameExpressionContext ctx) {
-        return setupNodeLocation(ClassHelper.make(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".")), ctx);
+        ClassNode classNode;
+
+        if (asBoolean(ctx.BUILT_IN_TYPE())) {
+            classNode = ClassHelper.make(ctx.BUILT_IN_TYPE().getText());
+        } else {
+            classNode = ClassHelper.make(DefaultGroovyMethods.join(ctx.IDENTIFIER(), "."));
+        }
+
+        return setupNodeLocation(classNode, ctx);
     }
 
     public ClassNode parseExpression(GroovyParser.GenericClassNameExpressionContext ctx) {
