@@ -43,7 +43,6 @@ import java.io.*;
 import java.net.*;
 import java.security.*;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * A ClassLoader which can load Groovy classes. The loaded classes are cached,
@@ -231,6 +230,7 @@ public class GroovyClassLoader extends URLClassLoader {
     /**
      * @deprecated Prefer using methods taking a Reader rather than an InputStream to avoid wrong encoding issues.
      */
+    @Deprecated
     public Class parseClass(final InputStream in, final String fileName) throws CompilationFailedException {
         // For generic input streams, provide a catch-all codebase of GroovyScript
         // Security for these classes can be administered via policy grants with

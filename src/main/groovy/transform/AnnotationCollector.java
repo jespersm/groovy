@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  * arguments and error will be given. Is this not wished or if you want a 
  * different mapping a custom processor has to be used. There are two ways of 
  * using the alias. The first way is by providing the annotations as list/array:
- * <pre>
+ * <pre class="groovyTestCase">
  *          import groovy.transform.*
  *          &#64;AnnotationCollector([ToString, EqualsAndHashCode, Immutable])
  *          &#64;interface Alias {}
@@ -50,7 +50,7 @@ import java.lang.annotation.Target;
  * excludes which will be mapped to ToString and EqualsAndHashCode. Immutable 
  * doesn't have excludes, thus nothing will be done there.<br>
  * The other way is to add annotations to the alias:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.*
  * &#64;ToString(excludes=["a"])
  * &#64;EqualsAndHashCode
@@ -73,6 +73,102 @@ import java.lang.annotation.Target;
  * EqualsAndHashCode.
  * If both ways are combined, then the list overwrites annotation usage.
  * NOTE: The aliasing does not support aliasing of aliased annotations. 
+ * <p>More examples:</p>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * import groovy.transform.*
+ * &#64;AnnotationCollector([EqualsAndHashCode, ToString])
+ * &#64;interface Simple {}
+ *
+ *
+ * &#64;Simple
+ * class User {
+ *     String username
+ *     int age
+ * }
+ *
+ * def user = new User(username: 'mrhaki', age: 39)
+ * assert user.toString() == 'User(mrhaki, 39)'
+ *
+ * // We still have 2 annotations:
+ * assert User.class.annotations.size() == 2
+ *
+ *
+ * // We can use the attributes from the 
+ * // grouped annotations.
+ * &#64;Simple(excludes = 'street')
+ * class Address {
+ *     String street, town
+ * }
+ *
+ * def address = new Address(street: 'Evergreen Terrace', town: 'Springfield') 
+ * assert address.toString() == 'Address(Springfield)'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * // Use a custom processor to handle attributes.
+ * import org.codehaus.groovy.transform.*
+ * import org.codehaus.groovy.ast.*
+ * import org.codehaus.groovy.control.*
+ *
+ * class SimpleProcessor extends AnnotationCollectorTransform {
+ *
+ *     public List&lt;AnnotationNode&gt; visit(AnnotationNode collector, 
+ *                                       AnnotationNode aliasAnnotationUsage, 
+ *                                       AnnotatedNode aliasAnnotated, 
+ *                                       SourceUnit source) {
+ *
+ *         // Get attributes and attribute value for dontUse.
+ *         def attributes = aliasAnnotationUsage.getMembers()
+ *         def dontUse = attributes.get('dontUse')
+ *         attributes.remove('dontUse')
+ *
+ *         if (dontUse) {
+ *             // Assign value of dontUse to excludes attributes.
+ *             aliasAnnotationUsage.addMember("excludes", dontUse)
+ *         }
+ *
+ *         super.visit(collector, aliasAnnotationUsage, aliasAnnotated, source)
+ *     }
+ *
+ * }
+ *
+ * new GroovyShell(this.class.classLoader).evaluate '''
+ * import groovy.transform.*
+ *
+ * &#64;AnnotationCollector(value = [EqualsAndHashCode, ToString], processor = 'SimpleProcessor')
+ * &#64;interface Simple {}
+ *
+ *
+ * &#64;Simple(dontUse = 'age')
+ * class User {
+ *     String username
+ *     int age
+ * }
+ *
+ * def user = new User(username: 'mrhaki', age: 39)
+ * assert user.toString() == 'User(mrhaki)'
+ * '''
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * // Use AnnotationCollector as last annotation to group the
+ * // previous annotations.
+ * import groovy.transform.*
+ * &#64;EqualsAndHashCode
+ * &#64;ToString
+ * &#64;AnnotationCollector
+ * &#64;interface Simple {}
+ *
+ *
+ * &#64;Simple
+ * class User {
+ *     String username
+ * }
+ *
+ * def user = new User(username: 'mrhaki')
+ * assert user.toString() == 'User(mrhaki)'
+ * </pre>
  * 
  * @author <a href="mailto:blackdrag@gmx.org">Jochen "blackdrag" Theodorou</a>
  * @see org.codehaus.groovy.transform.AnnotationCollectorTransform

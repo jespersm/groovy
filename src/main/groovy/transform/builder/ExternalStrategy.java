@@ -49,6 +49,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass;
+import static org.codehaus.groovy.transform.AbstractASTTransformation.shouldSkip;
 import static org.codehaus.groovy.transform.BuilderASTTransformation.MY_TYPE_NAME;
 import static org.codehaus.groovy.transform.BuilderASTTransformation.NO_EXCEPTIONS;
 import static org.codehaus.groovy.transform.BuilderASTTransformation.NO_PARAMS;
@@ -61,7 +62,7 @@ import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
  *
  * You use it by creating and annotating an explicit builder class which will be filled in by during
  * annotation processing with the appropriate build method and setters. An example is shown here:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.builder.*
  *
  * class Person {
@@ -119,10 +120,11 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         if (unsupportedAttribute(transform, anno, "builderClassName")) return;
         if (unsupportedAttribute(transform, anno, "builderMethodName")) return;
         List<PropertyInfo> props;
+        boolean allNames = transform.memberHasValue(anno, "allNames", true);
         if (buildee.getModule() == null) {
-            props = getPropertyInfoFromBeanInfo(buildee, includes, excludes);
+            props = getPropertyInfoFromBeanInfo(buildee, includes, excludes, allNames);
         } else {
-            props = getPropertyInfoFromClassNode(buildee, includes, excludes);
+            props = getPropertyInfoFromClassNode(transform, anno, buildee, includes, excludes, allNames);
         }
         if (includes != null) {
             for (String name : includes) {
@@ -158,12 +160,12 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         return new FieldNode(propName.equals("class") ? "clazz" : propName, ACC_PRIVATE, newClass(prop.getType()), builderClass, DEFAULT_INITIAL_VALUE);
     }
 
-    public static List<PropertyInfo> getPropertyInfoFromBeanInfo(ClassNode cNode, List<String> includes, List<String> excludes) {
+    public static List<PropertyInfo> getPropertyInfoFromBeanInfo(ClassNode cNode, List<String> includes, List<String> excludes, boolean allNames) {
         final List<PropertyInfo> result = new ArrayList<PropertyInfo>();
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(cNode.getTypeClass());
             for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-                if (AbstractASTTransformation.shouldSkipUndefinedAware(descriptor.getName(), excludes, includes)) continue;
+                if (AbstractASTTransformation.shouldSkipUndefinedAware(descriptor.getName(), excludes, includes, allNames)) continue;
                 // skip hidden and read-only props
                 if (descriptor.isHidden() || descriptor.getWriteMethod() == null) continue;
                 result.add(new PropertyInfo(descriptor.getName(), ClassHelper.make(descriptor.getPropertyType())));
@@ -171,6 +173,15 @@ public class ExternalStrategy extends BuilderASTTransformation.AbstractBuilderSt
         } catch (IntrospectionException ignore) {
         }
         return result;
+    }
+
+    private List<PropertyInfo> getPropertyInfoFromClassNode(BuilderASTTransformation transform, AnnotationNode anno, ClassNode cNode, List<String> includes, List<String> excludes, boolean allNames) {
+        List<PropertyInfo> props = new ArrayList<PropertyInfo>();
+        for (FieldNode fNode : getFields(transform, anno, cNode)) {
+            if (shouldSkip(fNode.getName(), excludes, includes, allNames)) continue;
+            props.add(new PropertyInfo(fNode.getName(), fNode.getType()));
+        }
+        return props;
     }
 
     private static Expression initializeInstance(ClassNode sourceClass, List<PropertyInfo> props, BlockStatement body) {

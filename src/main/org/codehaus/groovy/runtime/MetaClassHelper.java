@@ -502,6 +502,7 @@ public class MetaClassHelper {
      *         object (e.g. Object) ignoring primitive types
      * @deprecated
      */
+    @Deprecated
     public static Object chooseMostGeneralMethodWith1NullParam(FastArray methods) {
         // let's look for methods with 1 argument which matches the type of the
         // arguments
@@ -563,16 +564,6 @@ public class MetaClassHelper {
     }
 
     // 
-
-    private static int calculateSimplifiedClassDistanceToObject(Class clazz) {
-        int objectDistance = 0;
-        while (clazz != null) {
-            clazz = clazz.getSuperclass();
-            objectDistance++;
-        }
-        return objectDistance;
-    }
-
 
     /**
      * @param list   a list of MetaMethods
@@ -645,9 +636,9 @@ public class MetaClassHelper {
             int tmpCount = 0;
             for (int i = offset; i < arguments.length; i++) {
                 if (arguments[i] != null) {
-                    Class argClass, tmpClass;
+                    Class tmpClass;
                     Set<Class> intfs = new HashSet<Class>();
-                    tmpClass = argClass = arguments[i].getClass();
+                    tmpClass = arguments[i].getClass();
                     for (; tmpClass != Object.class; tmpClass = tmpClass.getSuperclass()) {
                         intfs.addAll(Arrays.asList(tmpClass.getInterfaces()));
                     }

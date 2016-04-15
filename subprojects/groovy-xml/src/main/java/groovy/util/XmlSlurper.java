@@ -56,7 +56,7 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * Parse XML into a document tree that may be traversed similar to XPath
  * expressions.  For example:
- * <pre>
+ * <pre class="groovyTestCase">
  * def rootNode = new XmlSlurper().parseText(
  *    '&lt;root&gt;&lt;one a1="uno!"/&gt;&lt;two&gt;Some text!&lt;/two&gt;&lt;/root&gt;' )
  *
@@ -68,7 +68,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * <p>
  * Note that in some cases, a 'selector' expression may not resolve to a
  * single node.  For example:
- * <pre>
+ * <pre class="groovyTestCase">
  * def rootNode = new XmlSlurper().parseText(
  *    '''&lt;root&gt;
  *         &lt;a&gt;one!&lt;/a&gt;
@@ -92,7 +92,7 @@ public class XmlSlurper extends DefaultHandler {
     private boolean namespaceAware = false;
 
     /**
-     * Creates a non-validating and non-namespace-aware <code>XmlSlurper</code> which does not allow DOCTYPE declarations in documents.
+     * Creates a non-validating and namespace-aware <code>XmlSlurper</code> which does not allow DOCTYPE declarations in documents.
      *
      * @throws ParserConfigurationException if no parser which satisfies the requested configuration can be created.
      * @throws SAXException for SAX errors.

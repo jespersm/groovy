@@ -40,6 +40,7 @@ import java.util.List;
 
 import static groovy.transform.Undefined.isUndefined;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.getInstancePropertyFields;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.getSuperPropertyFields;
 
 /**
  * Handles generation of code for the {@link Builder} annotation.
@@ -77,9 +78,13 @@ public class BuilderASTTransformation extends AbstractASTTransformation implemen
 
     public abstract static class AbstractBuilderStrategy implements BuilderStrategy {
         protected static List<PropertyInfo> getPropertyInfoFromClassNode(ClassNode cNode, List<String> includes, List<String> excludes) {
+            return getPropertyInfoFromClassNode(cNode, includes, excludes, false);
+        }
+
+        protected static List<PropertyInfo> getPropertyInfoFromClassNode(ClassNode cNode, List<String> includes, List<String> excludes, boolean allNames) {
             List<PropertyInfo> props = new ArrayList<PropertyInfo>();
             for (FieldNode fNode : getInstancePropertyFields(cNode)) {
-                if (shouldSkip(fNode.getName(), excludes, includes)) continue;
+                if (shouldSkip(fNode.getName(), excludes, includes, allNames)) continue;
                 props.add(new PropertyInfo(fNode.getName(), fNode.getType()));
             }
             return props;
@@ -154,6 +159,11 @@ public class BuilderASTTransformation extends AbstractASTTransformation implemen
             }
             List<String> includesToCheck = includes.size() == 1 && isUndefined(includes.get(0)) ? null : includes;
             return transform.checkIncludeExcludeUndefinedAware(anno, excludes, includesToCheck, MY_TYPE_NAME);
+        }
+
+        protected List<FieldNode> getFields(BuilderASTTransformation transform, AnnotationNode anno, ClassNode buildee) {
+           boolean includeSuperProperties = transform.memberHasValue(anno, "includeSuperProperties", true);
+           return includeSuperProperties ? getSuperPropertyFields(buildee) : getInstancePropertyFields(buildee);
         }
 
         protected static class PropertyInfo {

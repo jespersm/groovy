@@ -25,7 +25,7 @@ import groovy.lang.Closure;
  * Normally used only internally through the <code>curry()</code>, <code>rcurry()</code> or
  * <code>ncurry()</code> methods on <code>Closure</code>.
  * Typical usages:
- * <pre>
+ * <pre class="groovyTestCase">
  * // normal usage
  * def unitAdder = { first, second, unit -> "${first + second} $unit" }
  * assert unitAdder(10, 15, "minutes") == "25 minutes"
@@ -46,7 +46,6 @@ public final class CurriedClosure<V> extends Closure<V> {
 
     private Object[] curriedParams;
     private int index;
-    private int numTrailingArgs = 0;
     private Class varargType = null;
 
     public CurriedClosure(int index, Closure<V> uncurriedClosure, Object... arguments) {
@@ -61,11 +60,7 @@ public final class CurriedClosure<V> extends Closure<V> {
             varargType = lastType;
         }
 
-        if (isVararg()) {
-            if (index < 0) {
-                numTrailingArgs = (-index) - arguments.length;
-            }
-        } else {
+        if (!isVararg()) {
             // perform some early param checking for non-vararg case
             if (index < 0) {
                 // normalise

@@ -83,13 +83,12 @@ public class CompilerConfiguration {
     /**
      * Encoding for source files
      */
-
     private String sourceEncoding;
+    
     /**
-     * A <code>PrintWriter</code> for communicating with the user
-     */
-
-    private PrintWriter output;
+      * The <code>PrintWriter</code> does nothing.
+      */
+     private PrintWriter output;
 
     /**
      * Directory into which to write classes
@@ -212,6 +211,7 @@ public class CompilerConfiguration {
             // IGNORE
         }
 
+
         String target = safeGetSystemProperty("groovy.target.directory");
         if (target != null) {
             setTargetDirectory(target);
@@ -309,7 +309,6 @@ public class CompilerConfiguration {
         setTargetBytecode(configuration.getTargetBytecode());
         setDefaultScriptExtension(configuration.getDefaultScriptExtension());
         setSourceEncoding(configuration.getSourceEncoding());
-        setOutput(configuration.getOutput());
         setTargetDirectory(configuration.getTargetDirectory());
         Map<String, Object> jointCompilationOptions = configuration.getJointCompilationOptions();
         if (jointCompilationOptions != null) {
@@ -347,10 +346,6 @@ public class CompilerConfiguration {
      * CompilerConfiguration myConfiguration = new CompilerConfiguration(CompilerConfiguration.DEFAULT);
      * myConfiguration.setDebug(true);
      * </pre>
-     * Another reason to use the copy constructor rather than this one is that you
-     * must call {@link #setOutput}.  Calling <code>setOutput(null)</code> is valid and will
-     * set up a <code>PrintWriter</code> to a bit bucket.  The copy constructor will of course set
-     * the same one as the original.
      * <p>
      * <table summary="Groovy Compiler Configuration Properties">
      *   <tr>
@@ -567,14 +562,18 @@ public class CompilerConfiguration {
 
     /**
      * Gets the currently configured output writer.
+     * @deprecated not used anymore
      */
+    @Deprecated 
     public PrintWriter getOutput() {
         return this.output;
     }
 
     /**
      * Sets the output writer.
+     * @deprecated not used anymore, has no effect
      */
+    @Deprecated
     public void setOutput(PrintWriter output) {
         if (output == null) {
             this.output = new PrintWriter(NullWriter.DEFAULT);

@@ -29,4 +29,10 @@ class LoadCommandTest
     void testLoad() {
         shell.execute(LoadCommand.COMMAND_NAME)
     }
+
+    void testLoadScriptWithShebang() {
+        def script = getClass().getResource('/groovy7777script')
+        shell.execute("${LoadCommand.COMMAND_NAME} ${script}")
+        assert lastResult == 42
+    }
 }

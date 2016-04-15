@@ -16,27 +16,26 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.codehaus.groovy.tools.shell.util
+package groovy.xml.jaxb
 
-import groovy.transform.CompileStatic
-import org.fusesource.jansi.AnsiOutputStream
+import javax.xml.bind.JAXBContext
 
-@CompileStatic
-class JAnsiHelper {
+/**
+ * Test cases for {@link JaxbGroovyMethods}
+ *
+ * @author Dominik Przybysz
+ */
+class JaxbGroovyMethodsTest extends GroovyTestCase {
+    JAXBContext jaxbContext = JAXBContext.newInstance(Person)
+    Person p = new Person(name: 'JT', age: 20)
 
-    /**
-     * copied from jline2 ConsoleReader
-     */
-    static CharSequence stripAnsi(final CharSequence str) {
-        if (str == null) return ''
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream()
-            AnsiOutputStream aos = new AnsiOutputStream(baos)
-            aos.write(str.toString().bytes)
-            aos.flush()
-            return baos.toString()
-        } catch (IOException e) {
-            return str
-        }
+    void testMarshallAndUnmarshallObjectUsingExtensionMethodsForMarshallerAndUnmarshaller() {
+        String xml = jaxbContext.createMarshaller().marshal(p)
+        assert jaxbContext.createUnmarshaller().unmarshal(xml, Person) == p
+    }
+
+    void testMarshallAndUnmarshallObjectUsingExtensionMethodsForJaxbContext() {
+        String xml = jaxbContext.marshal(p)
+        assert jaxbContext.unmarshal(xml, Person) == p
     }
 }

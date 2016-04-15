@@ -130,29 +130,29 @@ configurations {
 
 ext {
     antVersion = '1.9.6'
-    asmVersion = '5.0.3'
+    asmVersion = '5.1'
     antlrVersion = '2.7.7'
     coberturaVersion = '1.9.4.1'
     commonsCliVersion = '1.3.1'
     commonsHttpClientVersion = '3.1'
     eclipseOsgiVersion = '3.9.1-v20140110-1610'
     gparsVersion = '1.2.1'
-    gradleVersion = '2.11'
+    gradleVersion = '2.12'
     ivyVersion = '2.4.0'
     jansiVersion = '1.11'
     jarjarVersion = '1.3'
-    jlineVersion = '2.12'
+    jlineVersion = '2.14.1'
     jmockVersion = '1.2.0'
-    logbackVersion = '1.1.3'
+    logbackVersion = '1.1.6'
     log4jVersion = '1.2.17'
     log4j2Version = '2.3'
     luceneVersion = '4.7.2'
     openbeansVersion = '1.0'
     openejbVersion = '1.0'
     qdoxVersion = '1.12.1'
-    slf4jVersion = '1.7.12'
+    slf4jVersion = '1.7.19'
     xmlunitVersion = '1.6'
-    xstreamVersion = '1.4.8'
+    xstreamVersion = '1.4.9'
     spockVersion = '1.0-groovy-2.4'
     antlr4Version = '4.5.3'
 }
@@ -401,7 +401,7 @@ task bootstrapJar {
         )
     }
     inputs.property('indy', useIndy())
-    inputs.files fileTree('src')
+    inputs.files sourceSets.main.allJava
     outputs.file archivePath
 }
 

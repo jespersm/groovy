@@ -260,6 +260,10 @@ public abstract class GPathResult extends GroovyObjectSupport implements Writabl
      * @return the namespace of the prefix
      */
     public String lookupNamespace(final String prefix) {
+        Object namespace = namespaceMap.get(prefix);
+        if (namespace != null) {
+            return namespace.toString();
+        }
         return this.namespaceTagHints.isEmpty() ? prefix : this.namespaceTagHints.get(prefix);
     }
 
@@ -374,7 +378,8 @@ public abstract class GPathResult extends GroovyObjectSupport implements Writabl
 
     /**
      * Supports the subscript operator for a GPathResult.
-     * <pre>
+     * <pre class="groovyTestCase">
+     * import groovy.util.slurpersupport.*
      * def text = """
      * &lt;characterList&gt;
      *   &lt;character/&gt;
@@ -416,7 +421,8 @@ public abstract class GPathResult extends GroovyObjectSupport implements Writabl
 
     /**
      * Supports the range subscript operator for a GPathResult.
-     * <pre>
+     * <pre class="groovyTestCase">
+     * import groovy.util.slurpersupport.*
      * def text = """
      * &lt;characterList>
      *   &lt;character&gt;Wallace&lt;/character&gt;

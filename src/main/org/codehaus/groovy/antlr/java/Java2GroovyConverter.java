@@ -23,11 +23,9 @@ import org.codehaus.groovy.antlr.parser.GroovyTokenTypes;
 import org.codehaus.groovy.antlr.treewalker.VisitorAdapter;
 
 public class Java2GroovyConverter extends VisitorAdapter{
-    private String[] tokenNames;
     private int[] typeMapping;
 
     public Java2GroovyConverter(String[] tokenNames) {
-        this.tokenNames = tokenNames;
         typeMapping = new int[400]; // magic number, much greater than current number of java tokens
         typeMapping[JavaTokenTypes.ABSTRACT] = GroovyTokenTypes.ABSTRACT;
 
@@ -214,10 +212,8 @@ public class Java2GroovyConverter extends VisitorAdapter{
             // as groovy AST doesn't expect to have them
             if (t.getType() == GroovyTokenTypes.STRING_LITERAL) {
                 String text = t.getText();
-                if (isSingleQuoted(text)) {
+                if (isSingleQuoted(text) || isDoubleQuoted(text)) {
                     t.setText(text.substring(1, text.length() - 1)); // chop off the single quotes at start and end
-                } else if (isDoubleQuoted(text)) {
-                    t.setText(text.substring(1, text.length() - 1)); // chop off the double quotes at start and end
                 }
             }
         }

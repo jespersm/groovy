@@ -34,7 +34,7 @@ import java.lang.annotation.Target;
  * methods is code which calls through to the delegate as per the normal delegate pattern.
  * <p>
  * As an example, consider this code:
- * <pre>
+ * <pre class="groovyTestCase">
  * class Event {
  *     {@code @Delegate} Date when
  *     String title, url
@@ -206,4 +206,12 @@ public @interface Delegate {
      * @since 2.3.0
      */
     Class[] includeTypes() default {Undefined.CLASS.class};
+
+    /**
+     * Whether to apply the delegate pattern to all methods, including those with names that are considered internal.
+     *
+     * @return true if owner class should delegate to methods which have internal names
+     * @since 2.5.0
+     */
+    boolean allNames() default false;
 }

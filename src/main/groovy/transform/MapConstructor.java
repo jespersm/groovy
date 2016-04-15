@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * Class annotation used to assist in the creation of map constructors in classes.
  * <p>
  * It allows you to write classes in this shortened form:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.*
  *
  * {@code @TupleConstructor}
@@ -120,4 +120,11 @@ public @interface MapConstructor {
      * A Closure containing statements which will be appended to the end of the generated constructor. Useful for validation steps or tweaking the populated fields/properties.
      */
     Class post();
+
+    /**
+     * Whether to include all fields and/or properties within the constructor, including those with names that are considered internal.
+     *
+     * @since 2.5.0
+     */
+    boolean allNames() default false;
 }

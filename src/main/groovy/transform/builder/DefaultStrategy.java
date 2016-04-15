@@ -43,7 +43,6 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.declS;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.getInstancePropertyFields;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.param;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.params;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.propX;
@@ -55,7 +54,6 @@ import static org.codehaus.groovy.ast.tools.GenericsUtils.createGenericsSpec;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.extractSuperClassGenerics;
 import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass;
 import static org.codehaus.groovy.transform.AbstractASTTransformation.getMemberStringValue;
-import static org.codehaus.groovy.transform.AbstractASTTransformation.shouldSkip;
 import static org.codehaus.groovy.transform.AbstractASTTransformation.shouldSkipUndefinedAware;
 import static org.codehaus.groovy.transform.BuilderASTTransformation.NO_EXCEPTIONS;
 import static org.codehaus.groovy.transform.BuilderASTTransformation.NO_PARAMS;
@@ -69,7 +67,7 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC;
  * static method or constructor levels.
  *
  * You use it as follows:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.builder.*
  *
  * {@code @Builder}
@@ -85,8 +83,8 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC;
  * </pre>
  * The {@code prefix} annotation attribute can be used to create setters with a different naming convention. The default is the
  * empty string but you could change that to "set" as follows:
- * <pre>
- * {@code @Builder}(prefix='set')
+ * <pre class="groovyTestCase">
+ * {@code @groovy.transform.builder.Builder}(prefix='set')
  * class Person {
  *     String firstName
  *     String lastName
@@ -101,7 +99,7 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC;
  *
  * You can also use the {@code @Builder} annotation in combination with this strategy on one or more constructor or
  * static method instead of or in addition to using it at the class level. An example with a constructor follows:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.ToString
  * import groovy.transform.builder.Builder
  *
@@ -129,7 +127,7 @@ import static org.objectweb.asm.Opcodes.ACC_STATIC;
  * have unique names. E.g.&nbsp;we can modify the previous example to have three builders. At least two of the builders
  * in our case will need to set the 'builderClassName' and 'builderMethodName' annotation attributes to ensure
  * we have unique names. This is shown in the following example:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.builder.*
  * import groovy.transform.*
  *
@@ -201,8 +199,9 @@ public class DefaultStrategy extends BuilderASTTransformation.AbstractBuilderStr
         if (includes.size() == 1 && Undefined.isUndefined(includes.get(0))) includes = null;
         ClassNode builder = createBuilder(anno, buildee);
         createBuilderFactoryMethod(anno, buildee, builder);
-        List<FieldNode> fields = getInstancePropertyFields(buildee);
-        List<FieldNode> filteredFields = selectFieldsFromExistingClass(fields, includes, excludes);
+        List<FieldNode> fields = getFields(transform, anno, buildee);
+        boolean allNames = transform.memberHasValue(anno, "allNames", true);
+        List<FieldNode> filteredFields = selectFieldsFromExistingClass(fields, includes, excludes, allNames);
         for (FieldNode fieldNode : filteredFields) {
             ClassNode correctedType = getCorrectedType(buildee, fieldNode);
             String fieldName = fieldNode.getName();
@@ -285,10 +284,10 @@ public class DefaultStrategy extends BuilderASTTransformation.AbstractBuilderStr
         return new FieldNode(fieldName, ACC_PRIVATE, fieldType, buildee, DEFAULT_INITIAL_VALUE);
     }
 
-    private static List<FieldNode> selectFieldsFromExistingClass(List<FieldNode> fieldNodes, List<String> includes, List<String> excludes) {
+    private static List<FieldNode> selectFieldsFromExistingClass(List<FieldNode> fieldNodes, List<String> includes, List<String> excludes, boolean allNames) {
         List<FieldNode> fields = new ArrayList<FieldNode>();
         for (FieldNode fNode : fieldNodes) {
-            if (shouldSkipUndefinedAware(fNode.getName(), excludes, includes)) continue;
+            if (shouldSkipUndefinedAware(fNode.getName(), excludes, includes, allNames)) continue;
             fields.add(fNode);
         }
         return fields;

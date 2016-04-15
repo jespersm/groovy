@@ -30,7 +30,8 @@ import java.lang.annotation.Target
  * since the JVM cannot do this itself. This works for both static and non-static methods.
  * <p/>
  * It allows you to write a method like this:
- * <pre>
+ * <pre class="groovyTestCase">
+ * import groovy.transform.TailRecursive
  * class Target {
  *      {@code @TailRecursive}
  *      long sumUp(long number, long sum = 0) {
@@ -57,6 +58,24 @@ import java.lang.annotation.Target
  * <li>Non trivial continuation passing style examples do not work.
  * <li>Probably many unrecognized edge cases.
  * </ul>
+ * 
+ * <p>More examples:</p>
+ * <pre class="groovyTestCase">
+ * import groovy.transform.TailRecursive
+ *
+ * &#64;TailRecursive
+ * long sizeOfList(list, counter = 0) {
+ *     if (list.size() == 0) {
+ *         counter
+ *     } else {
+ *        sizeOfList(list.tail(), counter + 1) 
+ *     }
+ * }
+ *
+ * // Without &#64;TailRecursive a StackOverFlowError
+ * // is thrown.
+ * assert sizeOfList(1..10000) == 10000
+ * </pre>
  *
  * @author Johannes Link
  * @since 2.3

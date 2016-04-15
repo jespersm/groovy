@@ -214,6 +214,20 @@ assert p.toString() == 'acme.Person(firstName:Jack, lastName:Nicholson)'
 
 '''
 
+        assertScript '''package acme
+import groovy.transform.ToString
+
+// tag::tostring_example_allNames[]
+@ToString(allNames=true)
+class Person {
+    String $firstName
+}
+
+def p = new Person($firstName: "Jack")
+assert p.toString() == 'acme.Person(Jack)'
+// end::tostring_example_allNames[]
+
+'''
     }
 
 
@@ -297,6 +311,74 @@ assert p1!=p2
 assert p1.hashCode() != p2.hashCode()
 // end::equalshashcode_example_super[]
 
+'''
+
+        assertScript '''
+// tag::equalshashcode_example_allNames[]
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode(allNames=true)
+class Person {
+    String $firstName
+}
+
+def p1 = new Person($firstName: 'Jack')
+def p2 = new Person($firstName: 'Bob')
+
+assert p1 != p2
+assert p1.hashCode() != p2.hashCode()
+// end::equalshashcode_example_allNames[]
+
+'''
+
+        assertScript '''
+// tag::equalshashcode_example_includeFields[]
+import groovy.transform.EqualsAndHashCode
+
+@EqualsAndHashCode(includeFields=true)
+class Person {
+    private String firstName
+
+    Person(String firstName) {
+        this.firstName = firstName
+    }
+}
+
+def p1 = new Person('Jack')
+def p2 = new Person('Jack')
+def p3 = new Person('Bob')
+
+assert p1 == p2
+assert p1 != p3
+// end::equalshashcode_example_includeFields[]
+'''
+
+        assertScript '''
+// tag::equalshashcode_example_cache[]
+import groovy.transform.EqualsAndHashCode
+import groovy.transform.Immutable
+
+@Immutable
+class SlowHashCode {
+    int hashCode() {
+        sleep 100
+        127
+    }
+}
+
+@EqualsAndHashCode(cache=true)
+@Immutable
+class Person {
+    SlowHashCode slowHashCode = new SlowHashCode()
+}
+
+def p = new Person()
+p.hashCode()
+
+def start = System.currentTimeMillis()
+p.hashCode()
+assert System.currentTimeMillis() - start < 100
+// end::equalshashcode_example_cache[]
 '''
     }
 
@@ -623,6 +705,21 @@ assert new Book(2015, false).toString() == 'Book(year:2015, fiction:false)'
 assert new Book("Regina", false).toString() == 'Book(name:Regina, fiction:false)'
 assert Book.constructors.size() == 3
 // end::tupleconstructor_example_defaults_multipleIncludes[]
+'''
+
+        assertScript '''
+// tag::tupleconstructor_example_allNames[]
+import groovy.transform.TupleConstructor
+
+@TupleConstructor(allNames=true)
+class Person {
+    String $firstName
+}
+
+def p = new Person('Jack')
+
+assert p.$firstName == 'Jack'
+// end::tupleconstructor_example_allNames[]
 '''
     }
 

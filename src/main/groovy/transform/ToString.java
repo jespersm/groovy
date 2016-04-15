@@ -64,7 +64,7 @@ import java.lang.annotation.Target;
  * Customer(first:Tom, last:Jones, age:21, answer:42)
  * </pre>
  * If you have this example:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.ToString
  * {@code @ToString} class NamedThing {
  *     String name
@@ -73,25 +73,18 @@ import java.lang.annotation.Target;
  * class AgedThing extends NamedThing {
  *     int age
  * }
- * println new AgedThing(name:'Lassie', age:5)
- * </pre>
- * Then the output will be:
- * <pre>
- * AgedThing(age:5, super:NamedThing(Lassie))
+ * String agedThingAsString = new AgedThing(name:'Lassie', age:5).toString()
+ * assert agedThingAsString == 'AgedThing(age:5, super:NamedThing(Lassie))'
  * </pre>
  * {@code @ToString} can also be used in conjunction with {@code @Canonical} and {@code @Immutable}.
  * <p>
  * If you want to omit fields or properties referring to <tt>null</tt>, you can use the <tt>ignoreNulls</tt> flag:
- * <pre>
+ * <pre class="groovyTestCase">
  * import groovy.transform.ToString
  * {@code @ToString(ignoreNulls = true)} class NamedThing {
  *     String name
  * }
- * println new NamedThing(name: null)
- * </pre>
- * Which results in:
- * <pre>
- * NamedThing()
+ * assert new NamedThing(name: null).toString() == 'NamedThing()'
  * </pre>
  * <p>
  * By default the fully-qualified class name is used as part of the generated toString.
@@ -112,6 +105,149 @@ import java.lang.annotation.Target;
  * <pre>
  * my.company.NamedThing(name: Lassie)
  * </pre>
+ * <p>More examples:</p>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------    
+ * // Most simple implementation of toString.
+ * import groovy.transform.ToString
+ *
+ * {@code @ToString}
+ * class Person {
+ *     String name
+ *     List likes
+ *     private boolean active = false
+ * }
+ *
+ * def person = new Person(name: 'mrhaki', likes: ['Groovy', 'Java'])
+ *
+ * assert person.toString() == 'Person(mrhaki, [Groovy, Java])'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------    
+ * // includeNames to output the names of the properties.
+ * import groovy.transform.ToString
+ *
+ * &#64;ToString(includeNames=true)
+ * class Person {
+ *     String name
+ *     List likes
+ *     private boolean active = false
+ * }
+ *
+ * def person = new Person(name: 'mrhaki', likes: ['Groovy', 'Java'])
+ *
+ * assert person.toString() == 'Person(name:mrhaki, likes:[Groovy, Java])'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * // includeFields to not only output properties, but also field values.
+ * import groovy.transform.ToString
+ *
+ * &#64;ToString(includeNames=true, includeFields=true)
+ * class Person {
+ *     String name
+ *     List likes
+ *     private boolean active = false
+ * }
+ *
+ * def person = new Person(name: 'mrhaki', likes: ['Groovy', 'Java'])
+ *
+ * assert person.toString() == 'Person(name:mrhaki, likes:[Groovy, Java], active:false)'
+ * </pre>
+ * <pre>
+ * //--------------------------------------------------------------------------    
+ * // Use includeSuper to include properties from super class in output.
+ * import groovy.transform.ToString
+ *
+ * &#64;ToString(includeNames=true)
+ * class Person {
+ *     String name
+ *     List likes
+ *     private boolean active = false
+ * }
+ *
+ * &#64;ToString(includeSuper=true, includeNames=true)
+ * class Student extends Person {
+ *     List courses
+ * }
+ *
+ * def student = new Student(name: 'mrhaki', likes: ['Groovy', 'Java'], courses: ['IT', 'Business'])
+ *
+ * assert student.toString() == 'Student(courses:[IT, Business], super:Person(name:mrhaki, likes:[Groovy, Java]))'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------    
+ * // excludes active field and likes property from output
+ * import groovy.transform.ToString
+ *
+ * &#64;ToString(includeNames=true, includeFields=true, excludes='active,likes')
+ * class Person {
+ *     String name
+ *     List likes
+ *     private boolean active = false
+ * }
+ *
+ * def person = new Person(name: 'mrhaki', likes: ['Groovy', 'Java'])
+ *
+ * assert person.toString() == 'Person(name:mrhaki)'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * // Don't include the package name in the output
+ * package com.mrhaki.blog.groovy
+ *
+ * import groovy.transform.*
+ *
+ * &#64;ToString(includePackage=false)
+ * class Course {
+ *     String title
+ *     Integer maxAttendees
+ * }
+ *
+ * final Course course = new Course(title: 'Groovy 101', maxAttendees: 200)
+ *
+ * assert course.toString() == 'Course(Groovy 101, 200)'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * // Don't use properties with null value.
+ * package com.mrhaki.blog.groovy
+ *
+ * import groovy.transform.*
+ *
+ * &#64;ToString(ignoreNulls=true)
+ * class Course {
+ *     String title
+ *     Integer maxAttendees
+ * }
+ *
+ * final Course course = new Course(title: 'Groovy 101')
+ *
+ * assert course.toString() == 'com.mrhaki.blog.groovy.Course(Groovy 101)'
+ * </pre>
+ * <pre class="groovyTestCase">
+ * //--------------------------------------------------------------------------
+ * // Cache toString() result.
+ * package com.mrhaki.blog.groovy
+ *
+ * import groovy.transform.*
+ *
+ * &#64;ToString(cache=true)
+ * class Course {
+ *     String title
+ *     Integer maxAttendees
+ * }
+ *
+ * Course course = new Course(title: 'Groovy 101', maxAttendees: 200)
+ *
+ * assert course.toString() == 'com.mrhaki.blog.groovy.Course(Groovy 101, 200)'
+ *
+ * // Value change will not be reflected in toString().
+ * course.title = 'Grails with REST'
+ *
+ * assert course.toString() == 'com.mrhaki.blog.groovy.Course(Groovy 101, 200)'
+ * assert course.title == 'Grails with REST'
+ * </pre> 
  *
  * @author Paul King
  * @author Andre Steingress
@@ -192,4 +328,11 @@ public @interface ToString {
      */
     boolean cache() default false;
 
+    /**
+     * Whether to include all fields and/or properties in the generated toString, including those with names that
+     * are considered internal.
+     *
+     * @since 2.5.0
+     */
+    boolean allNames() default false;
 }

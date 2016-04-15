@@ -872,11 +872,14 @@ public class MetaClassImpl implements MetaClass, MutableMetaClass {
 
         try {
             if (!(instance instanceof Class)) {
-                if (isGetter && propertyMissingGet != null) {
-                    return propertyMissingGet.invoke(instance, new Object[]{propertyName});
+                if (isGetter) {
+                    if (propertyMissingGet != null) {
+                        return propertyMissingGet.invoke(instance, new Object[]{propertyName});
+                    }
                 } else {
-                    if (propertyMissingSet != null)
+                    if (propertyMissingSet != null) {
                         return propertyMissingSet.invoke(instance, new Object[]{propertyName, optionalValue});
+                    }
                 }
             }
         } catch (InvokerInvocationException iie) {
@@ -2893,7 +2896,6 @@ public class MetaClassImpl implements MetaClass, MutableMetaClass {
                         }
                     };
 
-                    final ClassLoader parent = theClass.getClassLoader();
                     CompilationUnit unit = new CompilationUnit();
                     unit.setClassgenCallback(search);
                     unit.addSource(url);
@@ -3271,7 +3273,6 @@ public class MetaClassImpl implements MetaClass, MutableMetaClass {
 
     private void addProperties() {
         BeanInfo info;
-        final Class stopClass;
         //     introspect
         try {
             if (isBeanDerivative(theClass)) {
