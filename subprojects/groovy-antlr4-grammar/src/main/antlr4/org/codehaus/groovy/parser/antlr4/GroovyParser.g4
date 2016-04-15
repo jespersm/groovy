@@ -280,10 +280,8 @@ expression:
     | expression (DECREMENT | INCREMENT)  #postfixExpression
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
-    | PLUS expression #unaryExpression
-    | MINUS expression #unaryExpression
-    | DECREMENT expression #prefixExpression
-    | INCREMENT expression #prefixExpression
+    | (PLUS | MINUS) expression #unaryExpression
+    | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
     | { !GrammarPredicates.isKeyword(_input) }? implicitThisCallExpression #callExpression
@@ -292,15 +290,10 @@ expression:
 
     | (NOT | BNOT) expression #unaryExpression
     | expression POWER expression #binaryExpression
-    | expression MULT expression #binaryExpression
-    | expression DIV expression #binaryExpression
-    | expression MOD expression #binaryExpression
-    | expression PLUS expression #binaryExpression
-    | expression MINUS expression #binaryExpression
+    | expression (MULT | DIV | MOD) expression #binaryExpression
+    | expression (PLUS | MINUS) expression #binaryExpression
 
-    | expression LSHIFT expression #binaryExpression
-    | expression GT GT expression #binaryExpression
-    | expression GT GT GT expression #binaryExpression
+    | expression (LSHIFT | GT GT | GT GT GT) expression #binaryExpression
     | expression RANGE expression #binaryExpression
     | expression ORANGE expression #binaryExpression
     | expression KW_IN expression #binaryExpression
