@@ -73,6 +73,9 @@ public class StringUtil {
 
 			if (slashyType == SLASHY)
 				text = text.replace("\\/", "/");
+
+			if (slashyType == DOLLAR_SLASHY)
+				text = text.replace("$$", "$");
 		} else if (slashyType == NONE_SLASHY) {
 			text = text.replace("\\$", "$");
 			text = StringUtil.replaceEscapes(text);

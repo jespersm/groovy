@@ -49,7 +49,7 @@
 [PASS]	./chap03/Listing_03_03_DefiningOperators.groovy
 [PASS]	./chap03/Listing_03_04_DefiningGStrings.groovy
 [PASS]	./chap03/Listing_03_05_StringOperations.groovy
-[FIXME]	./chap03/Listing_03_06_RegexGStrings.groovy
+[PASS]	./chap03/Listing_03_06_RegexGStrings.groovy
 [PASS]	./chap03/Listing_03_07_RegularExpressions.groovy
 [FIXME]	./chap03/Listing_03_08_EachMatch.groovy
 [PASS]	./chap03/Listing_03_09_PatternReuse.groovy

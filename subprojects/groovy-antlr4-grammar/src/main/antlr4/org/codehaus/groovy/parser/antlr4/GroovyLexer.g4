@@ -60,25 +60,30 @@ lexer grammar GroovyLexer;
     // just a hook, which will be overrided by GroovyScanner
     protected void rollbackOneChar() {}
 
-    public void pushBrace(Brace b) {
+    private void pushBrace(Brace b) {
         braceStack.push(b);
         topBrace = braceStack.peekFirst();
         //System.out.println("> " + topBrace);
     }
 
-    public void popBrace() {
+    private void popBrace() {
         braceStack.pop();
         topBrace = braceStack.peekFirst();
         //System.out.println("> " + topBrace);
     }
 
 
-    public boolean isSlashyStringAllowed() {
+    private boolean isSlashyStringAllowed() {
         //System.out.println("SP: " + " TLECheck = " + (tlePos == tokenIndex) + " " + tlePos + "/" + tokenIndex);
         boolean isLastTokenOp = ALLOWED_OP_SET.contains(Integer.valueOf(lastTokenType));
         boolean res = isLastTokenOp || tlePos == tokenIndex;
         //System.out.println("SP: " + tokenNames[lastTokenType] + ": " + lastTokenType + " res " + res + (res ? ( isLastTokenOp ? " op" : " tle") : ""));
         return res;
+    }
+
+    private boolean isFollowedByJavaLetterInGString(int c) {
+        // FIXME reuse the code generated for rule JavaLetterInGString, don't forget the '{'
+        return String.valueOf((char) c).matches("[a-zA-Z_{]");
     }
 }
 
@@ -118,10 +123,12 @@ DOLLAR_SLASHY_GSTRING_START: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRI
 
 
 fragment SLASHY_STRING_ELEMENT:         SLASHY_ESCAPE
+                                       | '$' { !isFollowedByJavaLetterInGString(_input.LA(1)) }?
                                        | ~('/' | '$' | '\u0000' | '\n')
                                        ;
 fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
                                        | '/' { _input.LA(1) != '$' }?
+                                       | '$' { !isFollowedByJavaLetterInGString(_input.LA(1)) }?
                                        | ~('/' | '$')
                                        )
                                        ;
@@ -146,6 +153,8 @@ fragment TSQ: '\'\'\'';
 fragment TDQ: '"""';
 fragment LDS: '$/';
 fragment RDS: '/$';
+
+fragment IDENTIFIER_IN_GSTRING: JavaLetterInGString JavaLetterOrDigitInGString*;
 
 mode TRIPLE_QUOTED_GSTRING_MODE ;
     MULTILINE_GSTRING_END: TDQ -> type(GSTRING_END), popMode ;
@@ -326,7 +335,6 @@ IGNORE_NEWLINE : '\r'? '\n' { topBrace == Brace.ROUND || topBrace == Brace.SQUAR
 NL: '\r'? '\n';
 
 IDENTIFIER: JavaLetter JavaLetterOrDigit*; // reference https://github.com/antlr/grammars-v4/blob/master/java8/Java8.g4
-IDENTIFIER_IN_GSTRING: JavaLetterInGString JavaLetterOrDigitInGString*;
 
 fragment
 JavaLetter
