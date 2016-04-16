@@ -1110,7 +1110,11 @@ public class ASTBuilder {
             return collectPathExpression(c.pathExpression());
         } else if (ctx instanceof GroovyParser.AnnotationParamStringExpressionContext) {
             return parseExpression((GroovyParser.AnnotationParamStringExpressionContext)ctx);
+        } else if (ctx instanceof GroovyParser.AnnotationParamClosureExpressionContext) {
+            return parseExpression((GroovyParser.AnnotationParamClosureExpressionContext)ctx);
         }
+
+
         throw createParsingFailedException(new IllegalStateException(String.valueOf(ctx) + " is prohibited inside annotations."));
     }
 
@@ -1229,6 +1233,10 @@ public class ASTBuilder {
 
     public ConstantExpression parseExpression(GroovyParser.AnnotationParamStringExpressionContext ctx) {
         return parseConstantString(ctx);
+    }
+
+    public Expression parseExpression(GroovyParser.AnnotationParamClosureExpressionContext ctx) {
+        return setupNodeLocation(parseExpression(ctx.closureExpressionRule()), ctx);
     }
 
     public Expression parseExpression(GroovyParser.GstringExpressionContext ctx) {

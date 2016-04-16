@@ -61,5 +61,9 @@ class A {
         anchor3: {
             println "321"
         }
+        anchor4:
+        println 1
+        println 2
+        println 3
     }
 }

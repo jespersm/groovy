@@ -258,7 +258,7 @@ annotationParameter:
     | INTEGER #annotationParamIntegerExpression //primitive
     | KW_NULL #annotationParamNullExpression //primitive
     | (KW_TRUE | KW_FALSE) #annotationParamBoolExpression //primitive
-//    | statementBlock # annotationParamStatementBlock
+    | closureExpressionRule # annotationParamClosureExpression
 ;
 
 expression:
