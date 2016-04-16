@@ -191,7 +191,7 @@ blockStatement:
 declarationRule: annotationClause* ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
                                    | KW_DEF tupleDeclaration
                                    );
-singleDeclaration: IDENTIFIER (ASSIGN expression)?;
+singleDeclaration: IDENTIFIER (NL* ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody[false])?;
@@ -274,7 +274,7 @@ expression:
     | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) COMMA?) RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
+    | expression NL* (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) NL* (selectorName | STRING | gstring) #fieldAccessExpression
     | LPAREN expression RPAREN #parenthesisExpression
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
@@ -284,8 +284,8 @@ expression:
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    | { !GrammarPredicates.isKeyword(_input) }? implicitThisCallExpression #callExpression
-    | expression (DOT | SAFE_DOT | STAR_DOT) implicitThisCallExpression     #callExpression
+    | { !GrammarPredicates.isKeyword(_input) }?      implicitThisCallExpression     #callExpression
+    | expression NL* (DOT | SAFE_DOT | STAR_DOT) NL* implicitThisCallExpression     #callExpression
 
 
     | (NOT | BNOT) expression #unaryExpression
@@ -317,7 +317,7 @@ expression:
     |<assoc=right> expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression ELVIS NL* expression #elvisExpression
 
-    |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) expression #assignmentExpression
+    |<assoc=right> expression NL* (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) NL* expression #assignmentExpression
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN expression #assignmentExpression
 ;
 
