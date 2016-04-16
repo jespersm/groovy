@@ -602,6 +602,9 @@ public class ASTBuilder {
             return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
         if (ctx instanceof GroovyParser.AssertStatementContext)
             return parseStatement((GroovyParser.AssertStatementContext)ctx);
+        if (ctx instanceof GroovyParser.LabeledStatementContext)
+            return parseStatement((GroovyParser.LabeledStatementContext)ctx);
+
         throw createParsingFailedException(new InvalidSyntaxException("Unsupported statement type! " + ctx.getText(), ctx));
     }
 
@@ -741,6 +744,15 @@ public class ASTBuilder {
             return setupNodeLocation(new AssertStatement(booleanConditionExpression, errorMessage), ctx);
         }
     }
+
+    public Statement parseStatement(GroovyParser.LabeledStatementContext ctx) {
+        Statement statement = parse(ctx.statementBlock());
+
+        statement.setStatementLabel(ctx.IDENTIFIER().getText());
+
+        return setupNodeLocation(statement, ctx);
+    }
+
 
     public Statement parseStatement(GroovyParser.ThrowStatementContext ctx) {
         return setupNodeLocation(new ThrowStatement(parseExpression(ctx.expression())), ctx);

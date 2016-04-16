@@ -103,7 +103,7 @@ class MainTest extends Specification {
         "ParenthesisExpression_Issue24_1.groovy" | _
         "Script_Issue50_1.groovy" | addIgnore(ExpressionStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Statements_Issue17_1.groovy" | addIgnore([IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-        "Statements_Issue58_1.groovy" | addIgnore([IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "Statements_Issue58_1.groovy" | addIgnore([IfStatement, ForStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "SubscriptOperator.groovy" | _
         "AnnotationDeclaration.groovy" | _
         "TernaryAndElvis_Issue57.groovy" | _
@@ -402,7 +402,7 @@ class MainTest extends Specification {
         "chap09/Listing_09_32_AstBuildFromStringMixed.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/Listing_09_33_AstBuildFromCode.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/Listing_09_34_GreeterMainTransform.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap09/Listing_09_35_GreeterMainTransform2.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap09/Listing_09_35_GreeterMainTransform2.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/Listing_09_38_AstTesting1.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/Listing_09_39_AstTesting2.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/Listing_09_40_AstTesting3.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)

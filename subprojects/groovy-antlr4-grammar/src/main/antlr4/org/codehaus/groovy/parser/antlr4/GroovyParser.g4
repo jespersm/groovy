@@ -219,6 +219,7 @@ statement:
     | KW_ASSERT expression ((COLON|COMMA) NL* expression)? #assertStatement
     | expression #expressionStatement
     | cmdExpressionRule #commandExpressionStatement
+    | IDENTIFIER COLON NL* statementBlock #labeledStatement
 ;
 
 statementBlock:
@@ -257,6 +258,7 @@ annotationParameter:
     | INTEGER #annotationParamIntegerExpression //primitive
     | KW_NULL #annotationParamNullExpression //primitive
     | (KW_TRUE | KW_FALSE) #annotationParamBoolExpression //primitive
+//    | statementBlock # annotationParamStatementBlock
 ;
 
 expression:

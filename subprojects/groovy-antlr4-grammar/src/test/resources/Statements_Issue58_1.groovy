@@ -52,4 +52,14 @@ class A {
         for (int i : [])
             println(i)
     }
+
+    public void doSomething() {
+        println '123'
+        anchor1: for (int i=0; i<10;i++) { println i }
+        anchor2:
+                println "22"
+        anchor3: {
+            println "321"
+        }
+    }
 }
