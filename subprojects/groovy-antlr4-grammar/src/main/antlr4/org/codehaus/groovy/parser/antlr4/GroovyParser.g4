@@ -353,7 +353,7 @@ VISIBILITY_MODIFIER | KW_STATIC | (KW_ABSTRACT | KW_FINAL) | KW_STRICTFP ;
 memberModifier:
     VISIBILITY_MODIFIER | KW_STATIC | (KW_ABSTRACT | KW_FINAL) | KW_NATIVE | KW_SYNCHRONIZED | KW_TRANSIENT | KW_VOLATILE ;
 
-argumentList: ( (closureExpressionRule)+ | argument (COMMA argument)*) ;
+argumentList: ( (closureExpressionRule)+ | argument (NL* COMMA NL* argument NL*)*) ;
 
 argument: mapEntry
         | expression

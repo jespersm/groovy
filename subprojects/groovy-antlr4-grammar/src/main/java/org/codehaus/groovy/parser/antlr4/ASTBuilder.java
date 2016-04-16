@@ -723,9 +723,10 @@ public class ASTBuilder {
 
     public Statement parseStatement(GroovyParser.ReturnStatementContext ctx) {
         GroovyParser.ExpressionContext expression = ctx.expression();
+
         return setupNodeLocation(new ReturnStatement(asBoolean(expression)
                                                      ? parseExpression(expression)
-                                                     : EmptyExpression.INSTANCE), ctx);
+                                                     : new ConstantExpression(null)), ctx);
     }
 
 
