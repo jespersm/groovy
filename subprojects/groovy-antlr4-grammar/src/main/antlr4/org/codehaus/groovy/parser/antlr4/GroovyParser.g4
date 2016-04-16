@@ -188,9 +188,9 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule: annotationClause* ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
-                                   | KW_DEF tupleDeclaration
-                                   );
+declarationRule: annotationClause* KW_FINAL? ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
+                                             | KW_DEF tupleDeclaration
+                                             );
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
@@ -271,8 +271,8 @@ expression:
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
     | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
-    | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
-    | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) COMMA?) RBRACK #mapConstructor
+    | LBRACK NL* (expression NL* (NL* COMMA NL* expression NL*)* NL* COMMA?)?  NL* RBRACK #listConstructor
+    | LBRACK NL* (NL* COLON NL*| (NL* mapEntry NL* (NL* COMMA NL* mapEntry NL*)*) NL* COMMA?) NL* RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
     | expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
     | LPAREN expression RPAREN #parenthesisExpression

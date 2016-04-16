@@ -1583,7 +1583,7 @@ public class ASTBuilder {
         List<DeclarationExpression> declarations = new LinkedList<DeclarationExpression>();
 
         if (asBoolean(ctx.tupleDeclaration())) {
-            DeclarationExpression declarationExpression = parseTupleDeclaration(ctx.tupleDeclaration());
+            DeclarationExpression declarationExpression = parseTupleDeclaration(ctx.tupleDeclaration(), asBoolean(ctx.KW_FINAL()));
 
             declarations.add(declarationExpression);
 
@@ -1592,6 +1592,10 @@ public class ASTBuilder {
 
         for (GroovyParser.SingleDeclarationContext variableCtx : variables) {
             VariableExpression left = new VariableExpression(variableCtx.IDENTIFIER().getText(), type);
+
+            if (asBoolean(ctx.KW_FINAL())) {
+                left.setModifiers(Opcodes.ACC_FINAL);
+            }
 
             org.codehaus.groovy.syntax.Token token;
             if (asBoolean(variableCtx.ASSIGN())) {
@@ -1639,7 +1643,7 @@ public class ASTBuilder {
         return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText(), type), ctx);
     }
 
-    public DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx) {
+    public DeclarationExpression parseTupleDeclaration(GroovyParser.TupleDeclarationContext ctx, boolean isFinal) {
         // tuple must have an initial value.
         if (null == ctx.expression()) {
             throw createParsingFailedException(new InvalidSyntaxException("tuple declaration must have an initial value.", ctx));
@@ -1648,7 +1652,13 @@ public class ASTBuilder {
         List<Expression> variables = new LinkedList<Expression>();
 
         for (GroovyParser.TupleVariableDeclarationContext tupleVariableDeclarationContext : ctx.tupleVariableDeclaration()) {
-            variables.add(parseTupleVariableDeclaration(tupleVariableDeclarationContext));
+            VariableExpression variableExpression = parseTupleVariableDeclaration(tupleVariableDeclarationContext);
+
+            if (isFinal) {
+                variableExpression.setModifiers(Opcodes.ACC_FINAL);
+            }
+
+            variables.add(variableExpression);
         }
 
         ArgumentListExpression argumentListExpression = new ArgumentListExpression(variables);

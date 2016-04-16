@@ -41,6 +41,9 @@ public class Debugger {
         String text = sourceFile.text;
 
         GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
+
+
+
         CommonTokenStream tokens = new CommonTokenStream(scanner);
 
         GroovyParser parser = new GroovyParser(tokens);
@@ -65,6 +68,18 @@ public class Debugger {
 
     }
 
+    public void showTokens(File sourceFile) {
+        String text = sourceFile.text;
+
+        GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
+
+        println '<<<<<<<<<<<<<<<<<<<<<<<<<<'
+        scanner.getAllTokens().each {
+            println it
+        }
+        println '>>>>>>>>>>>>>>>>>>>>>>>>>>'
+    }
+
     public static void main(String[] args) {
         if (args.length == 0) {
             println "source file is required.";
@@ -77,6 +92,7 @@ public class Debugger {
 
         Debugger debugger = new Debugger();
 
+        debugger.showTokens(sourceFile);
         debugger.showParseTreeStr(sourceFile);
         debugger.showParseTreeGui(sourceFile);
     }

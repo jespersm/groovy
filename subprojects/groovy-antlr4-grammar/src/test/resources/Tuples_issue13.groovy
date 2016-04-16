@@ -12,3 +12,6 @@ def f(x, y) {
 def (int x, int y) = f(1, 2)
 (x, y) = f(2, 3)
 
+final def (int q, int w) = [1, 2]
+
+
