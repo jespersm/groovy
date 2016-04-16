@@ -168,7 +168,7 @@ typeDeclaration:
 annotationClause: //FIXME handle assignment expression.
     AT genericClassNameExpression ( LPAREN ((annotationElementPair (COMMA annotationElementPair)*) | annotationElement)? RPAREN )?
 ;
-annotationElementPair: IDENTIFIER ASSIGN annotationElement ;
+annotationElementPair: IDENTIFIER ASSIGN NL* annotationElement ;
 annotationElement: annotationParameter | annotationClause ;
 
 genericDeclarationList:
@@ -182,7 +182,7 @@ throwsClause: KW_THROWS classNameExpression (COMMA classNameExpression)*;
 argumentDeclarationList:
     argumentDeclaration (COMMA NL* argumentDeclaration)* | /* EMPTY ARGUMENT LIST */ ;
 argumentDeclaration:
-    annotationClause* typeDeclaration? IDENTIFIER (ASSIGN expression)? ;
+    annotationClause* typeDeclaration? IDENTIFIER (ASSIGN NL* expression)? ;
 
 blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
@@ -191,8 +191,8 @@ blockStatement:
 declarationRule: annotationClause* ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
                                    | KW_DEF tupleDeclaration
                                    );
-singleDeclaration: IDENTIFIER (NL* ASSIGN NL* expression)?;
-tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN expression)?;
+singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
+tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody[false])?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
@@ -274,7 +274,7 @@ expression:
     | LBRACK (expression (COMMA expression)* COMMA?)?  RBRACK #listConstructor
     | LBRACK (COLON | (mapEntry (COMMA mapEntry)*) COMMA?) RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
-    | expression NL* (DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) NL* (selectorName | STRING | gstring) #fieldAccessExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
     | LPAREN expression RPAREN #parenthesisExpression
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
@@ -285,40 +285,38 @@ expression:
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
     | { !GrammarPredicates.isKeyword(_input) }?      implicitThisCallExpression     #callExpression
-    | expression NL* (DOT | SAFE_DOT | STAR_DOT) NL* implicitThisCallExpression     #callExpression
-
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) implicitThisCallExpression     #callExpression
 
     | (NOT | BNOT) expression #unaryExpression
-    | expression POWER expression #binaryExpression
-    | expression (MULT | DIV | MOD) expression #binaryExpression
-    | expression (PLUS | MINUS) expression #binaryExpression
+    | expression POWER NL* expression #binaryExpression
+    | expression (MULT | DIV | MOD) NL* expression #binaryExpression
+    | expression (PLUS | MINUS) NL* expression #binaryExpression
 
-    | expression (LSHIFT | GT GT | GT GT GT) expression #binaryExpression
-    | expression RANGE expression #binaryExpression
-    | expression ORANGE expression #binaryExpression
-    | expression KW_IN expression #binaryExpression
-    | expression KW_AS genericClassNameExpression #binaryExpression
-    | expression KW_INSTANCEOF genericClassNameExpression #binaryExpression
+    | expression (LSHIFT | GT GT | GT GT GT) NL* expression #binaryExpression
+    | expression (RANGE | ORANGE) NL* expression #binaryExpression
+    | expression KW_IN NL* expression #binaryExpression
+    | expression KW_AS NL* genericClassNameExpression #binaryExpression
+    | expression KW_INSTANCEOF NL* genericClassNameExpression #binaryExpression
 
-    | expression SPACESHIP expression #binaryExpression
-    | expression GT expression #binaryExpression
-    | expression GTE expression #binaryExpression
-    | expression LT expression #binaryExpression
-    | expression LTE expression #binaryExpression
-    | expression EQUAL expression #binaryExpression
-    | expression UNEQUAL expression #binaryExpression
-    | expression FIND expression #binaryExpression
-    | expression MATCH expression #binaryExpression
-    | expression BAND expression #binaryExpression
-    |<assoc=right> expression XOR expression #binaryExpression
-    | expression BOR expression #binaryExpression
-    | expression AND expression #binaryExpression
-    | expression OR expression #binaryExpression
-    |<assoc=right> expression QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
-    | expression ELVIS NL* expression #elvisExpression
+    | expression SPACESHIP NL* expression #binaryExpression
+    | expression GT NL* expression #binaryExpression
+    | expression GTE NL* expression #binaryExpression
+    | expression LT NL* expression #binaryExpression
+    | expression LTE NL* expression #binaryExpression
+    | expression EQUAL NL* expression #binaryExpression
+    | expression UNEQUAL NL* expression #binaryExpression
+    | expression FIND NL* expression #binaryExpression
+    | expression MATCH NL* expression #binaryExpression
+    | expression BAND NL* expression #binaryExpression
+    |<assoc=right> expression XOR NL* expression #binaryExpression
+    | expression BOR NL* expression #binaryExpression
+    | expression AND NL* expression #binaryExpression
+    | expression OR NL* expression #binaryExpression
+    |<assoc=right> expression NL* QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
+    | expression NL* ELVIS NL* expression #elvisExpression
 
-    |<assoc=right> expression NL* (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) NL* expression #assignmentExpression
-    |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN expression #assignmentExpression
+    |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) NL* expression #assignmentExpression
+    |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
 implicitThisCallExpression: (selectorName | STRING | gstring) (LPAREN argumentList? RPAREN)

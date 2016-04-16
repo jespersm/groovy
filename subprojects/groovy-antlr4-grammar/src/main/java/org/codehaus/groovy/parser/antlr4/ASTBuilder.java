@@ -1106,7 +1106,7 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.FieldAccessExpressionContext ctx) {
-        TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
+        Token op = ctx.op;
         Expression left = parseExpression(ctx.expression());
 
         GroovyParser.SelectorNameContext fieldName = ctx.selectorName();
@@ -1114,7 +1114,7 @@ public class ASTBuilder {
             (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
         );
         Expression node = null;
-        switch (op.getSymbol().getType()) {
+        switch (op.getType()) {
             case GroovyParser.ATTR_DOT:
                 node = new AttributeExpression(left, right);
                 break;
@@ -1465,9 +1465,9 @@ public class ASTBuilder {
         method.setImplicitThis(implicitThis);
 
         if (!implicitThis) {
-            TerminalNode op = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
-            method.setSpreadSafe(op.getSymbol().getType() == GroovyParser.STAR_DOT);
-            method.setSafe(op.getSymbol().getType() == GroovyParser.SAFE_DOT);
+            Token op = ctx.op;
+            method.setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
+            method.setSafe(op.getType() == GroovyParser.SAFE_DOT);
         }
 
         return setupNodeLocation(method, ctx);
