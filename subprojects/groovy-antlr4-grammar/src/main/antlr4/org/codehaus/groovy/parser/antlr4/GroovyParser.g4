@@ -85,7 +85,7 @@ options { tokenVocab = GroovyLexer; }
 compilationUnit: SHEBANG_COMMENT? (NL*)
                  packageDefinition? (NL | SEMICOLON)*
                  (importStatement (NL | SEMICOLON)*)* (NL | SEMICOLON)*
-                 (scriptPart (NL | SEMICOLON) | classDeclaration | NL)* (NL | SEMICOLON)*
+                 (importStatement (NL | SEMICOLON) | scriptPart (NL | SEMICOLON) | classDeclaration | NL)* (NL | SEMICOLON)*
                  (scriptPart (NL | SEMICOLON)+)* (scriptPart)? (NL | SEMICOLON)*
                  EOF;
 
