@@ -20,5 +20,9 @@ class 类A {
     def testGString() {
         return "a$变量"
     }
+
+    def testSlashyGString() {
+        a =~ /a$变量/
+    }
 }
 
