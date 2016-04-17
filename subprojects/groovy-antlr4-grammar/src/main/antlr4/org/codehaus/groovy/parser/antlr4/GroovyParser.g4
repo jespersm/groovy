@@ -321,9 +321,8 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
-implicitThisCallExpression: (selectorName | STRING | gstring) (LPAREN argumentList? RPAREN)
+implicitThisCallExpression: (selectorName | STRING | gstring) LPAREN argumentList? RPAREN closureExpressionRule*
                           | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring) argumentList
-                          | (selectorName | STRING | gstring) (LPAREN argumentList? RPAREN | argumentList?) closureExpressionRule+
                           ;
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
