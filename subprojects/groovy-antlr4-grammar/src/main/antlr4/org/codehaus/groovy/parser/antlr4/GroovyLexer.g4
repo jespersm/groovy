@@ -81,10 +81,6 @@ lexer grammar GroovyLexer;
         return res;
     }
 
-    private boolean isFollowedByJavaLetterInGString(int c) {
-        // FIXME reuse the code generated for rule JavaLetterInGString, don't forget the '{'
-        return String.valueOf((char) c).matches("[a-zA-Z_{]");
-    }
 }
 
 
@@ -123,12 +119,12 @@ DOLLAR_SLASHY_GSTRING_START: LDS { isSlashyStringAllowed() }? DOLLAR_SLASHY_STRI
 
 
 fragment SLASHY_STRING_ELEMENT:         SLASHY_ESCAPE
-                                       | '$' { !isFollowedByJavaLetterInGString(_input.LA(1)) }?
+                                       | '$' { !GrammarPredicates.isFollowedByJavaLetterInGString(_input) }?
                                        | ~('/' | '$' | '\u0000' | '\n')
                                        ;
 fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
                                        | '/' { _input.LA(1) != '$' }?
-                                       | '$' { !isFollowedByJavaLetterInGString(_input.LA(1)) }?
+                                       | '$' { !GrammarPredicates.isFollowedByJavaLetterInGString(_input) }?
                                        | ~('/' | '$')
                                        )
                                        ;

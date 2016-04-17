@@ -16,5 +16,9 @@ class 类A {
     def "方法3"(参数1, 参数2) {
         this."方法3"(参数1, 参数2)
     }
+
+    def testGString() {
+        return "a$变量"
+    }
 }
 

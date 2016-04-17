@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.parser.antlr4;
 
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 
@@ -65,5 +66,31 @@ public class GrammarPredicates {
 
     public static boolean isCurrentClassName(TokenStream tokenStream, String currentClassName) {
         return tokenStream.LT(tokenStream.LT(1).getType() == GroovyParser.VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName);
+    }
+
+    public static boolean isFollowedByJavaLetterInGString(CharStream cs) {
+        int c1 = cs.LA(1);
+        int c2 = cs.LA(2);
+
+        String str1 = String.valueOf((char) c1);
+        String str2 = String.valueOf((char) c2);
+
+        if (str1.matches("[a-zA-Z_{]")) {
+            return true;
+        }
+
+        if (str1.matches("[^\u0000-\u007F\uD800-\uDBFF]")
+                && Character.isJavaIdentifierPart(c1)) {
+            return true;
+        }
+
+        if (str1.matches("[\uD800-\uDBFF]")
+                && str2.matches("[\uDC00-\uDFFF]")
+                && Character.isJavaIdentifierPart(Character.toCodePoint((char) c1, (char) c2))) {
+
+            return true;
+        }
+
+        return false;
     }
 }

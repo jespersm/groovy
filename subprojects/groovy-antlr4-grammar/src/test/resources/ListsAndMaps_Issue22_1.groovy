@@ -38,6 +38,9 @@ class A {
 
     private void emptyMap() {
         def a = [:]
+        def b = [
+                :
+        ]
     }
 
     private void map() {

@@ -273,8 +273,8 @@ expression:
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
     | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
-    | LBRACK NL* (expression NL* (NL* COMMA NL* expression NL*)* NL* COMMA?)?  NL* RBRACK #listConstructor
-    | LBRACK NL* (NL* COLON NL*| (NL* mapEntry NL* (NL* COMMA NL* mapEntry NL*)*) NL* COMMA?) NL* RBRACK #mapConstructor
+    | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
+    | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
     | expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
     | LPAREN expression RPAREN #parenthesisExpression
