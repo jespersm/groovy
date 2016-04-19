@@ -169,8 +169,8 @@ public class ASTBuilder {
             }
 
             if (alias != null) throw new GroovyBugError(
-                "imports like 'import foo.* as Bar' are not " +
-                    "supported and should be caught by the grammar");
+                    "imports like 'import foo.* as Bar' are not " +
+                            "supported and should be caught by the grammar");
         } else {
             if (isStatic) {
                 // import is like "import static foo.Bar.method"
@@ -256,12 +256,12 @@ public class ASTBuilder {
         int modifiers = ((Integer)(iterator.hasNext() ? iterator.next() : Opcodes.ACC_PUBLIC));
 
         boolean isAnnotationDeclaration = null != classNode
-                                                && ClassHelper.Annotation_TYPE.equals(classNode.getInterfaces().length > 0 ? classNode.getInterfaces()[0] : null);
+                && ClassHelper.Annotation_TYPE.equals(classNode.getInterfaces().length > 0 ? classNode.getInterfaces()[0] : null);
         boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : false));
         boolean hasModifier = 0 != ctx.memberModifier().size();
         boolean hasAnnotation = 0 != ctx.annotationClause().size();
         boolean hasReturnType = (asBoolean(ctx.typeDeclaration()) && !"def".equals(ctx.typeDeclaration().getText()))
-                                    || asBoolean(ctx.genericClassNameExpression());
+                || asBoolean(ctx.genericClassNameExpression());
 
 
         innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
@@ -297,15 +297,15 @@ public class ASTBuilder {
     public MethodNode parseScriptMethod(final GroovyParser.MethodDeclarationContext ctx) {
 
         return parseMethodDeclaration(null, ctx, new Closure<MethodNode>(this, this) {
-                                                public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
+                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
 
-                                                    final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
-                                                    methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
-                                                    methodNode.setAnnotationDefault(true);
+                        final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
+                        methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
+                        methodNode.setAnnotationDefault(true);
 
-                                                    return methodNode;
-                                                }
-                                      }
+                        return methodNode;
+                    }
+                }
         );
     }
 
@@ -314,10 +314,10 @@ public class ASTBuilder {
 
         final ClassNode parentClass = asBoolean(classes) ? classes.peek() : null;
         ClassNode[] interfaces = asBoolean(ctx.implementsClause())
-                                        ? DefaultGroovyMethods.asType(collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
-                                              public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
-                                          }), ClassNode[].class)
-                                        : new ClassNode[0];
+                ? DefaultGroovyMethods.asType(collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
+            public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
+        }), ClassNode[].class)
+                : new ClassNode[0];
 
         ClassNode classNode;
         if (parentClass != null) {
@@ -326,7 +326,7 @@ public class ASTBuilder {
         } else {
             final String name = moduleNode.getPackageName();
             classNode = isEnum ? EnumHelper.makeEnumNode(ctx.IDENTIFIER().getText(), Modifier.PUBLIC, interfaces, null)
-                               : new ClassNode((name != null && asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
+                    : new ClassNode((name != null && asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
         }
 
 
@@ -353,13 +353,13 @@ public class ASTBuilder {
 
 
         classNode.setModifiers(parseClassModifiers(ctx.classModifier()) |
-                                    (isEnum ? (Opcodes.ACC_ENUM | Opcodes.ACC_FINAL)
-                                            : ((asBoolean(ctx.KW_INTERFACE())
-                                                    ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT
-                                                    : 0)
-                                                )
-                                    )
-                               );
+                (isEnum ? (Opcodes.ACC_ENUM | Opcodes.ACC_FINAL)
+                        : ((asBoolean(ctx.KW_INTERFACE())
+                        ? Opcodes.ACC_INTERFACE | Opcodes.ACC_ABSTRACT
+                        : 0)
+                )
+                )
+        );
 
         classNode.setSyntheticPublic((classNode.getModifiers() & Opcodes.ACC_SYNTHETIC) != 0);
         classNode.setModifiers(classNode.getModifiers() & ~Opcodes.ACC_SYNTHETIC);// FIXME Magic with synthetic modifier.
@@ -505,14 +505,14 @@ public class ASTBuilder {
         for (GroovyParser.SingleDeclarationContext variableCtx : variables) {
             GroovyParser.ExpressionContext initExprContext = variableCtx.expression();
             Expression initialierExpression = asBoolean(initExprContext)
-                ? parseExpression(initExprContext)
-                : null;
+                    ? parseExpression(initExprContext)
+                    : null;
             ClassNode typeDeclaration = asBoolean(ctx.genericClassNameExpression())
-                ? parseExpression(ctx.genericClassNameExpression())
-                : ClassHelper.OBJECT_TYPE;
+                    ? parseExpression(ctx.genericClassNameExpression())
+                    : ClassHelper.OBJECT_TYPE;
             Expression initialValue = classNode.isInterface() && !typeDeclaration.equals(ClassHelper.OBJECT_TYPE)
-                ? new ConstantExpression(initialExpressionForType(typeDeclaration))
-                : initialierExpression;
+                    ? new ConstantExpression(initialExpressionForType(typeDeclaration))
+                    : initialierExpression;
             if (classNode.isInterface() || hasVisibilityModifier) {
                 modifiers |= classNode.isInterface() ? Opcodes.ACC_PUBLIC : 0;
 
@@ -544,8 +544,8 @@ public class ASTBuilder {
 
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.ConstructorDeclarationContext ctx) {
         int modifiers = asBoolean(ctx.VISIBILITY_MODIFIER())
-                        ? parseVisibilityModifiers(ctx.VISIBILITY_MODIFIER())
-                        : Opcodes.ACC_PUBLIC;
+                ? parseVisibilityModifiers(ctx.VISIBILITY_MODIFIER())
+                : Opcodes.ACC_PUBLIC;
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
         this.innerClassesDefinedInMethod.add(new ArrayList());
@@ -627,8 +627,8 @@ public class ASTBuilder {
     public Statement parseStatement(GroovyParser.IfStatementContext ctx) {
         Statement trueBranch = parse(ctx.statementBlock(0));
         Statement falseBranch = asBoolean(ctx.KW_ELSE())
-                                ? parse(ctx.statementBlock(1))
-                                : EmptyStatement.INSTANCE;
+                ? parse(ctx.statementBlock(1))
+                : EmptyStatement.INSTANCE;
         BooleanExpression expression = new BooleanExpression(parseExpression(ctx.expression()));
         return setupNodeLocation(new IfStatement(expression, trueBranch, falseBranch), ctx);
     }
@@ -720,16 +720,16 @@ public class ASTBuilder {
         // Fake inspection result should be suppressed.
         //noinspection GroovyConditionalWithIdenticalBranches
         return setupNodeLocation(asBoolean(ctx.KW_BREAK())
-                                 ? new BreakStatement()
-                                 : new ContinueStatement(), ctx);
+                ? new BreakStatement()
+                : new ContinueStatement(), ctx);
     }
 
     public Statement parseStatement(GroovyParser.ReturnStatementContext ctx) {
         GroovyParser.ExpressionContext expression = ctx.expression();
 
         return setupNodeLocation(new ReturnStatement(asBoolean(expression)
-                                                     ? parseExpression(expression)
-                                                     : new ConstantExpression(null)), ctx);
+                ? parseExpression(expression)
+                : new ConstantExpression(null)), ctx);
     }
 
 
@@ -835,21 +835,21 @@ public class ASTBuilder {
         Expression expression;
         List<TerminalNode> identifiers = ctx.IDENTIFIER();
         switch (identifiers.size()) {
-        case 1:
-            expression = VariableExpression.THIS_EXPRESSION;
-            break;
-        case 2:
-            expression = new VariableExpression(identifiers.get(0).getText());
-            break;
-        default:
-            expression = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size() - 1), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
-                public PropertyExpression doCall(Expression expr, Object prop) {
-                    return new PropertyExpression(expr, ((TerminalNode)prop).getText());
-                }
+            case 1:
+                expression = VariableExpression.THIS_EXPRESSION;
+                break;
+            case 2:
+                expression = new VariableExpression(identifiers.get(0).getText());
+                break;
+            default:
+                expression = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size() - 1), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
+                    public PropertyExpression doCall(Expression expr, Object prop) {
+                        return new PropertyExpression(expr, ((TerminalNode)prop).getText());
+                    }
 
-            });
-            log.info(expression.getText());
-            break;
+                });
+                log.info(expression.getText());
+                break;
         }
         return new ArrayList<Object>(Arrays.asList(expression, DefaultGroovyMethods.last(identifiers).getSymbol().getText(), identifiers.size() == 1));
     }
@@ -933,8 +933,8 @@ public class ASTBuilder {
     public Expression parseExpression(GroovyParser.MapConstructorContext ctx) {
         final List collect = collect(ctx.mapEntry(), new MethodClosure(this, "parseExpression"));
         return setupNodeLocation(new MapExpression(asBoolean(collect)
-                                                   ? collect
-                                                   : new ArrayList()), ctx);
+                ? collect
+                : new ArrayList()), ctx);
     }
 
     public MapEntryExpression parseExpression(GroovyParser.MapEntryContext ctx) {
@@ -997,21 +997,21 @@ public class ASTBuilder {
         // ClassExpression for given IDENTIFIERS. So, switch should fall through.
         //noinspection GroovyFallthrough
         switch (op.getType()) {
-        case Types.RANGE_OPERATOR:
-            right = parseExpression(ctx.expression(1));
-            expression = new RangeExpression(left, right, !op.getText().endsWith("<"));
-            break;
-        case Types.KEYWORD_AS:
-            ClassNode classNode = setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx.genericClassNameExpression());
-            expression = CastExpression.asExpression(classNode, left);
-            break;
-        case Types.KEYWORD_INSTANCEOF:
-            ClassNode rhClass = setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx.genericClassNameExpression());
-            right = new ClassExpression(rhClass);
-        default:
-            if (!asBoolean(right)) right = parseExpression(ctx.expression(1));
-            expression = new BinaryExpression(left, op, right);
-            break;
+            case Types.RANGE_OPERATOR:
+                right = parseExpression(ctx.expression(1));
+                expression = new RangeExpression(left, right, !op.getText().endsWith("<"));
+                break;
+            case Types.KEYWORD_AS:
+                ClassNode classNode = setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx.genericClassNameExpression());
+                expression = CastExpression.asExpression(classNode, left);
+                break;
+            case Types.KEYWORD_INSTANCEOF:
+                ClassNode rhClass = setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx.genericClassNameExpression());
+                right = new ClassExpression(rhClass);
+            default:
+                if (!asBoolean(right)) right = parseExpression(ctx.expression(1));
+                expression = new BinaryExpression(left, op, right);
+                break;
         }
 
         ((Expression)expression).setColumnNumber(op.getStartColumn());
@@ -1128,8 +1128,8 @@ public class ASTBuilder {
 
         GroovyParser.SelectorNameContext fieldName = ctx.selectorName();
         Expression right = fieldName != null ? new ConstantExpression(fieldName.getText()) :
-            (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
-        );
+                (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
+                );
         Expression node = null;
         switch (op.getType()) {
             case GroovyParser.ATTR_DOT:
@@ -1199,7 +1199,7 @@ public class ASTBuilder {
 
     public ConstantExpression cleanConstantStringLiteral(String text) {
         int slashyType = text.startsWith("/") ? StringUtil.SLASHY :
-                                text.startsWith("$/") ? StringUtil.DOLLAR_SLASHY : StringUtil.NONE_SLASHY;
+                text.startsWith("$/") ? StringUtil.DOLLAR_SLASHY : StringUtil.NONE_SLASHY;
 
         if (text.startsWith("'''") || text.startsWith("\"\"\"")) {
             text = StringUtil.removeCR(text); // remove CR in the multiline string
@@ -1246,7 +1246,7 @@ public class ASTBuilder {
     public Expression parseExpression(GroovyParser.GstringContext ctx) {
         String gstringStartText = ctx.GSTRING_START().getText();
         final int slashyType = gstringStartText.startsWith("/") ? StringUtil.SLASHY :
-                                    gstringStartText.startsWith("$/") ? StringUtil.DOLLAR_SLASHY : StringUtil.NONE_SLASHY;
+                gstringStartText.startsWith("$/") ? StringUtil.DOLLAR_SLASHY : StringUtil.NONE_SLASHY;
 
         Closure<String> clearStart = new Closure<String>(null, null) {
             public String doCall(String it) {
@@ -1404,16 +1404,16 @@ public class ASTBuilder {
     public Expression collectPathExpression(GroovyParser.PathExpressionContext ctx) {
         List<TerminalNode> identifiers = ctx.IDENTIFIER();
         switch (identifiers.size()) {
-        case 1:
-            return new VariableExpression(identifiers.get(0).getText());
-        default:
-            Expression inject = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size()), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
-                public PropertyExpression doCall(Object val, Object prop) {
-                    return new PropertyExpression(DefaultGroovyMethods.asType(val, Expression.class), new ConstantExpression(((TerminalNode)prop).getText()));
-                }
+            case 1:
+                return new VariableExpression(identifiers.get(0).getText());
+            default:
+                Expression inject = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size()), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
+                    public PropertyExpression doCall(Object val, Object prop) {
+                        return new PropertyExpression(DefaultGroovyMethods.asType(val, Expression.class), new ConstantExpression(((TerminalNode)prop).getText()));
+                    }
 
-            });
-            return inject;
+                });
+                return inject;
         }
     }
 
@@ -1472,20 +1472,15 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {
-        boolean implicitThis = !asBoolean(ctx.expression());
-        Expression objectExpression = implicitThis ? VariableExpression.THIS_EXPRESSION : parseExpression(ctx.expression());
-
-        Expression expression = parseImplicitThisCallExpression(ctx.implicitThisCallExpression());
+        Expression expression = parseImplicitThisCallExpression(ctx.implicitThisCallExpression(), ctx.expression());
 
         if (expression instanceof ConstructorCallExpression) {
             return expression;
         }
 
         MethodCallExpression method = (MethodCallExpression) expression;
-        method.setObjectExpression(objectExpression);
-        method.setImplicitThis(implicitThis);
 
-        if (!implicitThis) {
+        if (asBoolean(ctx.expression())) {
             Token op = ctx.op;
             method.setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
             method.setSafe(op.getType() == GroovyParser.SAFE_DOT);
@@ -1494,20 +1489,30 @@ public class ASTBuilder {
         return setupNodeLocation(method, ctx);
     }
 
-    public Expression parseImplicitThisCallExpression(GroovyParser.ImplicitThisCallExpressionContext ctx) {
-        GroovyParser.SelectorNameContext methodSelector = ctx.selectorName();
-        Expression method = methodSelector != null ? new ConstantExpression(methodSelector.getText()) : (
-            ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
-        );
+    public Expression parseImplicitThisCallExpression(GroovyParser.ImplicitThisCallExpressionContext ctx, GroovyParser.ExpressionContext expressionContext) {
+        Expression method;
+        boolean isClosureCall = asBoolean(ctx.c);
 
+        if (isClosureCall) {
+            method = new ConstantExpression("call");
+        } else {
+            GroovyParser.SelectorNameContext methodSelector = ctx.selectorName();
+            method = methodSelector != null ? new ConstantExpression(methodSelector.getText()) : (
+                    ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
+            );
+        }
 
         TupleExpression argumentListExpression = (TupleExpression) createArgumentList(ctx.argumentList());
 
         for (GroovyParser.ClosureExpressionRuleContext closureExpressionRuleContext : ctx.closureExpressionRule()) {
+            if (ctx.c == closureExpressionRuleContext) {
+                continue;
+            }
+
             argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
         }
 
-        boolean implicitThis = true;
+        boolean implicitThis = !isClosureCall && !asBoolean(expressionContext);
         if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(method.getText())) {
             // Actually a constructor call
             ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpression);
@@ -1519,8 +1524,11 @@ public class ASTBuilder {
 //            return setupNodeLocation(call, ctx);
         }
 
-        MethodCallExpression expression = new MethodCallExpression(VariableExpression.THIS_EXPRESSION, method, argumentListExpression);
+        MethodCallExpression expression = new MethodCallExpression(isClosureCall ? parseExpression(ctx.c)
+                                                                                 : (asBoolean(expressionContext) ? parseExpression(expressionContext) : VariableExpression.THIS_EXPRESSION)
+                                                                   , method, argumentListExpression);
         expression.setImplicitThis(implicitThis);
+
         return setupNodeLocation(expression, ctx);
     }
 
@@ -1686,7 +1694,7 @@ public class ASTBuilder {
         org.codehaus.groovy.syntax.Token token = createGroovyToken(ctx.ASSIGN().getSymbol(), Types.ASSIGN);
 
         Expression initialValue = (ctx != null) ? parseExpression(ctx.expression())
-                                                : setupNodeLocation(new EmptyExpression(),ctx);
+                : setupNodeLocation(new EmptyExpression(),ctx);
 
         DeclarationExpression declarationExpression  = new DeclarationExpression(argumentListExpression, token, initialValue);
 
@@ -1768,10 +1776,10 @@ public class ASTBuilder {
 
     public ClassNode[] parseThrowsClause(GroovyParser.ThrowsClauseContext ctx) {
         List list = asBoolean(ctx)
-                    ? collect(ctx.classNameExpression(), new Closure<ClassNode>(null, null) {
+                ? collect(ctx.classNameExpression(), new Closure<ClassNode>(null, null) {
             public ClassNode doCall(GroovyParser.ClassNameExpressionContext it) {return parseExpression(it);}
         })
-                    : new ArrayList();
+                : new ArrayList();
         return (ClassNode[])list.toArray(new ClassNode[list.size()]);
     }
 
@@ -1783,8 +1791,8 @@ public class ASTBuilder {
     public org.codehaus.groovy.syntax.Token createToken(TerminalNode node, int cardinality) {
         String text = multiply(node.getText(), cardinality);
         return new org.codehaus.groovy.syntax.Token(node.getText().equals("..<") || node.getText().equals("..")
-                                                    ? Types.RANGE_OPERATOR
-                                                    : Types.lookup(text, Types.ANY), text, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine() + 1);
+                ? Types.RANGE_OPERATOR
+                : Types.lookup(text, Types.ANY), text, node.getSymbol().getLine(), node.getSymbol().getCharPositionInLine() + 1);
     }
 
     /**
@@ -1797,8 +1805,8 @@ public class ASTBuilder {
 
     public ClassNode parseTypeDeclaration(GroovyParser.TypeDeclarationContext ctx) {
         return !asBoolean(ctx) || ctx.KW_DEF() != null
-               ? ClassHelper.OBJECT_TYPE
-               : setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx);
+                ? ClassHelper.OBJECT_TYPE
+                : setupNodeLocation(parseExpression(ctx.genericClassNameExpression()), ctx);
     }
 
     public ArrayExpression parse(GroovyParser.NewArrayRuleContext ctx) {
@@ -1811,8 +1819,8 @@ public class ASTBuilder {
 
     public ConstructorCallExpression parse(GroovyParser.NewInstanceRuleContext ctx) {
         ClassNode creatingClass = asBoolean(ctx.genericClassNameExpression())
-                                  ? parseExpression(ctx.genericClassNameExpression())
-                                  : parseExpression(ctx.classNameExpression());
+                ? parseExpression(ctx.genericClassNameExpression())
+                : parseExpression(ctx.classNameExpression());
         if (asBoolean(ctx.LT())) creatingClass.setGenericsTypes(new GenericsType[0]);
 
         ConstructorCallExpression expression;
@@ -1836,16 +1844,16 @@ public class ASTBuilder {
 
     public Parameter[] parseParameters(GroovyParser.ArgumentDeclarationListContext ctx) {
         List<Parameter> parameterList = ctx == null || ctx.argumentDeclaration() == null ?
-            new ArrayList<Parameter>(0) :
-            collect(ctx.argumentDeclaration(), new Closure<Parameter>(null, null) {
-                public Parameter doCall(GroovyParser.ArgumentDeclarationContext it) {
-                    Parameter parameter = new Parameter(parseTypeDeclaration(it.typeDeclaration()), it.IDENTIFIER().getText());
-                    attachAnnotations(parameter, it.annotationClause());
-                    if (asBoolean(it.expression()))
-                        parameter.setInitialExpression(parseExpression(it.expression()));
-                    return setupNodeLocation(parameter, it);
-                }
-            });
+                new ArrayList<Parameter>(0) :
+                collect(ctx.argumentDeclaration(), new Closure<Parameter>(null, null) {
+                    public Parameter doCall(GroovyParser.ArgumentDeclarationContext it) {
+                        Parameter parameter = new Parameter(parseTypeDeclaration(it.typeDeclaration()), it.IDENTIFIER().getText());
+                        attachAnnotations(parameter, it.annotationClause());
+                        if (asBoolean(it.expression()))
+                            parameter.setInitialExpression(parseExpression(it.expression()));
+                        return setupNodeLocation(parameter, it);
+                    }
+                });
         return parameterList.toArray(new Parameter[parameterList.size()]);
     }
 
@@ -1912,21 +1920,21 @@ public class ASTBuilder {
 
                 assert child instanceof TerminalNode;
                 switch (((TerminalNode)child).getSymbol().getType()) {
-                case GroovyLexer.VISIBILITY_MODIFIER:
-                    visibilityModifiers.add((TerminalNode)child);
-                    break;
-                case GroovyLexer.KW_STATIC:
-                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STATIC, (TerminalNode)child);
-                    break;
-                case GroovyLexer.KW_ABSTRACT:
-                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_ABSTRACT, (TerminalNode)child);
-                    break;
-                case GroovyLexer.KW_FINAL:
-                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_FINAL, (TerminalNode)child);
-                    break;
-                case GroovyLexer.KW_STRICTFP:
-                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STRICT, (TerminalNode)child);
-                    break;
+                    case GroovyLexer.VISIBILITY_MODIFIER:
+                        visibilityModifiers.add((TerminalNode)child);
+                        break;
+                    case GroovyLexer.KW_STATIC:
+                        modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STATIC, (TerminalNode)child);
+                        break;
+                    case GroovyLexer.KW_ABSTRACT:
+                        modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_ABSTRACT, (TerminalNode)child);
+                        break;
+                    case GroovyLexer.KW_FINAL:
+                        modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_FINAL, (TerminalNode)child);
+                        break;
+                    case GroovyLexer.KW_STRICTFP:
+                        modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STRICT, (TerminalNode)child);
+                        break;
                 }
             }
         }
@@ -1964,31 +1972,31 @@ public class ASTBuilder {
         for (GroovyParser.MemberModifierContext it : ctxList) {
             TerminalNode child = (DefaultGroovyMethods.asType(it.getChild(0), TerminalNode.class));
             switch (child.getSymbol().getType()) {
-            case GroovyLexer.KW_STATIC:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STATIC, child);
-                break;
-            case GroovyLexer.KW_ABSTRACT:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_ABSTRACT, child);
-                break;
-            case GroovyLexer.KW_FINAL:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_FINAL, child);
-                break;
-            case GroovyLexer.KW_NATIVE:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_NATIVE, child);
-                break;
-            case GroovyLexer.KW_SYNCHRONIZED:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_SYNCHRONIZED, child);
-                break;
-            case GroovyLexer.KW_TRANSIENT:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_TRANSIENT, child);
-                break;
-            case GroovyLexer.KW_VOLATILE:
-                modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_VOLATILE, child);
-                break;
-            case GroovyLexer.VISIBILITY_MODIFIER:
-                modifiers |= parseVisibilityModifiers(child);
-                hasVisibilityModifier = true;
-                break;
+                case GroovyLexer.KW_STATIC:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_STATIC, child);
+                    break;
+                case GroovyLexer.KW_ABSTRACT:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_ABSTRACT, child);
+                    break;
+                case GroovyLexer.KW_FINAL:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_FINAL, child);
+                    break;
+                case GroovyLexer.KW_NATIVE:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_NATIVE, child);
+                    break;
+                case GroovyLexer.KW_SYNCHRONIZED:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_SYNCHRONIZED, child);
+                    break;
+                case GroovyLexer.KW_TRANSIENT:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_TRANSIENT, child);
+                    break;
+                case GroovyLexer.KW_VOLATILE:
+                    modifiers |= checkModifierDuplication(modifiers, Opcodes.ACC_VOLATILE, child);
+                    break;
+                case GroovyLexer.VISIBILITY_MODIFIER:
+                    modifiers |= parseVisibilityModifiers(child);
+                    hasVisibilityModifier = true;
+                    break;
             }
         }
         if (!hasVisibilityModifier && defaultVisibilityModifier != null) modifiers |= defaultVisibilityModifier;
