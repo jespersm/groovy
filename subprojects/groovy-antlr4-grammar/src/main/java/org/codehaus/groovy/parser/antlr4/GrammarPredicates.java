@@ -69,7 +69,7 @@ public class GrammarPredicates {
             tokenType = token.getType();
         } while (tokenType == GroovyParser.NL);
 
-        return tokenStream.LT(index).getType() == GroovyParser.LPAREN;
+        return tokenType == GroovyParser.LPAREN;
     }
 
     public static boolean isKeyword(TokenStream tokenStream) {
