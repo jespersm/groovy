@@ -57,8 +57,8 @@ options { tokenVocab = GroovyLexer; }
         }
     }
 
-    public static final Set<String> VISIBILITY_MODIFIER_SET = new HashSet<String>(Arrays.asList("public", "protected", "private"));
-    public static final String VISIBILITY_MODIFIER_STR = "VISIBILITY_MODIFIER";
+    private static final Set<String> VISIBILITY_MODIFIER_SET = new HashSet<String>(Arrays.asList("public", "protected", "private"));
+    private static final String VISIBILITY_MODIFIER_STR = "VISIBILITY_MODIFIER";
     private static void collectModifier(Set<String> s, String modifier) {
         s.add(modifier);
     }

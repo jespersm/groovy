@@ -27,7 +27,7 @@ lexer grammar GroovyLexer;
 }
 
 @members {
-    public static final Set<Integer> ALLOWED_OP_SET = new HashSet<Integer>(Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR, KW_ASSERT)); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
+    private static final Set<Integer> ALLOWED_OP_SET = new HashSet<Integer>(Arrays.asList(NOT, BNOT, PLUS, ASSIGN, PLUS_ASSIGN, LT, GT, LTE, GTE, EQUAL, UNEQUAL, FIND, MATCH, DOT, SAFE_DOT, STAR_DOT, ATTR_DOT, MEMBER_POINTER, ELVIS, QUESTION, COLON, AND, OR, KW_ASSERT)); // the allowed ops before slashy string. e.g. p1=/ab/; p2=~/ab/; p3=!/ab/
 
     private static enum Brace {
        ROUND,

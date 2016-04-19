@@ -50,14 +50,26 @@ public class GrammarPredicates {
     public static boolean isFollowedByLPAREN(TokenStream tokenStream) {
         int index = 1;
         Token token = tokenStream.LT(index);
+        int tokenType = token.getType();
 
-        if (token.getType() == GroovyParser.GSTRING_START) {
+        if (tokenType == GroovyParser.GSTRING_START) {
             do {
-                index++;
-            } while (tokenStream.LT(index).getType() != GroovyParser.GSTRING_END);
+                token = tokenStream.LT(++index);
+                tokenType = token.getType();
+
+                if (tokenType == GroovyParser.EOF) {
+                    return false;
+                }
+            } while (tokenType != GroovyParser.GSTRING_END);
         }
 
-        return tokenStream.LT(index + 1).getType() == GroovyParser.LPAREN;
+        // ignore the newlines
+        do {
+            token = tokenStream.LT(++index);
+            tokenType = token.getType();
+        } while (tokenType == GroovyParser.NL);
+
+        return tokenStream.LT(index).getType() == GroovyParser.LPAREN;
     }
 
     public static boolean isKeyword(TokenStream tokenStream) {
