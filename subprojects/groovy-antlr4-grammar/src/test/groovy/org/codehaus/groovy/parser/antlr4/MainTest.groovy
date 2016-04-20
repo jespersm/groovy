@@ -130,6 +130,7 @@ class MainTest extends Specification {
         "CallExpression_issue33_1.groovy" | _
         "CallExpression_issue33_2.groovy" | addIgnore(Parameter, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Closure_Call_Issue40.groovy" | _
+        "CommandExpression_issue41.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 

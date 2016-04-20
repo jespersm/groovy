@@ -792,35 +792,54 @@ public class ASTBuilder {
     }
 
     public Statement parseStatement(GroovyParser.CommandExpressionStatementContext ctx) {
-        Expression expression = null;
-        List<List<ParseTree>> list = DefaultGroovyMethods.collate(ctx.cmdExpressionRule().children, 2);
-        for (List<ParseTree> c : list) {
-            final Iterator<ParseTree> iterator = c.iterator();
-            ParseTree c1 = iterator.hasNext() ? iterator.next() : null;
-            ParseTree c0 = iterator.hasNext() ? iterator.next() : null;
+        GroovyParser.CmdExpressionRuleContext cmdExpressionRuleContext = ctx.cmdExpressionRule();
 
-            if (c.size() == 1) expression = new PropertyExpression(expression, c1.getText());
-            else {
-                assert c0 instanceof GroovyParser.ArgumentListContext;
-                if (c1 instanceof TerminalNode) {
-                    expression = new MethodCallExpression(expression, ((TerminalNode)c1).getText(), createArgumentList((GroovyParser.ArgumentListContext)c0));
-                    ((MethodCallExpression)expression).setImplicitThis(false);
-                } else if (c1 instanceof GroovyParser.PathExpressionContext) {
-                    String methodName;
-                    boolean implicitThis;
-                    ArrayList<Object> objects = parsePathExpression((GroovyParser.PathExpressionContext)c1);
-                    expression = (Expression)objects.get(0);
-                    methodName = (String)objects.get(1);
-                    implicitThis = (Boolean)objects.get(2);
+        boolean hasExpression = asBoolean(cmdExpressionRuleContext.expression());
+        boolean hasPropertyAccess = asBoolean(cmdExpressionRuleContext.prop);
+        List<ParseTree> children = cmdExpressionRuleContext.children;
+        int childrenSize = children.size();
 
-                    expression = new MethodCallExpression(expression, methodName, createArgumentList((GroovyParser.ArgumentListContext)c0));
-                    ((MethodCallExpression)expression).setImplicitThis(implicitThis);
-                }
+        int firstIdentifierIndex = -1;
+        ParseTree firstIdentifier = null;
+        for (int i = 0; i < childrenSize; i++) {
+            ParseTree t = children.get(i);
+            if (t instanceof TerminalNode
+                    && ((TerminalNode) t).getSymbol().getType() == GroovyParser.IDENTIFIER) {
 
+                firstIdentifierIndex = i;
+                firstIdentifier = t;
+                break;
             }
-
         }
 
+        Expression expression = hasExpression ? parseExpression(cmdExpressionRuleContext.expression()) : VariableExpression.THIS_EXPRESSION;
+        List<List<ParseTree>> nameAndArgumentPairList = DefaultGroovyMethods.collate(
+                                                            children.subList(firstIdentifierIndex, hasPropertyAccess ? childrenSize - 1 : childrenSize),
+                                                            2
+                                                        );
+
+        for (List<ParseTree> nameAndArgumentPair : nameAndArgumentPairList) {
+            ParseTree nameNode = nameAndArgumentPair.get(0);
+            ParseTree argumentListNode = nameAndArgumentPair.get(1);
+
+            expression = new MethodCallExpression(expression, ((TerminalNode)nameNode).getText(), createArgumentList((GroovyParser.ArgumentListContext)argumentListNode));
+
+            if (nameNode == firstIdentifier) {
+                ((MethodCallExpression)expression).setImplicitThis(!hasExpression);
+            } else {
+                ((MethodCallExpression)expression).setImplicitThis(false);
+            }
+
+            if (hasExpression) {
+                Token op = cmdExpressionRuleContext.op;
+                ((MethodCallExpression)expression).setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
+                ((MethodCallExpression)expression).setSafe(op.getType() == GroovyParser.SAFE_DOT);
+            }
+        }
+
+        if (hasPropertyAccess) {
+            expression = new PropertyExpression(expression, cmdExpressionRuleContext.prop.getText());
+        }
 
         return setupNodeLocation(new ExpressionStatement(expression), ctx);
     }

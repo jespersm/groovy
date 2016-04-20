@@ -231,7 +231,7 @@ finallyBlock: KW_FINALLY NL* LCURVE blockStatement? RCURVE;
 
 caseStatement: (KW_CASE expression COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)* );
 
-cmdExpressionRule: pathExpression ( argumentList IDENTIFIER)+ argumentList IDENTIFIER? ;
+cmdExpressionRule: (expression op=(DOT | SAFE_DOT | STAR_DOT))? IDENTIFIER ( argumentList IDENTIFIER)+ argumentList prop=IDENTIFIER? ;
 pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
