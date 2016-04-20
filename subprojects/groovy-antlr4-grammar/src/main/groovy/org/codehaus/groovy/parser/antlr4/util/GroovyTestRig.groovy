@@ -16,11 +16,13 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.codehaus.groovy.parser.antlr4
+package org.codehaus.groovy.parser.antlr4.util
 
 import org.antlr.v4.gui.TestRig
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
+import org.codehaus.groovy.parser.antlr4.GroovyParser
+import org.codehaus.groovy.parser.antlr4.GroovyScanner
 
 /**
  * Created by Daniel on 2016/3/18.
@@ -34,7 +36,7 @@ public class GroovyTestRig extends TestRig {
         this.text = text;
     }
 
-    public void showParseTree() {
+    public void inspectParseTree() {
         GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(this.text));
         CommonTokenStream tokens = new CommonTokenStream(scanner);
         GroovyParser parser = new GroovyParser(tokens);
@@ -51,14 +53,14 @@ public class GroovyTestRig extends TestRig {
 
         File sourceFile = new File(args[0]);
 
-        def argList = ['Groovy', 'compilationUnit', '-tokens', '-gui', '-tree']
+        def argList = ['Groovy', 'compilationUnit', '-tokens', '-tree', '-gui']
 
         if (args.length > 1) {
-            argList = args[1..<(args.length)].inject(argList) {r, e -> r << e}
+            argList.addAll(args[1..<(args.length)]);
         }
 
-        GroovyTestRig debugger = new GroovyTestRig(sourceFile.text, argList as String[]);
+        GroovyTestRig groovyTestRig = new GroovyTestRig(sourceFile.text, argList as String[]);
 
-        debugger.showParseTree();
+        groovyTestRig.inspectParseTree();
     }
 }

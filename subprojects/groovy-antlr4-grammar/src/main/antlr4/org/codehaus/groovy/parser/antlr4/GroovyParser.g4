@@ -285,8 +285,8 @@ expression:
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    | { !GrammarPredicates.isKeyword(_input) }?      implicitThisCallExpression       #callExpression
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT)  implicitThisCallExpression       #callExpression
+    | { !GrammarPredicates.isKeyword(_input) }?      callExpressionRule       #callExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT)  callExpressionRule       #callExpression
 
     | (NOT | BNOT) expression #unaryExpression
     | expression POWER NL* expression #binaryExpression
@@ -320,9 +320,9 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
-implicitThisCallExpression: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN argumentList? RPAREN closureExpressionRule*
-                          | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | c=closureExpressionRule) argumentList
-                          ;
+callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN argumentList? RPAREN closureExpressionRule*
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | c=closureExpressionRule) argumentList
+                  ;
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
 

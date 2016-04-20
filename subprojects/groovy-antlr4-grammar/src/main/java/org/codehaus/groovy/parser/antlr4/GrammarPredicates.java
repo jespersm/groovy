@@ -22,9 +22,7 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.TokenStream;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class GrammarPredicates {
     public static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.KW_ABSTRACT, GroovyParser.KW_AS, GroovyParser.KW_ASSERT, GroovyParser.KW_BREAK, GroovyParser.KW_CASE, GroovyParser.KW_CATCH, GroovyParser.KW_CLASS, GroovyParser.KW_CONST, GroovyParser.KW_CONTINUE, GroovyParser.KW_DEF, GroovyParser.KW_DEFAULT, GroovyParser.KW_DO, GroovyParser.KW_ELSE, GroovyParser.KW_ENUM, GroovyParser.KW_EXTENDS, GroovyParser.KW_FALSE, GroovyParser.KW_FINAL, GroovyParser.KW_FINALLY, GroovyParser.KW_FOR, GroovyParser.KW_GOTO, GroovyParser.KW_IF, GroovyParser.KW_IMPLEMENTS, GroovyParser.KW_IMPORT, GroovyParser.KW_IN, GroovyParser.KW_INSTANCEOF, GroovyParser.KW_INTERFACE, GroovyParser.KW_NATIVE, GroovyParser.KW_NEW, GroovyParser.KW_NULL, GroovyParser.KW_PACKAGE, GroovyParser.KW_RETURN, GroovyParser.KW_STATIC, GroovyParser.KW_STRICTFP, GroovyParser.KW_SUPER, GroovyParser.KW_SWITCH, GroovyParser.KW_SYNCHRONIZED, GroovyParser.KW_THREADSAFE, GroovyParser.KW_THROW, GroovyParser.KW_THROWS, GroovyParser.KW_TRANSIENT, GroovyParser.KW_TRUE, GroovyParser.KW_TRY, GroovyParser.KW_VOLATILE, GroovyParser.KW_WHILE, GroovyParser.BUILT_IN_TYPE, GroovyParser.VISIBILITY_MODIFIER));
@@ -52,7 +50,7 @@ public class GrammarPredicates {
         Token token = tokenStream.LT(index);
         int tokenType = token.getType();
 
-        if (tokenType == GroovyParser.GSTRING_START) {
+        if (tokenType == GroovyParser.GSTRING_START) { // gstring
             do {
                 token = tokenStream.LT(++index);
                 tokenType = token.getType();
@@ -61,6 +59,22 @@ public class GrammarPredicates {
                     return false;
                 }
             } while (tokenType != GroovyParser.GSTRING_END);
+        } else if (tokenType == GroovyParser.LCURVE) { // closure
+            Deque<Integer> braceStack = new ArrayDeque<Integer>();
+            braceStack.push(tokenType);
+
+            do {
+                token = tokenStream.LT(++index);
+                tokenType = token.getType();
+
+                if (tokenType == GroovyParser.EOF) {
+                    return false;
+                } else if (tokenType == GroovyParser.LCURVE) {
+                    braceStack.push(tokenType);
+                } else if (tokenType == GroovyParser.RCURVE) {
+                    braceStack.pop();
+                }
+            } while (!braceStack.isEmpty());
         }
 
         // ignore the newlines

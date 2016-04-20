@@ -1472,7 +1472,7 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {
-        Expression expression = parseImplicitThisCallExpression(ctx.implicitThisCallExpression(), ctx.expression());
+        Expression expression = parseCallExpressionRule(ctx.callExpressionRule(), ctx.expression());
 
         if (expression instanceof ConstructorCallExpression) {
             return expression;
@@ -1489,7 +1489,7 @@ public class ASTBuilder {
         return setupNodeLocation(method, ctx);
     }
 
-    public Expression parseImplicitThisCallExpression(GroovyParser.ImplicitThisCallExpressionContext ctx, GroovyParser.ExpressionContext expressionContext) {
+    public Expression parseCallExpressionRule(GroovyParser.CallExpressionRuleContext ctx, GroovyParser.ExpressionContext expressionContext) {
         Expression method;
         boolean isClosureCall = asBoolean(ctx.c);
 
