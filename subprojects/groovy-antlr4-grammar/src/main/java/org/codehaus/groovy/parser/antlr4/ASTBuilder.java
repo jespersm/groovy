@@ -23,7 +23,6 @@ import groovy.lang.IntRange;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.*;
 import org.codehaus.groovy.GroovyBugError;
 import org.codehaus.groovy.antlr.EnumHelper;
@@ -145,7 +144,7 @@ public class ASTBuilder {
         }
     }
 
-    public void parseImportStatement(@NotNull GroovyParser.ImportStatementContext ctx) {
+    public void parseImportStatement(GroovyParser.ImportStatementContext ctx) {
         ImportNode node;
         List<TerminalNode> qualifiedClassName = new ArrayList<TerminalNode>(ctx.IDENTIFIER());
         boolean isStar = ctx.MULT() != null;
@@ -197,7 +196,7 @@ public class ASTBuilder {
     }
 
 
-    public void parsePackageDefinition(@NotNull GroovyParser.PackageDefinitionContext ctx) {
+    public void parsePackageDefinition(GroovyParser.PackageDefinitionContext ctx) {
         moduleNode.setPackageName(DefaultGroovyMethods.join(ctx.IDENTIFIER(), ".") + ".");
         attachAnnotations(moduleNode.getPackage(), ctx.annotationClause());
         setupNodeLocation(moduleNode.getPackage(), ctx);
@@ -309,7 +308,7 @@ public class ASTBuilder {
         );
     }
 
-    public ClassNode parseClassDeclaration(@NotNull final GroovyParser.ClassDeclarationContext ctx) {
+    public ClassNode parseClassDeclaration(final GroovyParser.ClassDeclarationContext ctx) {
         boolean isEnum = asBoolean(ctx.KW_ENUM());
 
         final ClassNode parentClass = asBoolean(classes) ? classes.peek() : null;
@@ -408,7 +407,7 @@ public class ASTBuilder {
         return listExpression;
     }
 
-    public void parseClassBody(@NotNull ClassNode classNode, GroovyParser.ClassBodyContext ctx) {
+    public void parseClassBody(ClassNode classNode, GroovyParser.ClassBodyContext ctx) {
         for(GroovyParser.EnumConstantContext node : ctx.enumConstant()) {
 
             setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.IDENTIFIER().getText(), createEnumConstantInitExpression(node.argumentList())), node.IDENTIFIER().getSymbol());
@@ -1923,7 +1922,7 @@ public class ASTBuilder {
         return astNode;
     }
 
-    public int parseClassModifiers(@NotNull List<GroovyParser.ClassModifierContext> ctxs) {
+    public int parseClassModifiers(List<GroovyParser.ClassModifierContext> ctxs) {
         List<TerminalNode> visibilityModifiers = new ArrayList<TerminalNode>();
         int modifiers = 0;
         for (int i = 0; i < ctxs.size(); i++) {
@@ -2117,29 +2116,29 @@ public class ASTBuilder {
         parser.addErrorListener(new ANTLRErrorListener() {
             @Override
             public void syntaxError(
-                    @NotNull Recognizer<?, ?> recognizer,
+                    Recognizer<?, ?> recognizer,
                     Object offendingSymbol, int line, int charPositionInLine,
-                    @NotNull String msg, RecognitionException e) {
+                    String msg, RecognitionException e) {
                 sourceUnit.getErrorCollector().addFatalError(new SyntaxErrorMessage(new SyntaxException(msg, line, charPositionInLine+1), sourceUnit));
             }
 
             @Override
-            public void reportAmbiguity(@NotNull Parser recognizer, @NotNull DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, @NotNull ATNConfigSet configs) {
+            public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
                 log.fine("Ambiguity at " + startIndex + " - " + stopIndex);
             }
 
             @Override
             public void reportAttemptingFullContext(
-                    @NotNull Parser recognizer,
-                    @NotNull DFA dfa, int startIndex, int stopIndex,
-                    BitSet conflictingAlts, @NotNull ATNConfigSet configs) {
+                    Parser recognizer,
+                    DFA dfa, int startIndex, int stopIndex,
+                    BitSet conflictingAlts, ATNConfigSet configs) {
                 log.fine("Attempting Full Context at " + startIndex + " - " + stopIndex);
             }
 
             @Override
             public void reportContextSensitivity(
-                    @NotNull Parser recognizer,
-                    @NotNull DFA dfa, int startIndex, int stopIndex, int prediction, @NotNull ATNConfigSet configs) {
+                    Parser recognizer,
+                    DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
                 log.fine("Context Sensitivity at " + startIndex + " - " + stopIndex);
             }
         });
@@ -2149,18 +2148,18 @@ public class ASTBuilder {
         final StringBuilder s = new StringBuilder();
         new ParseTreeWalker().walk(new ParseTreeListener() {
             @Override
-            public void visitTerminal(@NotNull TerminalNode node) {
+            public void visitTerminal(TerminalNode node) {
                 s.append(multiply(".\t", indent));
                 s.append(String.valueOf(node));
                 s.append("\n");
             }
 
             @Override
-            public void visitErrorNode(@NotNull ErrorNode node) {
+            public void visitErrorNode(ErrorNode node) {
             }
 
             @Override
-            public void enterEveryRule(@NotNull final ParserRuleContext ctx) {
+            public void enterEveryRule(final ParserRuleContext ctx) {
                 s.append(multiply(".\t", indent));
                 s.append(GroovyParser.ruleNames[ctx.getRuleIndex()] + ": {");
                 s.append("\n");
@@ -2168,7 +2167,7 @@ public class ASTBuilder {
             }
 
             @Override
-            public void exitEveryRule(@NotNull ParserRuleContext ctx) {
+            public void exitEveryRule(ParserRuleContext ctx) {
                 indent = indent--;
                 s.append(multiply(".\t", indent));
                 s.append("}");
