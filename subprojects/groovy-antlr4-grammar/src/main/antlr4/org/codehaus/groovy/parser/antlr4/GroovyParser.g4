@@ -216,10 +216,11 @@ statement:
     | KW_RETURN expression? #returnStatement
     | KW_THROW expression #throwStatement
     | KW_ASSERT expression ((COLON|COMMA) NL* expression)? #assertStatement
+    | KW_SYNCHRONIZED LPAREN expression RPAREN NL* statementBlock # synchronizedStatement
     | cmdExpressionRule #commandExpressionStatement
     | expression #expressionStatement
     | IDENTIFIER COLON NL* statementBlock #labeledStatement
-;
+    ;
 
 statementBlock:
     LCURVE blockStatement? RCURVE

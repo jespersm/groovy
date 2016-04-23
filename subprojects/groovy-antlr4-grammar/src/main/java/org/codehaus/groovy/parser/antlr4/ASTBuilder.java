@@ -603,6 +603,8 @@ public class ASTBuilder {
             return parseStatement((GroovyParser.AssertStatementContext)ctx);
         if (ctx instanceof GroovyParser.LabeledStatementContext)
             return parseStatement((GroovyParser.LabeledStatementContext)ctx);
+        if (ctx instanceof GroovyParser.SynchronizedStatementContext)
+            return parseStatement((GroovyParser.SynchronizedStatementContext)ctx);
 
         throw createParsingFailedException(new InvalidSyntaxException("Unsupported statement type! " + ctx.getText(), ctx));
     }
@@ -752,6 +754,12 @@ public class ASTBuilder {
         return setupNodeLocation(statement, ctx);
     }
 
+    public Statement parseStatement(GroovyParser.SynchronizedStatementContext ctx) {
+        Expression expression = parseExpression(ctx.expression());
+        Statement statementBlock = parse(ctx.statementBlock());
+
+        return setupNodeLocation(new SynchronizedStatement(expression, statementBlock), ctx);
+    }
 
     public Statement parseStatement(GroovyParser.ThrowStatementContext ctx) {
         return setupNodeLocation(new ThrowStatement(parseExpression(ctx.expression())), ctx);

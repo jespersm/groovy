@@ -96,10 +96,7 @@ public class GrammarPredicates {
 
     public static boolean isFollowedByJavaLetterInGString(CharStream cs) {
         int c1 = cs.LA(1);
-        int c2 = cs.LA(2);
-
         String str1 = String.valueOf((char) c1);
-        String str2 = String.valueOf((char) c2);
 
         if (str1.matches("[a-zA-Z_{]")) {
             return true;
@@ -109,6 +106,9 @@ public class GrammarPredicates {
                 && Character.isJavaIdentifierPart(c1)) {
             return true;
         }
+
+        int c2 = cs.LA(2);
+        String str2 = String.valueOf((char) c2);
 
         if (str1.matches("[\uD800-\uDBFF]")
                 && str2.matches("[\uDC00-\uDFFF]")
