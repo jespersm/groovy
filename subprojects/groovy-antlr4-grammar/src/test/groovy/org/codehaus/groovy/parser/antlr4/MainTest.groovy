@@ -132,6 +132,7 @@ class MainTest extends Specification {
         "Closure_Call_Issue40.groovy" | _
         "CommandExpression_issue41.groovy" | _
         "SynchronizedStatement.groovy" | _
+        "VarArg.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
@@ -479,7 +480,7 @@ class MainTest extends Specification {
         "chap10/Listing_10_45_MultiValidation.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/Listing_10_46_RobotExtension.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
 //FIXME        "chap10/Listing_10_47_SQLExtension.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap10/snippet1003_GroovyGreeter.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap10/snippet1003_GroovyGreeter.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/snippet1005_RobotMainTC.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/snippet1005_SqlMainTC.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/User.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
@@ -548,6 +549,7 @@ class MainTest extends Specification {
             "Statement_Errors_6.groovy" | _
             "Statement_Errors_7.groovy" | _
             "Statement_Errors_8.groovy" | _
+            "Statement_Errors_9.groovy" | _
             "ClassModifiersInvalid_Issue1_2.groovy" | _
             "ClassModifiersInvalid_Issue2_2.groovy" | _
 

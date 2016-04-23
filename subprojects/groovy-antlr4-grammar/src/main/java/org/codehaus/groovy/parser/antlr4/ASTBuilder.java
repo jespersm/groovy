@@ -1591,8 +1591,17 @@ public class ASTBuilder {
     public ClassNode parseExpression(GroovyParser.GenericClassNameExpressionContext ctx) {
         ClassNode classNode = parseExpression(ctx.classNameExpression());
 
-        if (asBoolean(ctx.LBRACK())) classNode = classNode.makeArray();
-        classNode.setGenericsTypes(parseGenericList(ctx.genericList()));
+        if (asBoolean(ctx.LBRACK())) {
+            classNode = classNode.makeArray();
+        } else {
+            // Groovy's bug? array's generics type will be ignored. e.g. List<String>[]... p
+            classNode.setGenericsTypes(parseGenericList(ctx.genericList()));
+        }
+
+        if (asBoolean(ctx.ELLIPSIS())) {
+            classNode = classNode.makeArray();
+        }
+
         return setupNodeLocation(classNode, ctx);
     }
 

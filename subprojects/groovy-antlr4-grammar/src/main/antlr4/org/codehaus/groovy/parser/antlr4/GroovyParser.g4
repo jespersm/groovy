@@ -41,6 +41,17 @@ options { tokenVocab = GroovyLexer; }
         declarationRuleInExpressionEnabled = false;
     }
 
+    private boolean ellipsisEnabled = false;
+
+    private boolean isEllipsisEnabled() {
+        return ellipsisEnabled;
+    }
+    private void enableEllipsis() {
+        ellipsisEnabled = true;
+    }
+    private void disableEllipsis() {
+        ellipsisEnabled = false;
+    }
 
     private static String createErrorMessageForStrictCheck(Set<String> s, String keyword) {
         if (VISIBILITY_MODIFIER_SET.contains(keyword)) {
@@ -179,7 +190,9 @@ genericsDeclarationElement: genericClassNameExpression (KW_EXTENDS genericClassN
 throwsClause: KW_THROWS classNameExpression (COMMA classNameExpression)*;
 
 argumentDeclarationList:
-    argumentDeclaration (COMMA NL* argumentDeclaration)* | /* EMPTY ARGUMENT LIST */ ;
+     (argumentDeclaration COMMA NL* )* { enableEllipsis(); } argumentDeclaration { disableEllipsis(); } | /* EMPTY ARGUMENT LIST */
+     ;
+
 argumentDeclaration:
     annotationClause* typeDeclaration? IDENTIFIER (ASSIGN NL* expression)? ;
 
@@ -331,7 +344,7 @@ callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) 
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
 
-genericClassNameExpression: classNameExpression (genericList | (LBRACK RBRACK))?;
+genericClassNameExpression: classNameExpression genericList? (LBRACK RBRACK)? (ELLIPSIS { isEllipsisEnabled() }?<fail={ "The var-arg only be allowed to appear as the last parameter" }>)?;
 
 genericList:
     LT genericListElement (COMMA genericListElement)* GT

@@ -304,6 +304,8 @@ MINUS: '-' ;
 BAND: '&' ;
 XOR: '^' ;
 QUESTION: '?' ;
+ELLIPSIS: '...';
+
 KW_AS: 'as' ;
 KW_INSTANCEOF: 'instanceof' ;
 
