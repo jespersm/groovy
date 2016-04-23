@@ -1016,11 +1016,21 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.BinaryExpressionContext ctx) {
-        TerminalNode c = DefaultGroovyMethods.asType(ctx.getChild(1), TerminalNode.class);
         int i = 1;
-        for (ParseTree next = ctx.getChild(i + 1); next instanceof TerminalNode && ((TerminalNode)next).getSymbol().getType() == GroovyParser.GT; next = ctx.getChild(i + 1))
+
+        // ignore newlines
+        for (ParseTree t = ctx.getChild(i); t instanceof TerminalNode && ((TerminalNode) t).getSymbol().getType() == GroovyParser.NL; t = ctx.getChild(i)) {
             i++;
-        org.codehaus.groovy.syntax.Token op = createToken(c, i);
+        }
+
+        TerminalNode c = DefaultGroovyMethods.asType(ctx.getChild(i), TerminalNode.class);
+
+        for (ParseTree next = ctx.getChild(i + 1); next instanceof TerminalNode && ((TerminalNode)next).getSymbol().getType() == GroovyParser.GT; next = ctx.getChild(i + 1)) {
+            i++;
+        }
+
+        org.codehaus.groovy.syntax.Token op = createToken(c, c.getSymbol().getType() == GroovyParser.GT ? i : 1);
+
         Object expression;
         Expression left = parseExpression(ctx.expression(0));
         Expression right = null;// Will be initialized later, in switch. We should handle as and instanceof creating

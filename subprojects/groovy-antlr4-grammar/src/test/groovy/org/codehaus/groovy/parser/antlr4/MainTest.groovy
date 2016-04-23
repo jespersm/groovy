@@ -479,7 +479,7 @@ class MainTest extends Specification {
 //FIXME        "chap10/Listing_10_44_BookingDSL.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/Listing_10_45_MultiValidation.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/Listing_10_46_RobotExtension.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap10/Listing_10_47_SQLExtension.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap10/Listing_10_47_SQLExtension.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/snippet1003_GroovyGreeter.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/snippet1005_RobotMainTC.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap10/snippet1005_SqlMainTC.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
