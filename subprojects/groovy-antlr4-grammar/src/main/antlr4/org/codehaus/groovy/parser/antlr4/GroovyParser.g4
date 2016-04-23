@@ -316,8 +316,8 @@ expression:
     | expression BAND NL* expression #binaryExpression
     |<assoc=right> expression XOR NL* expression #binaryExpression
     | expression BOR NL* expression #binaryExpression
-    | expression AND NL* expression #binaryExpression
-    | expression OR NL* expression #binaryExpression
+    | expression NL* AND NL* expression #binaryExpression
+    | expression NL* OR NL* expression #binaryExpression
     |<assoc=right> expression NL* QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression NL* ELVIS NL* expression #elvisExpression
 
