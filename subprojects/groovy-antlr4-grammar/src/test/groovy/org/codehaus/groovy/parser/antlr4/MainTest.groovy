@@ -414,11 +414,11 @@ class MainTest extends Specification {
         "chap09/settings.gradle" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_autoCloneDefault.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_autoCloneSerialization.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap09/snippet0902_autoExternalize.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap09/snippet0902_autoExternalize.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_fieldEquivalent.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_mapCreation.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_noisySetDelegateByHand.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap09/snippet0902_noisySetInheritance.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap09/snippet0902_noisySetInheritance.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_nonTailCallReverseList.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_readWriteByHand.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0902_readWriteLock.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
@@ -430,7 +430,7 @@ class MainTest extends Specification {
         "chap09/snippet0903_localMainTransformation.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/snippet0905_GetCompiledTimeScript.txt" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap09/src/main/groovy/regina/CompiledAtASTTransformation.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap09/src/test/groovy/regina/CompiledAtASTTransformationTest.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap09/src/test/groovy/regina/CompiledAtASTTransformationTest.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
     }
 
     @Unroll

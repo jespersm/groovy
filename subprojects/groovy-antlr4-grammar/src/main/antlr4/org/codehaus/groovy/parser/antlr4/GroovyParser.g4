@@ -287,7 +287,8 @@ expression:
     | (DECREMENT | INCREMENT) expression #prefixExpression
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    | { !GrammarPredicates.isKeyword(_input) }?      callExpressionRule       #callExpression
+    // exclude this and super to support this(...) and super(...) in the contructor
+    | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?      callExpressionRule       #callExpression
     | expression NL* op=(DOT | SAFE_DOT | STAR_DOT)  callExpressionRule       #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
