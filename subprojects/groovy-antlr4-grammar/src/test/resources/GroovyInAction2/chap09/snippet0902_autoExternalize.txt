@@ -1,5 +1,5 @@
 class Composer implements Externalizable {
-    ...
+    // ...
     void writeExternal(ObjectOutput out) throws IOException {
         out.writeObject(name)
         out.writeInt(born)

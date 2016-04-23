@@ -935,6 +935,10 @@ public class ASTBuilder {
             return parseExpression((GroovyParser.IndexExpressionContext)ctx);
         if (ctx instanceof GroovyParser.SpreadExpressionContext)
             return parseExpression((GroovyParser.SpreadExpressionContext)ctx);
+        if (ctx instanceof GroovyParser.ThisExpressionContext)
+            return parseExpression((GroovyParser.ThisExpressionContext)ctx);
+        if (ctx instanceof GroovyParser.SuperExpressionContext)
+            return parseExpression((GroovyParser.SuperExpressionContext)ctx);
 
         throw createParsingFailedException(new InvalidSyntaxException("Unsupported expression type! " + String.valueOf(ctx), ctx));
     }
@@ -1255,6 +1259,14 @@ public class ASTBuilder {
 
     public ConstantExpression parseExpression(GroovyParser.ConstantExpressionContext ctx) {
         return parseConstantString(ctx);
+    }
+
+    public Expression parseExpression(GroovyParser.SuperExpressionContext ctx) {
+        return setupNodeLocation(new VariableExpression(ctx.KW_SUPER().getText()), ctx);
+    }
+
+    public Expression parseExpression(GroovyParser.ThisExpressionContext ctx) {
+        return setupNodeLocation(new VariableExpression(ctx.KW_THIS().getText()), ctx);
     }
 
     public ConstantExpression parseExpression(GroovyParser.AnnotationParamStringExpressionContext ctx) {

@@ -267,6 +267,8 @@ expression:
     | DECIMAL #constantDecimalExpression
     | INTEGER #constantIntegerExpression
     | KW_NULL #nullExpression
+    | KW_THIS # thisExpression
+    | KW_SUPER # superExpression
     | (KW_TRUE | KW_FALSE) #boolExpression
     | IDENTIFIER #variableExpression
     | newArrayRule #newArrayExpression
@@ -280,7 +282,6 @@ expression:
     | LPAREN expression RPAREN #parenthesisExpression
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
-    | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
     | (PLUS | MINUS) expression #unaryExpression
     | (DECREMENT | INCREMENT) expression #prefixExpression
@@ -288,6 +289,8 @@ expression:
 
     | { !GrammarPredicates.isKeyword(_input) }?      callExpressionRule       #callExpression
     | expression NL* op=(DOT | SAFE_DOT | STAR_DOT)  callExpressionRule       #callExpression
+
+    | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
     | (NOT | BNOT) expression #unaryExpression
     | expression POWER NL* expression #binaryExpression
@@ -370,7 +373,7 @@ kwSelectorName: KW_ABSTRACT | KW_AS | KW_ASSERT | KW_BREAK | KW_CASE | KW_CATCH 
                      | KW_DEF | KW_DEFAULT | KW_DO | KW_ELSE | KW_ENUM | KW_EXTENDS | KW_FALSE | KW_FINAL | KW_FINALLY
                      | KW_FOR | KW_GOTO | KW_IF | KW_IMPLEMENTS | KW_IMPORT | KW_IN | KW_INSTANCEOF | KW_INTERFACE
                      | KW_NATIVE | KW_NEW | KW_NULL | KW_PACKAGE
-                     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THREADSAFE | KW_THROW
+                     | KW_RETURN | KW_STATIC | KW_STRICTFP | KW_SUPER | KW_SWITCH | KW_SYNCHRONIZED | KW_THIS | KW_THREADSAFE | KW_THROW
                      | KW_THROWS | KW_TRANSIENT | KW_TRUE | KW_TRY | KW_VOLATILE | KW_WHILE
                      | BUILT_IN_TYPE | VISIBILITY_MODIFIER /* in place of KW_PRIVATE | KW_PROTECTED | KW_PUBLIC */
 ;

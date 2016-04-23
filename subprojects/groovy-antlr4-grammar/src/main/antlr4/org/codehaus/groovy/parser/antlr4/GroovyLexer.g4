@@ -225,6 +225,7 @@ KW_TRUE: 'true' ;
 KW_FALSE: 'false' ;
 KW_NEW: 'new' ;
 KW_SUPER: 'super' ;
+KW_THIS: 'this' ;
 
 KW_IN: 'in' ;
 KW_FOR: 'for' ;

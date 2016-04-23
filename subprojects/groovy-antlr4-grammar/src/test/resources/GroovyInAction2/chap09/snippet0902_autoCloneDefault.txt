@@ -1,5 +1,5 @@
 class Chef1 implements Cloneable {
-    ...
+    //...
     Chef1 clone() throws CloneNotSupportedException {
         Chef1 _result = (Chef1) super.clone()
         if (recipes instanceof Cloneable) {
