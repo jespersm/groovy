@@ -18,6 +18,7 @@
  */
 package org.codehaus.groovy.parser.antlr4.util
 
+import groovy.util.logging.Log
 import org.antlr.v4.gui.TestRig
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
@@ -27,6 +28,7 @@ import org.codehaus.groovy.parser.antlr4.GroovyScanner
 /**
  * Created by Daniel on 2016/3/18.
  */
+@Log
 public class GroovyTestRig extends TestRig {
 
     public GroovyTestRig(String[] args) throws Exception {
@@ -34,7 +36,14 @@ public class GroovyTestRig extends TestRig {
     }
 
     public void inspectParseTree() {
-        byte[] content = new File(this.inputFiles[0]).bytes;
+        def inputFile = new File(this.inputFiles[0]);
+
+        if (!(inputFile.exists() && inputFile.isFile())) {
+            log.info "Input file[${inputFile.absolutePath}] does not exist."
+            return;
+        }
+
+        byte[] content = inputFile.bytes;
         String text = new String(content, this.encoding ?: 'UTF-8');
 
         GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
@@ -46,12 +55,12 @@ public class GroovyTestRig extends TestRig {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            println "Usage: [-tokens] [-tree] [-gui] [-ps file.ps] [-encoding encodingname] [-trace] [-diagnostics] [-SLL] input-filename\n";
+            log.info "Usage: [-tokens] [-tree] [-gui] [-ps file.ps] [-encoding encodingname] [-trace] [-diagnostics] [-SLL] input-filename";
             return;
         }
 
-        if (!(args.find { !it.startsWith('-') })) {
-            println "input-filename is required!"
+        if (args.every { it.startsWith('-') }) {
+            log.info "input-filename is required!"
             return;
         }
 
