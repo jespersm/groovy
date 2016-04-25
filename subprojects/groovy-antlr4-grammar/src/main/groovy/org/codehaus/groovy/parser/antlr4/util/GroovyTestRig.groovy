@@ -28,16 +28,15 @@ import org.codehaus.groovy.parser.antlr4.GroovyScanner
  * Created by Daniel on 2016/3/18.
  */
 public class GroovyTestRig extends TestRig {
-    private String text;
 
-    public GroovyTestRig(String text, String[] args) throws Exception {
+    public GroovyTestRig(String[] args) throws Exception {
         super(args);
-
-        this.text = text;
     }
 
     public void inspectParseTree() {
-        GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(this.text));
+        String text = new String(new File(this.inputFiles[0]).bytes, this.encoding ?: 'UTF-8');
+
+        GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
         CommonTokenStream tokens = new CommonTokenStream(scanner);
         GroovyParser parser = new GroovyParser(tokens);
 
@@ -46,20 +45,20 @@ public class GroovyTestRig extends TestRig {
 
     public static void main(String[] args) {
         if (args.length == 0) {
-            println "source file is required.";
-
+            println "Usage: [-tokens] [-tree] [-gui] [-ps file.ps] [-encoding encodingname] [-trace] [-diagnostics] [-SLL] input-filename\n";
             return;
         }
 
-        File sourceFile = new File(args[0]);
-
-        def argList = ['Groovy', 'compilationUnit', '-tokens', '-tree', '-gui']
-
-        if (args.length > 1) {
-            argList.addAll(args[1..<(args.length)]);
+        if (!(args.find { !it.startsWith('-') })) {
+            println "input-filename is required!"
+            return;
         }
 
-        GroovyTestRig groovyTestRig = new GroovyTestRig(sourceFile.text, argList as String[]);
+        def argList = ['Groovy', 'compilationUnit']
+
+        argList.addAll(args);
+
+        GroovyTestRig groovyTestRig = new GroovyTestRig(argList as String[]);
 
         groovyTestRig.inspectParseTree();
     }
