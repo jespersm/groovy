@@ -30,17 +30,18 @@ import org.codehaus.groovy.parser.antlr4.GroovyScanner
 public class GroovyTestRig extends TestRig {
 
     public GroovyTestRig(String[] args) throws Exception {
-        super(['Groovy', 'compilationUnit', *args]);
+        super(['Groovy', 'compilationUnit', *args] as String[]);
     }
 
     public void inspectParseTree() {
-        String text = new String(new File(this.inputFiles[0]).bytes, this.encoding ?: 'UTF-8');
+        byte[] content = new File(this.inputFiles[0]).bytes;
+        String text = new String(content, this.encoding ?: 'UTF-8');
 
         GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
         CommonTokenStream tokens = new CommonTokenStream(scanner);
         GroovyParser parser = new GroovyParser(tokens);
 
-        this.process(scanner, GroovyParser.class, parser, new ByteArrayInputStream(text.bytes), new StringReader(text));
+        this.process(scanner, GroovyParser.class, parser, new ByteArrayInputStream(content), new StringReader(text));
     }
 
     public static void main(String[] args) {
