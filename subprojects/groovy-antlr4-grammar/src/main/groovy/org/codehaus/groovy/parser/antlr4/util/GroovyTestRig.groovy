@@ -30,7 +30,7 @@ import org.codehaus.groovy.parser.antlr4.GroovyScanner
 public class GroovyTestRig extends TestRig {
 
     public GroovyTestRig(String[] args) throws Exception {
-        super(args);
+        super(['Groovy', 'compilationUnit', *args]);
     }
 
     public void inspectParseTree() {
@@ -54,11 +54,7 @@ public class GroovyTestRig extends TestRig {
             return;
         }
 
-        def argList = ['Groovy', 'compilationUnit']
-
-        argList.addAll(args);
-
-        GroovyTestRig groovyTestRig = new GroovyTestRig(argList as String[]);
+        GroovyTestRig groovyTestRig = new GroovyTestRig(args);
 
         groovyTestRig.inspectParseTree();
     }
