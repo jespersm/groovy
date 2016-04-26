@@ -494,7 +494,7 @@ class MainTest extends Specification {
         "chap11/Listing_11_10_PW_SwingBuilder.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_11_Swing_Widgets.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_12_Swing_Layout.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap11/Listing_11_13_Table_Demo.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap11/Listing_11_13_Table_Demo.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_14_Binding.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_15_Plotter.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_16_Groovyfx.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)

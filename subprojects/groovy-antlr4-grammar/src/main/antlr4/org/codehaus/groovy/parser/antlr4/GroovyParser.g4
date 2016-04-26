@@ -338,7 +338,7 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
-callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN argumentList? RPAREN closureExpressionRule*
+callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN argumentList? NL* RPAREN closureExpressionRule*
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | c=closureExpressionRule) argumentList
                   ;
 
