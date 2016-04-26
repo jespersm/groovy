@@ -1565,7 +1565,7 @@ public class ASTBuilder {
         for (Expression expression : argumentListExpression.getExpressions()) {
 
             if (expression instanceof NamedArgumentListExpression) {
-                expression = new MapExpression(((NamedArgumentListExpression) expression).getMapEntryExpressions());
+                expression = setupNodeLocation(new MapExpression(((NamedArgumentListExpression) expression).getMapEntryExpressions()), expression);
                 namedArgumentListExpressionCnt++;
             } else if (expression instanceof ClosureExpression) {
                 closureExpressionCnt++;
@@ -1575,7 +1575,7 @@ public class ASTBuilder {
         }
 
         if (namedArgumentListExpressionCnt > 0 && closureExpressionCnt > 0) {
-            return new ArgumentListExpression(result);
+            return setupNodeLocation(new ArgumentListExpression(result), argumentListExpression);
         }
 
         return argumentListExpression;
@@ -1833,12 +1833,12 @@ public class ASTBuilder {
             if (asBoolean(mapArgs))
                 expressions.add(0, new MapExpression(mapArgs));
 
-            return new ArgumentListExpression(expressions);
+            return setupNodeLocation(new ArgumentListExpression(expressions), ctx);
         } else {
             if (asBoolean(mapArgs))
-                return new TupleExpression(new NamedArgumentListExpression(mapArgs));
+                return setupNodeLocation(new TupleExpression(new NamedArgumentListExpression(mapArgs)), ctx);
             else
-                return new ArgumentListExpression();
+                return setupNodeLocation(new ArgumentListExpression(), ctx);
         }
 
     }
@@ -1987,10 +1987,17 @@ public class ASTBuilder {
      * @return Modified astNode.
      */
     public <T extends ASTNode> T setupNodeLocation(T astNode, ParserRuleContext ctx) {
-        astNode.setLineNumber(ctx.getStart().getLine());
-        astNode.setColumnNumber(ctx.getStart().getCharPositionInLine() + 1);
-        astNode.setLastLineNumber(ctx.getStop().getLine());
-        astNode.setLastColumnNumber(ctx.getStop().getCharPositionInLine() + 1 + ctx.getStop().getText().length());
+        if (null == ctx) {
+            return astNode;
+        }
+
+        Token start = ctx.getStart();
+        Token stop = ctx.getStop();
+
+        astNode.setLineNumber(start.getLine());
+        astNode.setColumnNumber(start.getCharPositionInLine() + 1);
+        astNode.setLastLineNumber(stop.getLine());
+        astNode.setLastColumnNumber(stop.getCharPositionInLine() + 1 + stop.getText().length());
 //        System.err.println(astNode.getClass().getSimpleName() + " at " + astNode.getLineNumber() + ":" + astNode.getColumnNumber());
         return astNode;
     }
