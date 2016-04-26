@@ -207,7 +207,7 @@ singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
 newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody[false])?;
-newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)* ;
+newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)+ ;
 
 statement:
       declarationRule #declarationStatement
@@ -374,7 +374,7 @@ memberModifier:
 argumentList: ( (closureExpressionRule)+ | argument (NL* COMMA NL* argument)*) ;
 
 argument
-: mapEntry
+        : mapEntry
         | expression
         ;
 

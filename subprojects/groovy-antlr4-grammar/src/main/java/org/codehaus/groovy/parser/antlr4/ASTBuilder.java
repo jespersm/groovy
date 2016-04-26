@@ -1537,6 +1537,50 @@ public class ASTBuilder {
         return setupNodeLocation(method, ctx);
     }
 
+    /**
+     * If argument list contains closure and named argument, the argument list's struture looks like as follows:
+     *
+     *      ArgumentListExpression
+     *            MapExpression (NOT NamedArgumentListExpression!)
+     *            ClosureExpression
+     *
+     * Original structure:
+     *
+     *      TupleExpression
+     *            NamedArgumentListExpression
+     *            ClosureExpression
+     *
+     * @param argumentListExpression
+     * @return
+     *
+     */
+    private TupleExpression convertArgumentList(TupleExpression argumentListExpression) {
+        if (argumentListExpression instanceof ArgumentListExpression) {
+            return argumentListExpression;
+        }
+
+        List<Expression> result = new LinkedList<Expression>();
+
+        int namedArgumentListExpressionCnt = 0, closureExpressionCnt = 0;
+        for (Expression expression : argumentListExpression.getExpressions()) {
+
+            if (expression instanceof NamedArgumentListExpression) {
+                expression = new MapExpression(((NamedArgumentListExpression) expression).getMapEntryExpressions());
+                namedArgumentListExpressionCnt++;
+            } else if (expression instanceof ClosureExpression) {
+                closureExpressionCnt++;
+            }
+
+            result.add(expression);
+        }
+
+        if (namedArgumentListExpressionCnt > 0 && closureExpressionCnt > 0) {
+            return new ArgumentListExpression(result);
+        }
+
+        return argumentListExpression;
+    }
+
     public Expression parseCallExpressionRule(GroovyParser.CallExpressionRuleContext ctx, GroovyParser.ExpressionContext expressionContext) {
         Expression method;
         boolean isClosureCall = asBoolean(ctx.c);
@@ -1559,6 +1603,8 @@ public class ASTBuilder {
 
             argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
         }
+
+        argumentListExpression = convertArgumentList(argumentListExpression);
 
         boolean implicitThis = !isClosureCall && !asBoolean(expressionContext);
         if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(method.getText())) {
@@ -1761,6 +1807,7 @@ public class ASTBuilder {
     private Expression createArgumentList(GroovyParser.ArgumentListContext ctx) {
         final List<MapEntryExpression> mapArgs = new ArrayList<MapEntryExpression>();
         final List<Expression> expressions = new ArrayList<Expression>();
+
         if (ctx != null) {
             DefaultGroovyMethods.each(ctx.children, new Closure<Collection<? extends Expression>>(null, null) {
                 public Collection<? extends Expression> doCall(ParseTree it) {
@@ -1774,6 +1821,8 @@ public class ASTBuilder {
                         }
                     } else if (it instanceof GroovyParser.ClosureExpressionRuleContext) {
                         expressions.add(parseExpression((GroovyParser.ClosureExpressionRuleContext) it));
+
+
                         return expressions;
                     }
                     return null;
@@ -1783,11 +1832,13 @@ public class ASTBuilder {
         if (asBoolean(expressions)) {
             if (asBoolean(mapArgs))
                 expressions.add(0, new MapExpression(mapArgs));
+
             return new ArgumentListExpression(expressions);
         } else {
             if (asBoolean(mapArgs))
                 return new TupleExpression(new NamedArgumentListExpression(mapArgs));
-            else return new ArgumentListExpression();
+            else
+                return new ArgumentListExpression();
         }
 
     }
