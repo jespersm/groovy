@@ -128,7 +128,7 @@ fragment DOLLAR_SLASHY_STRING_ELEMENT: (SLASHY_ESCAPE
                                        | ~('/' | '$')
                                        )
                                        ;
-fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
+fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
                              |  '\'' { !(_input.LA(1) == '\'' && _input.LA(2) == '\'') }?
                              | ~('\'' | '\\')
                              )
@@ -136,7 +136,7 @@ fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
 fragment SQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
                              | ~('\'' | '\\')
                              ;
-fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE
+fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
                              |  '"' { !(_input.LA(1) == '"' && _input.LA(2) == '"') }?
                              | ~('"'  | '\\' | '$')
                              )
@@ -184,6 +184,7 @@ mode DEFAULT_MODE ;
 
 fragment SLASHY_ESCAPE: '\\' '/' ;
 fragment DOLLAR_ESCAPE: '\\' '$' ;
+fragment JOIN_LINE_ESCAPE: '\\' '\r'? '\n';
 fragment ESC_SEQUENCE: '\\' [btnfr"'\\] | OCTAL_ESC_SEQ | UNICODE_ESCAPE;
 fragment OCTAL_ESC_SEQ: '\\' [0-3]? ZERO_TO_SEVEN? ZERO_TO_SEVEN ;
 fragment UNICODE_ESCAPE: '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT;

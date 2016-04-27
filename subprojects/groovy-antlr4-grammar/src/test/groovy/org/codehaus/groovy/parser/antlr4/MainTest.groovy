@@ -133,6 +133,7 @@ class MainTest extends Specification {
         "CommandExpression_issue41.groovy" | _
         "SynchronizedStatement.groovy" | _
         "VarArg.groovy" | _
+        "Join_Line_Escape_issue46.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
@@ -487,7 +488,7 @@ class MainTest extends Specification {
 
         "chap11/Listing_11_03_MarkupBuilderPlain.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_04_NodeBuilder.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap11/Listing_11_05_NodeBuilderLogic.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap11/Listing_11_05_NodeBuilderLogic.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_06_MarkupBuilderLogic.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_07_MarkupBuilderHtml.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap11/Listing_11_08_StreamingMarkupBuilderLogic.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)

@@ -77,7 +77,6 @@ public class StringUtil {
 			if (slashyType == DOLLAR_SLASHY)
 				text = text.replace("$$", "$");
 		} else if (slashyType == NONE_SLASHY) {
-			text = text.replace("\\$", "$");
 			text = StringUtil.replaceEscapes(text);
 		} else {
 			throw new IllegalArgumentException("Invalid slashyType: " + slashyType);
@@ -87,6 +86,9 @@ public class StringUtil {
 	}
 
 	public static String replaceEscapes(String text) {
+		text = text.replace("\\$", "$");
+		text = text.replaceAll("\\\\\r?\n", "");
+
         return replaceStandardEscapes(replaceHexEscapes(replaceOctalEscapes(text)));
     }
 
