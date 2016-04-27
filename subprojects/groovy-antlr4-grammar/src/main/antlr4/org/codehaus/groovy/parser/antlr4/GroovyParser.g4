@@ -274,6 +274,29 @@ annotationParameter:
     | closureExpressionRule # annotationParamClosureExpression
 ;
 
+// Reference: https://github.com/apache/groovy/blob/master/src/main/org/codehaus/groovy/antlr/groovy.g#L2276
+// The operators have the following precedences:
+//      lowest  ( 15)  = **= *= /= %= += -= <<= >>= >>>= &= ^= |= (assignments)
+//              ( 14)  ?: (conditional expression and elvis)
+//              ( 13)  || (logical or)
+//              ( 12)  && (logical and)
+//              ( 11)  | ()binary or
+//              ( 10)  ^ (binary xor)
+//              (  9)  & (binary and)
+//              (8.5)  =~ ==~ (regex find/match)
+//              (  8)  == != <=> === !== (equals, not equals, compareTo)
+//              (  7)  < <= > >= instanceof as in (relational, in, instanceof, type coercion)
+//              (  6)  << >> >>> .. ..< (shift, range)
+//              (  5)  + - (addition, subtraction)
+//              (  4)  * / % (multiply div modulo)
+//              (  3)  ++ -- + - (pre dec/increment, unary signs)
+//              (  2)  ** (power)
+//              (  1)  ~ ! $ (type) (negate, not, typecast)
+//                     ?. * *. *: (safe dereference, spread, spread-dot, spread-map)
+//                     . .& .@ (member access, method closure, field/attribute access)
+//                     [] ++ -- (list/map/array index, post inc/decrement)
+//                     () {} [] (method call, closableBlock, list/map literal)
+//                     new () (object creation, explicit parenthesis)
 expression:
       STRING  #constantExpression
     | gstring #gstringExpression
@@ -296,8 +319,7 @@ expression:
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
 
-    | (PLUS | MINUS) expression #unaryExpression
-    | (DECREMENT | INCREMENT) expression #prefixExpression
+
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
     // exclude this and super to support this(...) and super(...) in the contructor
@@ -307,30 +329,33 @@ expression:
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
     | (NOT | BNOT) expression #unaryExpression
+
     | expression POWER NL* expression #binaryExpression
+
+    | (PLUS | MINUS) expression #unaryExpression
+    | (DECREMENT | INCREMENT) expression #prefixExpression
+
     | expression (MULT | DIV | MOD) NL* expression #binaryExpression
     | expression (PLUS | MINUS) NL* expression #binaryExpression
 
-    | expression (LSHIFT | GT GT | GT GT GT) NL* expression #binaryExpression
     | expression (RANGE | ORANGE) NL* expression #binaryExpression
-    | expression KW_IN NL* expression #binaryExpression
-    | expression KW_AS NL* genericClassNameExpression #binaryExpression
-    | expression KW_INSTANCEOF NL* genericClassNameExpression #binaryExpression
+    | expression (LSHIFT | GT GT | GT GT GT) NL* expression #binaryExpression
 
-    | expression SPACESHIP NL* expression #binaryExpression
-    | expression GT NL* expression #binaryExpression
-    | expression GTE NL* expression #binaryExpression
-    | expression LT NL* expression #binaryExpression
-    | expression LTE NL* expression #binaryExpression
-    | expression EQUAL NL* expression #binaryExpression
-    | expression UNEQUAL NL* expression #binaryExpression
-    | expression FIND NL* expression #binaryExpression
-    | expression MATCH NL* expression #binaryExpression
+    | expression KW_IN NL* expression #binaryExpression
+    | expression (KW_AS | KW_INSTANCEOF) NL* genericClassNameExpression #binaryExpression
+    | expression (LT | LTE | GT | GTE) NL* expression #binaryExpression
+
+    | expression (EQUAL | UNEQUAL | SPACESHIP) NL* expression #binaryExpression
+
+    | expression (FIND | MATCH) NL* expression #binaryExpression
+
     | expression BAND NL* expression #binaryExpression
-    |<assoc=right> expression XOR NL* expression #binaryExpression
+    | expression XOR NL* expression #binaryExpression
     | expression BOR NL* expression #binaryExpression
+
     | expression NL* AND NL* expression #binaryExpression
     | expression NL* OR NL* expression #binaryExpression
+
     |<assoc=right> expression NL* QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
     | expression NL* ELVIS NL* expression #elvisExpression
 
