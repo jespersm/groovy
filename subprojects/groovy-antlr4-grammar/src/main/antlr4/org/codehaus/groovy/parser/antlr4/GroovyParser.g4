@@ -302,7 +302,7 @@ expression:
 
     // exclude this and super to support this(...) and super(...) in the contructor
     | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?      callExpressionRule       #callExpression
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT)  callExpressionRule       #callExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* callExpressionRule                       #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
@@ -338,7 +338,7 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
-callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN argumentList? NL* RPAREN closureExpressionRule*
+callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | c=closureExpressionRule) argumentList
                   ;
 
