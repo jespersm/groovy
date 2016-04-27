@@ -133,7 +133,7 @@ fragment TSQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
                              | ~('\'' | '\\')
                              )
                              ;
-fragment SQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
+fragment SQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
                              | ~('\'' | '\\')
                              ;
 fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
@@ -141,7 +141,7 @@ fragment TDQ_STRING_ELEMENT: (ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
                              | ~('"'  | '\\' | '$')
                              )
                              ;
-fragment DQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE
+fragment DQ_STRING_ELEMENT:   ESC_SEQUENCE | DOLLAR_ESCAPE | JOIN_LINE_ESCAPE
                              | ~('"'  | '\\' | '$')
                              ;
 
