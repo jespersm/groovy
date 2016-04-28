@@ -175,7 +175,7 @@ typeDeclaration:
     (genericClassNameExpression | KW_DEF)
 ;
 
-annotationClause: //FIXME handle assignment expression.
+annotationClause:
     AT genericClassNameExpression ( LPAREN ((annotationElementPair (COMMA annotationElementPair)*) | annotationElement)? RPAREN )?
 ;
 annotationElementPair: IDENTIFIER ASSIGN NL* annotationElement ;
@@ -200,9 +200,9 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule: annotationClause* KW_FINAL? ( typeDeclaration singleDeclaration ( COMMA singleDeclaration)*
-                                             | KW_DEF tupleDeclaration
-                                             );
+declarationRule:  ( (annotationClause* KW_FINAL? (annotationClause* typeDeclaration | annotationClause+) | annotationClause* KW_FINAL annotationClause*) singleDeclaration ( COMMA singleDeclaration)*
+                  | annotationClause* KW_FINAL? KW_DEF tupleDeclaration
+                  );
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;

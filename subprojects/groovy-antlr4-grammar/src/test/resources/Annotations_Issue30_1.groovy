@@ -31,3 +31,9 @@ class A {
 
     @Transient(1) @Log private <T> T singleValueMethod(@Deprecated int a) {}
 }
+
+@Field a = 1;
+@Field final a = 1;
+@Field final @Field a = 1;
+@Field final int a = 1;
+@Field final @Field int a = 1;
