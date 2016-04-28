@@ -311,23 +311,30 @@ public class ASTBuilder {
     public ClassNode parseClassDeclaration(final GroovyParser.ClassDeclarationContext ctx) {
         boolean isEnum = asBoolean(ctx.KW_ENUM());
 
-        final ClassNode parentClass = asBoolean(classes) ? classes.peek() : null;
+        final ClassNode outerClass = asBoolean(classes) ? classes.peek() : null;
         ClassNode[] interfaces = asBoolean(ctx.implementsClause())
                 ? DefaultGroovyMethods.asType(collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
-            public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {return parseExpression(it);}
-        }), ClassNode[].class)
+                                                                                                                public ClassNode doCall(GroovyParser.GenericClassNameExpressionContext it) {
+                                                                                                                    return parseExpression(it);
+                                                                                                                }
+                                                                                                            }),
+                                                ClassNode[].class)
                 : new ClassNode[0];
 
         ClassNode classNode;
-        if (parentClass != null) {
-            String string = parentClass.getName() + "$" + String.valueOf(ctx.IDENTIFIER());
-            classNode = new InnerClassNode(parentClass, string, Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
-        } else {
-            final String name = moduleNode.getPackageName();
-            classNode = isEnum ? EnumHelper.makeEnumNode(ctx.IDENTIFIER().getText(), Modifier.PUBLIC, interfaces, null)
-                    : new ClassNode((name != null && asBoolean(name) ? name : "") + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
-        }
+        String packageName = moduleNode.getPackageName();
+        packageName = packageName != null && asBoolean(packageName) ? packageName : "";
 
+        if (isEnum) {
+            classNode = EnumHelper.makeEnumNode(asBoolean(outerClass) ? ctx.IDENTIFIER().getText() : packageName + ctx.IDENTIFIER().getText(), Modifier.PUBLIC, interfaces, outerClass);
+        } else {
+            if (outerClass != null) {
+                String name = outerClass.getName() + "$" + String.valueOf(ctx.IDENTIFIER());
+                classNode = new InnerClassNode(outerClass, name, Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
+            } else {
+                classNode = new ClassNode(packageName + String.valueOf(ctx.IDENTIFIER()), Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
+            }
+        }
 
         setupNodeLocation(classNode, ctx);
         attachAnnotations(classNode, ctx.annotationClause());

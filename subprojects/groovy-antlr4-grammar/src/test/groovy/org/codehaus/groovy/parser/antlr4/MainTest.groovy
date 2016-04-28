@@ -134,6 +134,7 @@ class MainTest extends Specification {
         "SynchronizedStatement.groovy" | _
         "VarArg.groovy" | _
         "Join_Line_Escape_issue46.groovy" | _
+        "Enums_Inner.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
@@ -569,7 +570,7 @@ class MainTest extends Specification {
         "chap13/snippet1301_ReadQuery.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap13/snippet1301_ReadRows.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap13/util/DbUtil.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap13/util/MarathonRelationships.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap13/util/MarathonRelationships.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap13/util/Neo4jUtil.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
 
