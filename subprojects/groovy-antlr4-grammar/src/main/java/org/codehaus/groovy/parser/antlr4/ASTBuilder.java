@@ -1655,7 +1655,9 @@ public class ASTBuilder {
         ClassNode classNode = parseExpression(ctx.classNameExpression());
 
         if (asBoolean(ctx.LBRACK())) {
-            classNode = classNode.makeArray();
+            for (int i = 0, n = ctx.LBRACK().size(); i < n; i++) {
+                classNode = classNode.makeArray();
+            }
         } else {
             // Groovy's bug? array's generics type will be ignored. e.g. List<String>[]... p
             classNode.setGenericsTypes(parseGenericList(ctx.genericList()));

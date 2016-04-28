@@ -369,7 +369,7 @@ callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) 
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
 
-genericClassNameExpression: classNameExpression genericList? (LBRACK RBRACK)? (ELLIPSIS { isEllipsisEnabled() }?<fail={ "The var-arg only be allowed to appear as the last parameter" }>)?;
+genericClassNameExpression: classNameExpression genericList? (LBRACK RBRACK)* (ELLIPSIS { isEllipsisEnabled() }?<fail={ "The var-arg only be allowed to appear as the last parameter" }>)?;
 
 genericList:
     LT genericListElement (COMMA genericListElement)* GT

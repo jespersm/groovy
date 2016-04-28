@@ -9,6 +9,23 @@ class A {
 }
 
 
+String[][] a = [
+        ['1', '2'],
+        ['3', '4']
+]
+
+List<String[][]> b = [[
+                              ['1', '2'],
+                              ['3', '4']
+                      ],
+                      [
+                              ['a', 'b'],
+                              ['c', 'd']
+                      ]];
+
+List<String>[][][] c = null;
+int[][][][] d = null;
+
 /*
    public java.lang.Object run() {
         a = {
