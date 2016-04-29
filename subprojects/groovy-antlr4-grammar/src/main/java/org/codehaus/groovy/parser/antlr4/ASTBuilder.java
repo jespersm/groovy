@@ -212,13 +212,21 @@ public class ASTBuilder {
         }
     }
 
-    private void unpackStatement(BlockStatement destination, Statement stmt) {
+    private void unpackStatement(BlockStatement blockStatement, Statement stmt) {
         if (stmt instanceof DeclarationList) {
+            String label = stmt.getStatementLabel();
+
             for (DeclarationExpression decl : ((DeclarationList)stmt).declarations) {
-                destination.addStatement(setupNodeLocation(new ExpressionStatement(decl), decl));
+                Statement declarationStatement = new ExpressionStatement(decl);
+
+                if (null != label) {
+                    declarationStatement.setStatementLabel(label);
+                }
+
+                blockStatement.addStatement(setupNodeLocation(declarationStatement, decl));
             }
         } else {
-            destination.addStatement(stmt);
+            blockStatement.addStatement(stmt);
         }
     }
 
