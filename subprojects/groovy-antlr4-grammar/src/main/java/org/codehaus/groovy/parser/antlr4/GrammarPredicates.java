@@ -39,53 +39,6 @@ public class GrammarPredicates {
         return GroovyParser.BUILT_IN_TYPE == token.getType() || Character.isUpperCase(token.getText().codePointAt(0));
     }
 
-    /**
-     * Check if the method/closure name is followed by LPAREN
-     *
-     * @param tokenStream
-     * @return
-     */
-    public static boolean isFollowedByLPAREN(TokenStream tokenStream) {
-        int index = 1;
-        Token token = tokenStream.LT(index);
-        int tokenType = token.getType();
-
-        if (tokenType == GroovyParser.GSTRING_START) { // gstring
-            do {
-                token = tokenStream.LT(++index);
-                tokenType = token.getType();
-
-                if (tokenType == GroovyParser.EOF) {
-                    return false;
-                }
-            } while (tokenType != GroovyParser.GSTRING_END);
-        } else if (tokenType == GroovyParser.LCURVE) { // closure
-            Deque<Integer> braceStack = new ArrayDeque<Integer>();
-            braceStack.push(tokenType);
-
-            do {
-                token = tokenStream.LT(++index);
-                tokenType = token.getType();
-
-                if (tokenType == GroovyParser.EOF) {
-                    return false;
-                } else if (tokenType == GroovyParser.LCURVE) {
-                    braceStack.push(tokenType);
-                } else if (tokenType == GroovyParser.RCURVE) {
-                    braceStack.pop();
-                }
-            } while (!braceStack.isEmpty());
-        }
-
-        // ignore the newlines
-        do {
-            token = tokenStream.LT(++index);
-            tokenType = token.getType();
-        } while (tokenType == GroovyParser.NL);
-
-        return tokenType == GroovyParser.LPAREN;
-    }
-
     public static boolean isKeyword(TokenStream tokenStream, int... excludedKeywords) {
         int tokenType = tokenStream.LT(1).getType();
 
@@ -127,4 +80,57 @@ public class GrammarPredicates {
 
         return false;
     }
+
+    /**
+     * Check if the method/closure name is followed by LPAREN
+     *
+     * @param tokenStream
+     * @return
+     */
+    public static boolean isFollowedByLPAREN(TokenStream tokenStream) {
+        int index = 1;
+        Token token = tokenStream.LT(index);
+        int tokenType = token.getType();
+
+        if (tokenType == GroovyParser.GSTRING_START) { // gstring
+            index = consumeTokenPair(tokenStream, index, GroovyParser.GSTRING_START, GroovyParser.GSTRING_END);
+        } else if (tokenType == GroovyParser.LCURVE) { // closure
+            index = consumeTokenPair(tokenStream, index, GroovyParser.LCURVE, GroovyParser.RCURVE);
+        }
+
+        if (-1 == index) { // EOF reached.
+            return false;
+        }
+
+        // ignore the newlines
+        do {
+            token = tokenStream.LT(++index);
+            tokenType = token.getType();
+        } while (tokenType == GroovyParser.NL);
+
+        return tokenType == GroovyParser.LPAREN;
+    }
+
+    private static int consumeTokenPair(TokenStream tokenStream, int index, int beginTokenType, int endTokenType) {
+        int tokenCnt = 1;
+
+        Token token;
+        int tokenType;
+
+        do {
+            token = tokenStream.LT(++index);
+            tokenType = token.getType();
+
+            if (tokenType == GroovyParser.EOF) {
+                return -1;
+            } else if (tokenType == beginTokenType) {
+                tokenCnt++;
+            } else if (tokenType == endTokenType) {
+                tokenCnt--;
+            }
+        } while (tokenCnt != 0);
+
+        return index;
+    }
+
 }

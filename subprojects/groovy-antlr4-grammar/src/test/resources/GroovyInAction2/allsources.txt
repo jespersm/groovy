@@ -505,7 +505,7 @@
 [TODO]	./chap17/cobertura/src/test/groovy/BiggestPairCalcTest.groovy
 [TODO]	./chap17/Converter.groovy
 [TODO]	./chap17/Counter.groovy
-[TODO]	./chap17/extra_ParameterizedTestNG.groovy
+[FIXME]	./chap17/extra_ParameterizedTestNG.groovy       // ISSUE#48(Identifier in the gstring can not be recognized properly when mixing special characters)
 [TODO]	./chap17/extra_TestNG.groovy
 [TODO]	./chap17/Farm.groovy
 [TODO]	./chap17/Listing_17_01_Celsius.groovy
