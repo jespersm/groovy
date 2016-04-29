@@ -733,6 +733,13 @@ class MainTest extends Specification {
         "chap19/xform/extra_WhenTransformationWorksWithoutBraces.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/xform/snippet1906_WhenUntilXform_Structure.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
+        "chap20/Listing_20_01_Grapes_for_twitter_urls.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap20/Listing_20_02_Scriptom_Windows_only.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap20/Listing_20_03_ActivX_Windows_only.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap20/Listing_20_10_SquaringMapValue.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap20/Listing_20_11_Synchronized.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap20/Listing_20_12_DbC_invariants.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+
     }
 
     @Unroll
