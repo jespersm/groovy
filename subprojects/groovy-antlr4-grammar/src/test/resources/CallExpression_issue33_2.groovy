@@ -8,3 +8,7 @@ println a."${hello}"('world') {
 println a."${"$hello"}"('world') {
 }
 
+a."${"$hello"}" 'world', {
+}
+
+
