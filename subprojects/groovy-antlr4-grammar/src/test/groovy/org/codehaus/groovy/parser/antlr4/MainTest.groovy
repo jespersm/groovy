@@ -18,12 +18,7 @@
  */
 package org.codehaus.groovy.parser.antlr4
 
-import org.codehaus.groovy.ast.ConstructorNode
-import org.codehaus.groovy.ast.FieldNode
-import org.codehaus.groovy.ast.GenericsType
-import org.codehaus.groovy.ast.MethodNode
-import org.codehaus.groovy.ast.Parameter
-import org.codehaus.groovy.ast.PropertyNode
+import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
@@ -686,8 +681,8 @@ class MainTest extends Specification {
         "chap19/Listing_19_32_UntilControlStructure.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_39_GivenWhenThen.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_43_FetchOptionsScript.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap19/Listing_19_44_RubyStyleNewify.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "chap19/Listing_19_45_PythonStyleNewify.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap19/Listing_19_44_RubyStyleNewify.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap19/Listing_19_45_PythonStyleNewify.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
 //FIXME        "chap19/Listing_19_46_Terms.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_48_No_IO.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_49_ArithmeticShell.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)

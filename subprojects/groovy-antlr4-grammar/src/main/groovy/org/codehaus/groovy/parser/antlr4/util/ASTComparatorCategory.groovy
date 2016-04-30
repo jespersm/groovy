@@ -40,7 +40,7 @@ class ASTComparatorCategory {
             (PropertyNode): ['declaringClass', 'initialValueExpression'],
             (Variable): [],
             (VariableScope): ["clazzScope", "parent"],
-            (Token): ["root", "startColumn"],
+            (Token): ["root", "startColumn", "startLine"],
             (AnnotationNode): (["text"] + LOCATION_IGNORE_LIST) as List<String>,
             (AssertStatement): ["text"],
             (BlockStatement): ["columnNumber", "lineNumber", "lastColumnNumber", "lastLineNumber", "text"],

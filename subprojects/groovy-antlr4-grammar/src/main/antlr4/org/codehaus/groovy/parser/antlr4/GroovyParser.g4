@@ -188,8 +188,8 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule:  ( (annotationClause* KW_FINAL? (annotationClause* typeDeclaration | annotationClause+) | annotationClause* KW_FINAL annotationClause*) singleDeclaration ( COMMA singleDeclaration)*
-                  | annotationClause* KW_FINAL? KW_DEF tupleDeclaration
+declarationRule:  ( ((annotationClause NL*)* KW_FINAL? ((annotationClause NL*)* typeDeclaration | (annotationClause NL*)+) | (annotationClause NL*)* KW_FINAL (annotationClause NL*)*) singleDeclaration ( COMMA singleDeclaration)*
+                  | (annotationClause NL*)* KW_FINAL? KW_DEF tupleDeclaration
                   );
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
