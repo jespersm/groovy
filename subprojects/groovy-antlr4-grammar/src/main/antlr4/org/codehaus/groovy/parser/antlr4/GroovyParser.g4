@@ -29,18 +29,6 @@ options { tokenVocab = GroovyLexer; }
 @members {
     private String currentClassName = null; // Used for correct constructor recognition.
 
-    private boolean declarationRuleInExpressionEnabled = false;
-
-    private boolean isDeclarationRuleInExpressionEnabled() {
-        return declarationRuleInExpressionEnabled;
-    }
-    private void enableDeclarationRuleInExpression() {
-        declarationRuleInExpressionEnabled = true;
-    }
-    private void disableDeclarationRuleInExpression() {
-        declarationRuleInExpressionEnabled = false;
-    }
-
     private boolean ellipsisEnabled = false;
 
     private boolean isEllipsisEnabled() {
@@ -213,9 +201,9 @@ statement:
       declarationRule #declarationStatement
     | newArrayRule #newArrayStatement
     | newInstanceRule #newInstanceStatement
-    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} (expression)? {disableDeclarationRuleInExpression();} SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
-    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} typeDeclaration? IDENTIFIER {disableDeclarationRuleInExpression();} KW_IN expression RPAREN NL* statementBlock #forInStatement
-    | KW_FOR LPAREN {enableDeclarationRuleInExpression();} typeDeclaration  IDENTIFIER {disableDeclarationRuleInExpression();} COLON expression RPAREN NL* statementBlock #forColonStatement
+    | KW_FOR LPAREN (declarationRule | expression)? SEMICOLON expression? SEMICOLON expression? RPAREN NL* statementBlock #classicForStatement
+    | KW_FOR LPAREN typeDeclaration? IDENTIFIER KW_IN expression RPAREN NL* statementBlock #forInStatement
+    | KW_FOR LPAREN typeDeclaration  IDENTIFIER COLON expression RPAREN NL* statementBlock #forColonStatement
     | KW_IF LPAREN expression RPAREN NL* statementBlock NL* (KW_ELSE NL* statementBlock)? #ifStatement
     | KW_WHILE LPAREN expression RPAREN NL* statementBlock #whileStatement
     | KW_SWITCH LPAREN expression RPAREN NL* LCURVE
@@ -274,7 +262,7 @@ annotationParameter:
     | closureExpressionRule # annotationParamClosureExpression
 ;
 
-// Reference: https://github.com/apache/groovy/blob/master/src/main/org/codehaus/groovy/antlr/groovy.g#L2276
+// (!!! OUTDATED !!!)Reference: https://github.com/apache/groovy/blob/master/src/main/org/codehaus/groovy/antlr/groovy.g#L2276
 // The operators have the following precedences:
 //      lowest  ( 15)  = **= *= /= %= += -= <<= >>= >>>= &= ^= |= (assignments)
 //              ( 14)  ?: (conditional expression and elvis)
@@ -310,7 +298,6 @@ expression:
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression
-    | {isDeclarationRuleInExpressionEnabled()}?  declarationRule #declarationExpression
     | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
     | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
@@ -322,7 +309,7 @@ expression:
 
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    // exclude this and super to support this(...) and super(...) in the contructor
+    // exclude this and super to support this(...) and super(...) in the constructors
     | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?      callExpressionRule       #callExpression
     | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* callExpressionRule                       #callExpression
 

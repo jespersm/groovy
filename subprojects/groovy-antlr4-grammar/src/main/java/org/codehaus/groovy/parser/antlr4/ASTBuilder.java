@@ -653,6 +653,16 @@ public class ASTBuilder {
         return setupNodeLocation(new WhileStatement(new BooleanExpression(parseExpression(ctx.expression())), parse(ctx.statementBlock())), ctx);
     }
 
+    public Expression parseExpression(GroovyParser.DeclarationRuleContext ctx) {
+        List<?> declarations = parseDeclaration(ctx);
+
+        if (declarations.size() == 1) {
+            return setupNodeLocation((Expression) declarations.get(0), ctx);
+        } else {
+            return new ClosureListExpression((List<Expression>)declarations);
+        }
+    }
+
     public Statement parseStatement(GroovyParser.ClassicForStatementContext ctx) {
         ClosureListExpression expression = new ClosureListExpression();
 
@@ -660,12 +670,19 @@ public class ASTBuilder {
         for (ParseTree c : ctx.children) {
             // FIXME terrible logic.
             Boolean isSemicolon = c instanceof TerminalNode && (((TerminalNode)c).getSymbol().getText().equals(";") || ((TerminalNode)c).getSymbol().getText().equals("(") || ((TerminalNode)c).getSymbol().getText().equals(")"));
-            if (captureNext && isSemicolon) expression.addExpression(EmptyExpression.INSTANCE);
-            else if (captureNext && c instanceof GroovyParser.ExpressionContext)
-                expression.addExpression(parseExpression((GroovyParser.ExpressionContext)c));
+
+            if (captureNext) {
+                if (isSemicolon) {
+                    expression.addExpression(EmptyExpression.INSTANCE);
+                } else if (c instanceof GroovyParser.ExpressionContext) {
+                    expression.addExpression(parseExpression((GroovyParser.ExpressionContext)c));
+                } else if (c instanceof GroovyParser.DeclarationRuleContext) {
+                    expression.addExpression(parseExpression((GroovyParser.DeclarationRuleContext) c));
+                }
+            }
+
             captureNext = isSemicolon;
         }
-
 
         Parameter parameter = ForStatement.FOR_LOOP_DUMMY;
         return setupNodeLocation(new ForStatement(parameter, expression, parse(ctx.statementBlock())), ctx);
@@ -914,8 +931,6 @@ public class ASTBuilder {
             return parseExpression((GroovyParser.CallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.CastExpressionContext)
             return parseExpression((GroovyParser.CastExpressionContext)ctx);
-        else if (ctx instanceof GroovyParser.DeclarationExpressionContext)
-            return parseExpression((GroovyParser.DeclarationExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.ElvisExpressionContext)
             return parseExpression((GroovyParser.ElvisExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.BinaryExpressionContext)
@@ -1452,17 +1467,6 @@ public class ASTBuilder {
 
         return setupNodeLocation(new BinaryExpression(left, token, right), ctx);
     }
-
-    public Expression parseExpression(GroovyParser.DeclarationExpressionContext ctx) {
-        List<?> declarations = parseDeclaration(ctx.declarationRule());
-
-        if (declarations.size() == 1) {
-            return setupNodeLocation((Expression) declarations.get(0), ctx);
-        } else {
-            return new ClosureListExpression((List<Expression>)declarations);
-        }
-    }
-
 
     public Expression collectPathExpression(GroovyParser.PathExpressionContext ctx) {
         List<TerminalNode> identifiers = ctx.IDENTIFIER();
