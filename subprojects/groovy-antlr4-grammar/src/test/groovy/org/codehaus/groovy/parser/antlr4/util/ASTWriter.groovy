@@ -101,9 +101,10 @@ class ASTWriter implements GroovyCodeVisitor, GroovyClassVisitor {
 
             visitAllImports(module)
 
-            module?.classes?.each {
+            new LinkedList<ClassNode>(module?.classes ?: []).sort {c1, c2 -> c1.name <=> c2.name}?.each {
                 visitClass(it)
             }
+
             module.getStatementBlock()?.visit(this)
         }
 

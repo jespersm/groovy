@@ -101,6 +101,10 @@ class ASTComparatorCategory {
             (VariableExpression): EXPRESSION_IGNORE_LIST,
     ];
 
+    static Map<Class, List<String>> COLLECTION_PROPERTY_CONFIGURATION = [
+            (ModuleNode): ["classes", "name"]
+    ]
+
     static Map<Class, List<String>> configuration = DEFAULT_CONFIGURATION;
 
     static void apply(config = DEFAULT_CONFIGURATION, Closure cl) {
@@ -146,6 +150,21 @@ class ASTComparatorCategory {
             def name = p.name
             lastName = "$name :::: ${ a.getClass() } ${ a.hashCode() }"
 
+
+            for (Map.Entry<Class, List<String>> me : COLLECTION_PROPERTY_CONFIGURATION) {
+                if (!(me.key.isCase(a) && me.key.isCase(b))) {
+                    continue;
+                }
+
+                String propName = me.value[0];
+                def aValue = a."${propName}";
+                def bValue = b."${propName}";
+
+                String orderName = me.value[1];
+
+                return new LinkedList(aValue?.getClass()?.isArray() ? Arrays.asList(aValue) : (aValue ?: [])).sort {c1, c2 -> c1."${orderName}" <=> c2."${orderName}"} !=
+                        new LinkedList(bValue?.getClass()?.isArray() ? Arrays.asList(bValue) : (bValue ?: [])).sort {c1, c2 -> c1."${orderName}" <=> c2."${orderName}"}
+            }
 
             !(name in ignore) && name != 'nodeMetaData' && a."$name" != b."$name"
         }

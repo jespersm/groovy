@@ -310,6 +310,13 @@ public class ASTBuilder {
                         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
                         methodNode.setAnnotationDefault(true);
 
+                        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
+                            public MethodNode doCall(InnerClassNode it) {
+                                it.setEnclosingMethod(methodNode);
+                                return methodNode;
+                            }
+                        });
+
                         return methodNode;
                     }
                 }
@@ -562,7 +569,7 @@ public class ASTBuilder {
                 : Opcodes.ACC_PUBLIC;
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
-        this.innerClassesDefinedInMethod.add(new ArrayList());
+        this.innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
         final ConstructorNode constructorNode = classNode.addConstructor(modifiers, parseParameters(ctx.argumentDeclarationList()), exceptions, parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class)));
         DefaultGroovyMethods.each(this.innerClassesDefinedInMethod.pop(), new Closure<ConstructorNode>(null, null) {
             public ConstructorNode doCall(InnerClassNode it) {
@@ -1956,12 +1963,24 @@ public class ASTBuilder {
         if (!asBoolean(ctx.classBody())) {
             expression = setupNodeLocation(new ConstructorCallExpression(creatingClass, createArgumentList(ctx.argumentList())), ctx);
         } else {
-            ClassNode outer = this.classes.peek();
+            ClassNode outer;
+
+            if (!this.classes.isEmpty()) {
+                outer = this.classes.peek();
+            } else {
+                outer = moduleNode.getScriptClassDummy();
+            }
+
             InnerClassNode classNode = new InnerClassNode(outer, outer.getName() + "$" + String.valueOf((this.anonymousClassesCount = ++this.anonymousClassesCount)), Opcodes.ACC_PUBLIC, ClassHelper.make(creatingClass.getName()));
+
             expression = setupNodeLocation(new ConstructorCallExpression(classNode, createArgumentList(ctx.argumentList())), ctx);
             expression.setUsingAnonymousInnerClass(true);
             classNode.setAnonymous(true);
-            DefaultGroovyMethods.last(this.innerClassesDefinedInMethod).add(classNode);
+
+            if (!this.innerClassesDefinedInMethod.isEmpty()) {
+                DefaultGroovyMethods.last(this.innerClassesDefinedInMethod).add(classNode);
+            }
+
             this.moduleNode.addClass(classNode);
             this.classes.add(classNode);
             parseClassBody(classNode, ctx.classBody());

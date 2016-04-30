@@ -138,7 +138,7 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
     |
         genericClassNameExpression
     )
-    (IDENTIFIER | STRING) LPAREN argumentDeclarationList RPAREN throwsClause? (KW_DEFAULT annotationParameter | methodBody)?
+    (IDENTIFIER | STRING) LPAREN NL* argumentDeclarationList NL* RPAREN throwsClause? (KW_DEFAULT annotationParameter | methodBody)?
 ;
 
 methodBody:
@@ -194,7 +194,7 @@ declarationRule:  ( ((annotationClause NL*)* KW_FINAL? ((annotationClause NL*)* 
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
-newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN argumentList? RPAREN) (classBody[false])?;
+newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN NL* argumentList? NL* RPAREN) (classBody[false])?;
 newArrayRule: KW_NEW classNameExpression (LBRACK INTEGER RBRACK)+ ;
 
 statement:
