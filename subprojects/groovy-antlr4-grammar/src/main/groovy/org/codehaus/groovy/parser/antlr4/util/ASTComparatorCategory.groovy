@@ -157,6 +157,11 @@ class ASTComparatorCategory {
                 }
 
                 String propName = me.value[0];
+
+                if (name != propName) {
+                    continue;
+                }
+
                 def aValue = a."${propName}";
                 def bValue = b."${propName}";
 
