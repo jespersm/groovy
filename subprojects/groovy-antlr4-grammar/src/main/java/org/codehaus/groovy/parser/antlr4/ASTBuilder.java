@@ -290,7 +290,14 @@ public class ASTBuilder {
 
         String methodName = (null != ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : parseString(ctx.STRING());
 
-        MethodNode methodNode = createMethodNode.call(classNode, ctx, methodName, modifiers, returnType, params, exceptions, statement, innerClassesDeclared);
+        final MethodNode methodNode = createMethodNode.call(classNode, ctx, methodName, modifiers, returnType, params, exceptions, statement);
+
+        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
+            public MethodNode doCall(InnerClassNode it) {
+                it.setEnclosingMethod(methodNode);
+                return methodNode;
+            }
+        });
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
@@ -304,18 +311,11 @@ public class ASTBuilder {
     public MethodNode parseScriptMethod(final GroovyParser.MethodDeclarationContext ctx) {
 
         return parseMethodDeclaration(null, ctx, new Closure<MethodNode>(this, this) {
-                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
+                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement) {
 
                         final MethodNode methodNode = new MethodNode(methodName, modifiers, returnType, params, exceptions, statement);
                         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
                         methodNode.setAnnotationDefault(true);
-
-                        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
-                            public MethodNode doCall(InnerClassNode it) {
-                                it.setEnclosingMethod(methodNode);
-                                return methodNode;
-                            }
-                        });
 
                         return methodNode;
                     }
@@ -485,7 +485,7 @@ public class ASTBuilder {
         }
 
         return parseMethodDeclaration(classNode, ctx, new Closure<MethodNode>(this, this) {
-                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement, List<InnerClassNode> innerClassesDeclared) {
+                    public MethodNode doCall(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx, String methodName, int modifiers, ClassNode returnType, Parameter[] params, ClassNode[] exceptions, Statement statement) {
                         modifiers |= classNode.isInterface() ? Opcodes.ACC_ABSTRACT : 0;
 
                         if (ctx.KW_DEFAULT() != null) {
@@ -494,12 +494,7 @@ public class ASTBuilder {
 
                         final MethodNode methodNode = classNode.addMethod(methodName, modifiers, returnType, params, exceptions, statement);
                         methodNode.setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));
-                        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
-                            public MethodNode doCall(InnerClassNode it) {
-                                it.setEnclosingMethod(methodNode);
-                                return methodNode;
-                            }
-                        });
+
 
                         if (ctx.KW_DEFAULT() != null) {
                             methodNode.setAnnotationDefault(true);
