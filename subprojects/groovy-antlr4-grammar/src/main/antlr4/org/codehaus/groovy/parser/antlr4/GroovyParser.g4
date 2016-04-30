@@ -98,13 +98,13 @@ importStatement:
     (annotationClause (NL | annotationClause)*)? KW_IMPORT KW_STATIC? (IDENTIFIER (DOT IDENTIFIER)* (DOT MULT)?) (KW_AS IDENTIFIER)?;
 
 classDeclaration
-locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum=false]
+locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum = false, boolean isInterface = false]
 :
     (
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE | KW_TRAIT | KW_ENUM {$isEnum=true;}) IDENTIFIER { currentClassName = $IDENTIFIER.text; }
-    ({!$isEnum}? genericDeclarationList? extendsClause?
+    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE {$isInterface=true;} | KW_TRAIT | KW_ENUM {$isEnum=true;}) IDENTIFIER { currentClassName = $IDENTIFIER.text; }
+    ({!$isEnum}? genericDeclarationList? (extendsClause[$isInterface])?
     |
     )
     implementsClause? (NL)*
@@ -124,7 +124,8 @@ classBody[boolean isEnum]
       RCURVE;
 
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
-extendsClause:  KW_EXTENDS genericClassNameExpression ;
+extendsClause[boolean isInterface]
+    :  KW_EXTENDS genericClassNameExpression (COMMA {$isInterface}?<fail={"Only interface allows multi-inheritance"}> genericClassNameExpression)* ;
 
 // Members
 methodDeclaration

@@ -359,11 +359,24 @@ public class ASTBuilder {
         }
 
         moduleNode.addClass(classNode);
-        if (asBoolean(ctx.extendsClause()))
-            (classNode).setSuperClass(parseExpression(ctx.extendsClause().genericClassNameExpression()));
+        if (asBoolean(ctx.extendsClause())) {
+            if (asBoolean(ctx.KW_INTERFACE()) && !asBoolean(ctx.AT())) { // interface(NOT annotation)
+                List<ClassNode> interfaceList = new LinkedList<ClassNode>();
+                for (GroovyParser.GenericClassNameExpressionContext genericClassNameExpressionContext : ctx.extendsClause().genericClassNameExpression()) {
+                    interfaceList.add(parseExpression(genericClassNameExpressionContext));
+                }
+                (classNode).setInterfaces(interfaceList.toArray(new ClassNode[0]));
+                (classNode).setSuperClass(ClassHelper.OBJECT_TYPE);
+            } else {
+                (classNode).setSuperClass(parseExpression(ctx.extendsClause().genericClassNameExpression(0)));
+            }
 
-        if (asBoolean(ctx.implementsClause()))
+        }
+
+        if (asBoolean(ctx.implementsClause())) {
             (classNode).setInterfaces(interfaces);
+        }
+
 
         if (!isEnum) {
             (classNode).setGenericsTypes(parseGenericDeclaration(ctx.genericDeclarationList()));

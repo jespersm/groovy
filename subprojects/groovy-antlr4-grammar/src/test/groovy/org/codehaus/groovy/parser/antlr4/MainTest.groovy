@@ -131,8 +131,71 @@ class MainTest extends Specification {
         "VarArg.groovy" | _
         "Join_Line_Escape_issue46.groovy" | _
         "Enums_Inner.groovy" | _
+        "Interface.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+
+    }
+
+
+    @Unroll
+    def "test grails-core-3 for #path"() {
+        def filename = path;
+
+        setup:
+        def file = new File("$RESOURCES_PATH/grails-core-3/$path")
+        def moduleNodeNew = new Main(Configuration.NEW).process(file)
+        def moduleNodeOld = new Main(Configuration.OLD).process(file)
+        def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
+        config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
+
+        expect:
+        moduleNodeNew
+        moduleNodeOld
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeOld == moduleNodeOld2
+        }
+        and:
+        ASTWriter.astToString(moduleNodeNew) == ASTWriter.astToString(moduleNodeOld2)
+        and:
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeNew == moduleNodeOld, "Fail in $path"
+        }
+
+        where:
+        path | config
+        "buildSrc/src/main/groovy/org/grails/gradle/GrailsBuildPlugin.groovy" | _
+
+        "grails-async/src/main/groovy/grails/async/DelegateAsync.groovy" | _
+        "grails-async/src/main/groovy/grails/async/Promise.groovy" | _
+//FIXME        "grails-async/src/main/groovy/grails/async/PromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/grails/async/PromiseList.groovy" | _
+        "grails-async/src/main/groovy/grails/async/PromiseMap.groovy" | _
+//FIXME        "grails-async/src/main/groovy/grails/async/Promises.groovy" | _
+//FIXME        "grails-async/src/main/groovy/grails/async/decorator/PromiseDecorator.groovy" | _
+        "grails-async/src/main/groovy/grails/async/decorator/PromiseDecoratorLookupStrategy.groovy" | _
+        "grails-async/src/main/groovy/grails/async/decorator/PromiseDecoratorProvider.groovy" | _
+        "grails-async/src/main/groovy/grails/async/factory/AbstractPromiseFactory.groovy" | _
+//FIXME        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecorator.groovy" | _
+//FIXME        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecoratorLookupStrategy.groovy" | _
+//FIXME        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecoratorProvider.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/AbstractPromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/BoundPromise.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/SynchronousPromise.groovy" | _
+//FIXME        "grails-async/src/main/groovy/org/grails/async/factory/SynchronousPromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/gpars/GparsPromise.groovy" | _
+//FIXME        "grails-async/src/main/groovy/org/grails/async/factory/gpars/GparsPromiseFactory.groovy" | _
+//FIXME        "grails-async/src/main/groovy/org/grails/async/factory/gpars/LoggingPoolFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/reactor/ReactorPromise.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/reactor/ReactorPromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/transform/internal/DelegateAsyncUtils.groovy" | _
+        "grails-async/src/test/groovy/grails/async/DelegateAsyncSpec.groovy" | _
+//FIXME        "grails-async/src/test/groovy/grails/async/PromiseListSpec.groovy" | _
+//FIXME        "grails-async/src/test/groovy/grails/async/PromiseMapSpec.groovy" | _
+//FIXME        "grails-async/src/test/groovy/grails/async/PromiseSpec.groovy" | _
+        "grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy" | _
+//FIXME        "grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy" | _
+
 
     }
 
@@ -737,6 +800,7 @@ class MainTest extends Specification {
 
     }
 
+
     @Unroll
     def "test by evaluating script: #path"() {
         def filename = path;
@@ -799,6 +863,7 @@ class MainTest extends Specification {
             "Statement_Errors_7.groovy" | _
             "Statement_Errors_8.groovy" | _
             "Statement_Errors_9.groovy" | _
+            "Statement_Errors_10.groovy" | _
             "ClassModifiersInvalid_Issue1_2.groovy" | _
             "ClassModifiersInvalid_Issue2_2.groovy" | _
 
