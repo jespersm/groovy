@@ -172,8 +172,8 @@ class MainTest extends Specification {
         "grails-async/src/main/groovy/grails/async/PromiseFactory.groovy" | _
         "grails-async/src/main/groovy/grails/async/PromiseList.groovy" | _
         "grails-async/src/main/groovy/grails/async/PromiseMap.groovy" | _
-//FIXME        "grails-async/src/main/groovy/grails/async/Promises.groovy" | _
-//FIXME        "grails-async/src/main/groovy/grails/async/decorator/PromiseDecorator.groovy" | _
+        "grails-async/src/main/groovy/grails/async/Promises.groovy" | _
+        "grails-async/src/main/groovy/grails/async/decorator/PromiseDecorator.groovy" | _
         "grails-async/src/main/groovy/grails/async/decorator/PromiseDecoratorLookupStrategy.groovy" | _
         "grails-async/src/main/groovy/grails/async/decorator/PromiseDecoratorProvider.groovy" | _
         "grails-async/src/main/groovy/grails/async/factory/AbstractPromiseFactory.groovy" | _

@@ -237,16 +237,21 @@ public class ASTBuilder {
      * @param hasVisibilityModifier     whether the method declaration contains visibility modifier(e.g. public, protected, private)
      * @param hasModifier               whether the method declaration has modifier(e.g. visibility modifier, final, static and so on)
      * @param hasReturnType             whether the method declaration has an return type(e.g. String, generic types)
+     * @param hasDef                    whether the method declaration using def keyword
      * @return                          the result
      *
      */
-    private boolean isSyntheticPublic(boolean isAnnotationDeclaration, boolean hasAnnotation, boolean hasVisibilityModifier, boolean hasModifier, boolean hasReturnType) {
+    private boolean isSyntheticPublic(boolean isAnnotationDeclaration, boolean hasAnnotation, boolean hasVisibilityModifier, boolean hasModifier, boolean hasReturnType, boolean hasDef) {
 
         if (hasVisibilityModifier) {
             return false;
         }
 
         if (isAnnotationDeclaration) {
+            return true;
+        }
+
+        if (hasDef && hasReturnType) {
             return true;
         }
 
@@ -269,7 +274,7 @@ public class ASTBuilder {
         boolean hasAnnotation = 0 != ctx.annotationClause().size();
         boolean hasReturnType = (asBoolean(ctx.typeDeclaration()) && !"def".equals(ctx.typeDeclaration().getText()))
                 || asBoolean(ctx.genericClassNameExpression());
-
+        boolean hasDef = asBoolean(ctx.KW_DEF);
 
         innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
         Statement statement = asBoolean(ctx.methodBody())
@@ -301,7 +306,7 @@ public class ASTBuilder {
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
-        methodNode.setSyntheticPublic(isSyntheticPublic(isAnnotationDeclaration, hasAnnotation, hasVisibilityModifier, hasModifier, hasReturnType));
+        methodNode.setSyntheticPublic(isSyntheticPublic(isAnnotationDeclaration, hasAnnotation, hasVisibilityModifier, hasModifier, hasReturnType, hasDef));
         methodNode.setSynthetic(false); // user-defined method are not synthetic
 
         return methodNode;
