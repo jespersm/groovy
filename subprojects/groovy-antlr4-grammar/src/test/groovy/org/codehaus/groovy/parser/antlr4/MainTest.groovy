@@ -177,22 +177,22 @@ class MainTest extends Specification {
         "grails-async/src/main/groovy/grails/async/decorator/PromiseDecoratorLookupStrategy.groovy" | _
         "grails-async/src/main/groovy/grails/async/decorator/PromiseDecoratorProvider.groovy" | _
         "grails-async/src/main/groovy/grails/async/factory/AbstractPromiseFactory.groovy" | _
-//FIXME        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecorator.groovy" | _
-//FIXME        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecoratorLookupStrategy.groovy" | _
-//FIXME        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecoratorProvider.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecorator.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecoratorLookupStrategy.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/decorator/PromiseDecoratorProvider.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/factory/AbstractPromiseFactory.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/factory/BoundPromise.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/factory/SynchronousPromise.groovy" | _
-//FIXME        "grails-async/src/main/groovy/org/grails/async/factory/SynchronousPromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/SynchronousPromiseFactory.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/factory/gpars/GparsPromise.groovy" | _
-//FIXME        "grails-async/src/main/groovy/org/grails/async/factory/gpars/GparsPromiseFactory.groovy" | _
-//FIXME        "grails-async/src/main/groovy/org/grails/async/factory/gpars/LoggingPoolFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/gpars/GparsPromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/org/grails/async/factory/gpars/LoggingPoolFactory.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/factory/reactor/ReactorPromise.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/factory/reactor/ReactorPromiseFactory.groovy" | _
         "grails-async/src/main/groovy/org/grails/async/transform/internal/DelegateAsyncUtils.groovy" | _
         "grails-async/src/test/groovy/grails/async/DelegateAsyncSpec.groovy" | _
-//FIXME        "grails-async/src/test/groovy/grails/async/PromiseListSpec.groovy" | _
-//FIXME        "grails-async/src/test/groovy/grails/async/PromiseMapSpec.groovy" | _
+        "grails-async/src/test/groovy/grails/async/PromiseListSpec.groovy" | addIgnore(ThrowStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-async/src/test/groovy/grails/async/PromiseMapSpec.groovy" | addIgnore(ThrowStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
 //FIXME        "grails-async/src/test/groovy/grails/async/PromiseSpec.groovy" | _
         "grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy" | _
 //FIXME        "grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy" | _
