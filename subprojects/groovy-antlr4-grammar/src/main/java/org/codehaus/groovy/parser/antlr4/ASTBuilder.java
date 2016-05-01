@@ -131,16 +131,17 @@ public class ASTBuilder {
         }
 
         try {
-            DefaultGroovyMethods.each(tree.importStatement(), new MethodClosure(this, "parseImportStatement"));
-            DefaultGroovyMethods.each(tree.children, new Closure<ClassNode>(this, this) {
-                public ClassNode doCall(ParseTree it) {
-                    if (it instanceof GroovyParser.ClassDeclarationContext)
-                        return parseClassDeclaration((GroovyParser.ClassDeclarationContext)it);
-                    else if (it instanceof GroovyParser.PackageDefinitionContext)
-                        parsePackageDefinition((GroovyParser.PackageDefinitionContext)it);
-                    return null;
-                }
-            });
+            for (GroovyParser.ImportStatementContext it : tree.importStatement()) {
+                parseImportStatement(it);
+            }
+
+            for (ParseTree it : tree.children) {
+                if (it instanceof GroovyParser.ClassDeclarationContext)
+                    parseClassDeclaration((GroovyParser.ClassDeclarationContext)it);
+                else if (it instanceof GroovyParser.PackageDefinitionContext)
+                    parsePackageDefinition((GroovyParser.PackageDefinitionContext)it);
+            }
+
             for (GroovyParser.ScriptPartContext part : tree.scriptPart()) {
                 if (part.statement() != null) {
                     unpackStatement(moduleNode, parseStatement(part.statement()));
@@ -291,7 +292,6 @@ public class ASTBuilder {
         Statement statement = asBoolean(ctx.methodBody())
                 ? parseStatement(ctx.methodBody().blockStatement())
                 : null;
-        List<InnerClassNode> innerClassesDeclared = innerClassesDefinedInMethod.pop();
 
         Parameter[] params = parseParameters(ctx.argumentDeclarationList());
 
@@ -308,12 +308,9 @@ public class ASTBuilder {
 
         final MethodNode methodNode = createMethodNode.call(classNode, ctx, methodName, modifiers, returnType, params, exceptions, statement);
 
-        DefaultGroovyMethods.each(innerClassesDeclared, new Closure<MethodNode>(this, this) {
-            public MethodNode doCall(InnerClassNode it) {
-                it.setEnclosingMethod(methodNode);
-                return methodNode;
-            }
-        });
+        for (InnerClassNode it : innerClassesDefinedInMethod.pop()) {
+            it.setEnclosingMethod(methodNode);
+        }
 
         setupNodeLocation(methodNode, ctx);
         attachAnnotations(methodNode, ctx.annotationClause());
@@ -595,12 +592,11 @@ public class ASTBuilder {
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
         this.innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
         final ConstructorNode constructorNode = classNode.addConstructor(modifiers, parseParameters(ctx.argumentDeclarationList()), exceptions, parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class)));
-        DefaultGroovyMethods.each(this.innerClassesDefinedInMethod.pop(), new Closure<ConstructorNode>(null, null) {
-            public ConstructorNode doCall(InnerClassNode it) {
-                it.setEnclosingMethod(constructorNode);
-                return constructorNode;
-            }
-        });
+
+        for (InnerClassNode it : this.innerClassesDefinedInMethod.pop()) {
+            it.setEnclosingMethod(constructorNode);
+        }
+
         setupNodeLocation(constructorNode, ctx);
         constructorNode.setSyntheticPublic(ctx.VISIBILITY_MODIFIER() == null);
         return constructorNode;
@@ -659,11 +655,10 @@ public class ASTBuilder {
         final BlockStatement statement = new BlockStatement();
         if (!asBoolean(ctx)) return statement;
 
-        DefaultGroovyMethods.each(ctx.statement(), new Closure<Object>(null, null) {
-            public void doCall(GroovyParser.StatementContext it) {
-                unpackStatement(statement, parseStatement(it));
-            }
-        });
+        for (GroovyParser.StatementContext it : ctx.statement()) {
+            unpackStatement(statement, parseStatement(it));
+        }
+
         return setupNodeLocation(statement, ctx);
     }
 
@@ -840,24 +835,21 @@ public class ASTBuilder {
         } else finallyStatement = EmptyStatement.INSTANCE;
 
         final TryCatchStatement statement = new TryCatchStatement(parseStatement(DefaultGroovyMethods.asType(ctx.tryBlock().blockStatement(), GroovyParser.BlockStatementContext.class)), (Statement)finallyStatement);
-        DefaultGroovyMethods.each(ctx.catchBlock(), new Closure<List<GroovyParser.ClassNameExpressionContext>>(null, null) {
-            public List<GroovyParser.ClassNameExpressionContext> doCall(GroovyParser.CatchBlockContext it) {
-                final Statement catchBlock = parseStatement(DefaultGroovyMethods.asType(it.blockStatement(), GroovyParser.BlockStatementContext.class));
-                final String var = it.IDENTIFIER().getText();
 
-                List<GroovyParser.ClassNameExpressionContext> classNameExpression = it.classNameExpression();
-                if (!asBoolean(classNameExpression))
-                    statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(ClassHelper.OBJECT_TYPE, var), catchBlock), it));
-                else {
-                    DefaultGroovyMethods.each(classNameExpression, new Closure<Object>(null, null) {
-                        public void doCall(GroovyParser.ClassNameExpressionContext it) {
-                            statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(parseExpression(DefaultGroovyMethods.asType(it, GroovyParser.ClassNameExpressionContext.class)), var), catchBlock), it));
-                        }
-                    });
+        for (GroovyParser.CatchBlockContext it : ctx.catchBlock()) {
+            final Statement catchBlock = parseStatement(DefaultGroovyMethods.asType(it.blockStatement(), GroovyParser.BlockStatementContext.class));
+            final String var = it.IDENTIFIER().getText();
+
+            List<GroovyParser.ClassNameExpressionContext> classNameExpression = it.classNameExpression();
+            if (!asBoolean(classNameExpression)) {
+                statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(ClassHelper.OBJECT_TYPE, var), catchBlock), it));
+            } else {
+                for (GroovyParser.ClassNameExpressionContext classNameExpressionContext : classNameExpression) {
+                    statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(parseExpression(DefaultGroovyMethods.asType(classNameExpressionContext, GroovyParser.ClassNameExpressionContext.class)), var), catchBlock), classNameExpressionContext));
                 }
-                return null;
             }
-        });
+        }
+
         return statement;
     }
 
@@ -1419,46 +1411,39 @@ public class ASTBuilder {
         final List<Expression> expressions = new ArrayList<Expression>();
 
         final List<ParseTree> children = ctx.children;
-        DefaultGroovyMethods.eachWithIndex(children, new Closure<Collection>(null, null) {
-            public Collection doCall(Object it, Integer i) {
-                if (!(it instanceof GroovyParser.GstringExpressionBodyContext)) {
-                    return expressions;
-                }
 
-                GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
-
-                if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
-                    expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
-                    return expressions;
-                } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
-                    GroovyParser.ClosureExpressionRuleContext closureExpressionRule = gstringExpressionBodyContext.closureExpressionRule();
-                    Expression expression = parseExpression(closureExpressionRule);
-
-                    if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
-
-                        MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
-
-                        expressions.add(setupNodeLocation(methodCallExpression, expression));
-                        return expressions;
-                    }
-
-                    expressions.add(expression);
-                    return expressions;
-                } else {
-                    if (asBoolean(gstringExpressionBodyContext.expression())) {
-                        // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
-                        //noinspection GroovyAssignabilityCheck
-                        expressions.add(parseExpression(gstringExpressionBodyContext.expression()));
-                        return expressions;
-                    } else { // handle empty expression e.g. "GString ${}"
-                        expressions.add(new ConstantExpression(null));
-                        return expressions;
-                    }
-                }
-
+        for (Object it : children) {
+            if (!(it instanceof GroovyParser.GstringExpressionBodyContext)) {
+                continue;
             }
 
-        });
+            GroovyParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyParser.GstringExpressionBodyContext) it;
+
+            if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
+                expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
+            } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
+                GroovyParser.ClosureExpressionRuleContext closureExpressionRule = gstringExpressionBodyContext.closureExpressionRule();
+                Expression expression = parseExpression(closureExpressionRule);
+
+                if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
+
+                    MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
+
+                    expressions.add(setupNodeLocation(methodCallExpression, expression));
+                } else {
+                    expressions.add(expression);
+                }
+            } else {
+                if (asBoolean(gstringExpressionBodyContext.expression())) {
+                    // We can guarantee, that it will be at least fallback ExpressionContext multimethod overloading, that can handle such situation.
+                    //noinspection GroovyAssignabilityCheck
+                    expressions.add(parseExpression(gstringExpressionBodyContext.expression()));
+                } else { // handle empty expression e.g. "GString ${}"
+                    expressions.add(new ConstantExpression(null));
+                }
+            }
+        }
+
         GStringExpression gstringNode = new GStringExpression(ctx.getText(), collect(strings, new Closure<ConstantExpression>(null, null) {
             public ConstantExpression doCall(String it) {return new ConstantExpression(it);}
         }), expressions);
@@ -1861,26 +1846,20 @@ public class ASTBuilder {
         final List<Expression> expressions = new ArrayList<Expression>();
 
         if (ctx != null) {
-            DefaultGroovyMethods.each(ctx.children, new Closure<Collection<? extends Expression>>(null, null) {
-                public Collection<? extends Expression> doCall(ParseTree it) {
-                    if (it instanceof GroovyParser.ArgumentContext) {
-                        if (asBoolean(((GroovyParser.ArgumentContext)it).mapEntry())) {
-                            mapArgs.add(parseExpression(((GroovyParser.ArgumentContext) it).mapEntry()));
-                            return mapArgs;
-                        } else {
-                            expressions.add(parseExpression(((GroovyParser.ArgumentContext) it).expression()));
-                            return expressions;
-                        }
-                    } else if (it instanceof GroovyParser.ClosureExpressionRuleContext) {
-                        expressions.add(parseExpression((GroovyParser.ClosureExpressionRuleContext) it));
-
-
-                        return expressions;
+            for (ParseTree it : ctx.children) {
+                if (it instanceof GroovyParser.ArgumentContext) {
+                    if (asBoolean(((GroovyParser.ArgumentContext)it).mapEntry())) {
+                        mapArgs.add(parseExpression(((GroovyParser.ArgumentContext) it).mapEntry()));
+                    } else {
+                        expressions.add(parseExpression(((GroovyParser.ArgumentContext) it).expression()));
                     }
-                    return null;
+                } else if (it instanceof GroovyParser.ClosureExpressionRuleContext) {
+                    expressions.add(parseExpression((GroovyParser.ClosureExpressionRuleContext) it));
                 }
-            });
+            }
+
         }
+
         if (asBoolean(expressions)) {
             if (asBoolean(mapArgs))
                 expressions.add(0, new MapExpression(mapArgs));
