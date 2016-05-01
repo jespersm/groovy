@@ -183,7 +183,7 @@ argumentDeclarationList:
      ;
 
 argumentDeclaration:
-    annotationClause* typeDeclaration? IDENTIFIER (ASSIGN NL* expression)? ;
+    annotationClause* KW_FINAL? typeDeclaration? IDENTIFIER (ASSIGN NL* expression)? ;
 
 blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*

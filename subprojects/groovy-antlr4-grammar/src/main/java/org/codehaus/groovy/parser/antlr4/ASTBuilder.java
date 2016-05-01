@@ -2005,8 +2005,14 @@ public class ASTBuilder {
                     public Parameter doCall(GroovyParser.ArgumentDeclarationContext it) {
                         Parameter parameter = new Parameter(parseTypeDeclaration(it.typeDeclaration()), it.IDENTIFIER().getText());
                         attachAnnotations(parameter, it.annotationClause());
+
+                        if (asBoolean(it.KW_FINAL())) {
+                            parameter.setModifiers(Opcodes.ACC_FINAL);
+                        }
+
                         if (asBoolean(it.expression()))
                             parameter.setInitialExpression(parseExpression(it.expression()));
+
                         return setupNodeLocation(parameter, it);
                     }
                 });
