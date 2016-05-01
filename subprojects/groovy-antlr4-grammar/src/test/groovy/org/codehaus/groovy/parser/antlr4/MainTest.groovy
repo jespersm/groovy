@@ -132,6 +132,7 @@ class MainTest extends Specification {
         "Join_Line_Escape_issue46.groovy" | _
         "Enums_Inner.groovy" | _
         "Interface.groovy" | _
+        "ClassMembers_Issue3_3.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
@@ -168,7 +169,7 @@ class MainTest extends Specification {
 
         "grails-async/src/main/groovy/grails/async/DelegateAsync.groovy" | _
         "grails-async/src/main/groovy/grails/async/Promise.groovy" | _
-//FIXME        "grails-async/src/main/groovy/grails/async/PromiseFactory.groovy" | _
+        "grails-async/src/main/groovy/grails/async/PromiseFactory.groovy" | _
         "grails-async/src/main/groovy/grails/async/PromiseList.groovy" | _
         "grails-async/src/main/groovy/grails/async/PromiseMap.groovy" | _
 //FIXME        "grails-async/src/main/groovy/grails/async/Promises.groovy" | _
