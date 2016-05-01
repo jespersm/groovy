@@ -22,9 +22,8 @@ import groovy.util.logging.Log
 import org.antlr.v4.gui.TestRig
 import org.antlr.v4.runtime.ANTLRInputStream
 import org.antlr.v4.runtime.CommonTokenStream
-import org.codehaus.groovy.parser.antlr4.GroovyLangParser
-import org.codehaus.groovy.parser.antlr4.GroovyParser
 import org.codehaus.groovy.parser.antlr4.GroovyLangLexer
+import org.codehaus.groovy.parser.antlr4.GroovyLangParser
 
 /**
  * Created by Daniel on 2016/3/18.
@@ -51,7 +50,7 @@ public class GroovyTestRig extends TestRig {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         GroovyLangParser parser = new GroovyLangParser(tokens);
 
-        this.process(lexer, GroovyParser.class, parser, new ByteArrayInputStream(content), new StringReader(text));
+        this.process(lexer, GroovyLangParser.class, parser, new ByteArrayInputStream(content), new StringReader(text));
     }
 
     public static void main(String[] args) {
