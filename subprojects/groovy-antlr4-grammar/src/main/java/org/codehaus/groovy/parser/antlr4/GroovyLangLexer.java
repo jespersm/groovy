@@ -28,10 +28,11 @@ import org.antlr.v4.runtime.dfa.DFA;
 /**
  * Created by Daniel on 2016/4/14.
  */
-public class GroovyScanner extends GroovyLexer {
-    public GroovyScanner(CharStream input) {
+public class GroovyLangLexer extends GroovyLexer {
+    public GroovyLangLexer(CharStream input) {
         super(input);
-        _interp = new PositionAdjustingLexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
+
+        this.setInterpreter(new PositionAdjustingLexerATNSimulator(this, this.getATN(), new DfaInitializer(this).createDecisionToDFA(), new PredictionContextCache()));
     }
 
     @Override

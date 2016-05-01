@@ -57,7 +57,7 @@ lexer grammar GroovyLexer;
         super.emit(token);
     }
 
-    // just a hook, which will be overrided by GroovyScanner
+    // just a hook, which will be overrided by GroovyLangLexer
     protected void rollbackOneChar() {}
 
     private void pushBrace(Brace b) {

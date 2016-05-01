@@ -21,10 +21,7 @@ package org.codehaus.groovy.parser.antlr4;
 import groovy.lang.Closure;
 import groovy.lang.IntRange;
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.atn.ParserATNSimulator;
-import org.antlr.v4.runtime.atn.PredictionContextCache;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.tree.*;
 import org.codehaus.groovy.GroovyBugError;
@@ -73,17 +70,8 @@ public class ASTBuilder {
             this.logTokens(text);
         }
 
-        GroovyScanner scanner = new GroovyScanner(new ANTLRInputStream(text));
-        GroovyParser parser = new GroovyParser(new CommonTokenStream(scanner));
-
-        // Workaround for ever-growing cache in org.codehaus.groovy.parser.antlr4.GroovyParser#_decisionToDFA
-        ATN atn = parser.getATN();
-        DFA[] decisionToDFA = new DFA[atn.getNumberOfDecisions()];
-        for(int i = 0; i < decisionToDFA.length; ++i) {
-            decisionToDFA[i] = new DFA(atn.getDecisionState(i), i);
-        }
-        parser.setInterpreter(new ParserATNSimulator(
-                                    parser, atn, decisionToDFA, new PredictionContextCache()));
+        GroovyLangLexer lexer = new GroovyLangLexer(new ANTLRInputStream(text));
+        GroovyLangParser parser = new GroovyLangParser(new CommonTokenStream(lexer));
 
         this.setupErrorListener(parser);
 
