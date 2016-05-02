@@ -362,7 +362,7 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/grails/compiler/ast/GlobalClassInjectorAdapter.groovy" | _
         "grails-core/src/main/groovy/grails/config/Config.groovy" | _
         "grails-core/src/main/groovy/grails/config/ConfigProperties.groovy" | _
-//FIXME        "grails-core/src/main/groovy/grails/config/Settings.groovy" | _
+        "grails-core/src/main/groovy/grails/config/Settings.groovy" | _
         "grails-core/src/main/groovy/grails/core/GrailsApplicationClass.groovy" | _
         "grails-core/src/main/groovy/grails/core/GrailsApplicationLifeCycle.groovy" | _
         "grails-core/src/main/groovy/grails/core/GrailsApplicationLifeCycleAdapter.groovy" | _

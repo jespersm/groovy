@@ -541,8 +541,10 @@ public class ASTBuilder {
             ClassNode typeDeclaration = asBoolean(ctx.genericClassNameExpression())
                     ? parseExpression(ctx.genericClassNameExpression())
                     : ClassHelper.OBJECT_TYPE;
-            Expression initialValue = classNode.isInterface() && !typeDeclaration.equals(ClassHelper.OBJECT_TYPE)
-                    ? new ConstantExpression(initialExpressionForType(typeDeclaration))
+
+            Object defaultValue = getDefaultValueByType(typeDeclaration);
+            Expression initialValue = classNode.isInterface() && (null == initialierExpression)
+                    ? (null == defaultValue ? null : new ConstantExpression(defaultValue))
                     : initialierExpression;
             if (classNode.isInterface() || hasVisibilityModifier) {
                 modifiers |= classNode.isInterface() ? Opcodes.ACC_PUBLIC : 0;
@@ -2222,7 +2224,7 @@ public class ASTBuilder {
         return asBoolean(t) ? DefaultGroovyMethods.getAt(t, new IntRange(true, 1, -2)) : t;
     }
 
-    public Object initialExpressionForType(ClassNode type) {
+    public Object getDefaultValueByType(ClassNode type) {
         if (ClassHelper.int_TYPE.equals(type))
             return 0;
         else if (ClassHelper.long_TYPE.equals(type))
