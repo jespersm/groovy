@@ -336,6 +336,17 @@ class MainTest extends Specification {
         "grails-compat/src/main/groovy/org/grails/databinding/SimpleDataBinder.groovy" | _
         "grails-compat/src/main/groovy/org/grails/databinding/SimpleMapDataBindingSource.groovy" | _
 
+        "grails-console/src/main/groovy/grails/ui/command/GrailsApplicationContextCommandRunner.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/console/GrailsSwingConsole.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/console/support/GroovyConsoleApplicationContext.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/console/support/GroovyConsoleWebApplicationContext.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/script/GrailsApplicationScriptRunner.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/shell/GrailsShell.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/shell/support/GroovyshApplicationContext.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/shell/support/GroovyshWebApplicationContext.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/support/DevelopmentGrailsApplication.groovy" | _
+        "grails-console/src/main/groovy/grails/ui/support/DevelopmentWebApplicationContext.groovy" | _
+
 
     }
 
