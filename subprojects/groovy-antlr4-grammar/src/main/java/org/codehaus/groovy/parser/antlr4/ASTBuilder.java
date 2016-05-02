@@ -1946,9 +1946,10 @@ public class ASTBuilder {
     }
 
     public ArrayExpression parse(GroovyParser.NewArrayRuleContext ctx) {
-        List<Expression> collect = collect(ctx.INTEGER(), new Closure<Expression>(null, null) {
-            public Expression doCall(TerminalNode it) {return parseInteger(it.getText(), it.getSymbol());}
+        List<Expression> collect = collect(ctx.expression(), new Closure<Expression>(null, null) {
+            public Expression doCall(GroovyParser.ExpressionContext it) {return parseExpression(it);}
         });
+
         ArrayExpression expression = new ArrayExpression(parseExpression(ctx.classNameExpression()), new ArrayList<Expression>(), collect);
         return setupNodeLocation(expression, ctx);
     }

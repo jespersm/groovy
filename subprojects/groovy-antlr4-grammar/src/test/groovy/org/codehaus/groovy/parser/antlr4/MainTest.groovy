@@ -237,6 +237,24 @@ class MainTest extends Specification {
         "grails-bootstrap/src/test/groovy/grails/util/EnvironmentTests.groovy" | _
         "grails-bootstrap/src/test/groovy/org/codehaus/groovy/grails/cli/parsing/CommandLineParserSpec.groovy" | _
 
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/Base64CodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/DigestUtils.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/HexCodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/MD5BytesCodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/MD5CodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/SHA1BytesCodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/SHA1CodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/SHA256BytesCodecExtensionMethods.groovy" | _
+        "grails-codecs/src/main/groovy/org/grails/plugins/codecs/SHA256CodecExtensionMethods.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/Base64CodecTests.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/HexCodecTests.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/MD5BytesCodecTests.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/MD5CodecTests.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/SHA1BytesCodecTests.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/SHA1CodecTests.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/SHA256BytesCodec.groovy" | _
+        "grails-codecs/src/test/groovy/org/grails/web/codecs/SHA256CodecTests.groovy" | _
+
 
     }
 
