@@ -197,7 +197,8 @@ class MainTest extends Specification {
         "grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy" | _
 //FIXME        "grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy" | _
 
-        "grails-bootstrap/src/main/groovy/grails/build/proxy/SystemPropertiesAuthenticator.groovy" | _
+//        "grails-bootstrap/src/main/groovy/grails/build/proxy/SystemPropertiesAuthenticator.groovy" | _
+        "grails-bootstrap/SystemPropertiesAuthenticator.groovy" | _
         "grails-bootstrap/src/main/groovy/grails/codegen/model/Model.groovy" | _
         "grails-bootstrap/src/main/groovy/grails/codegen/model/ModelBuilder.groovy" | _
         "grails-bootstrap/src/main/groovy/grails/config/ConfigMap.groovy" | _
@@ -215,7 +216,8 @@ class MainTest extends Specification {
         "grails-bootstrap/src/main/groovy/org/codehaus/groovy/grails/io/support/GrailsResourceUtils.groovy" | _
         "grails-bootstrap/src/main/groovy/org/codehaus/groovy/grails/io/support/Resource.groovy" | _
         "grails-bootstrap/src/main/groovy/org/codehaus/groovy/grails/plugins/GrailsPluginInfo.groovy" | _
-        "grails-bootstrap/src/main/groovy/org/grails/build/parsing/ScriptNameResolver.groovy" | _
+//        "grails-bootstrap/src/main/groovy/org/grails/build/parsing/ScriptNameResolver.groovy" | _
+        "grails-bootstrap/ScriptNameResolver.groovy" | _
         "grails-bootstrap/src/main/groovy/org/grails/config/CodeGenConfig.groovy" | _
         "grails-bootstrap/src/main/groovy/org/grails/config/NavigableMap.groovy" | _
         "grails-bootstrap/src/main/groovy/org/grails/exceptions/ExceptionUtils.groovy" | _
@@ -227,7 +229,8 @@ class MainTest extends Specification {
         "grails-bootstrap/src/main/groovy/org/grails/io/support/FactoriesLoaderSupport.groovy" | _
         "grails-bootstrap/src/main/groovy/org/grails/io/support/MainClassFinder.groovy" | addIgnore(ReturnStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-bootstrap/src/main/groovy/org/grails/io/watch/FileExtensionFileChangeListener.groovy" | _
-        "grails-bootstrap/src/test/groovy/grails/build/logging/GrailsConsoleSpec.groovy" | _
+//        "grails-bootstrap/src/test/groovy/grails/build/logging/GrailsConsoleSpec.groovy" | _
+        "grails-bootstrap/GrailsConsoleSpec.groovy" | _
         "grails-bootstrap/src/test/groovy/grails/config/ConfigMapSpec.groovy" | _
         "grails-bootstrap/src/test/groovy/grails/config/GrailsConfigSpec.groovy" | _
         "grails-bootstrap/src/test/groovy/grails/io/IOUtilsSpec.groovy" | _
