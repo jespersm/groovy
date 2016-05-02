@@ -255,6 +255,87 @@ class MainTest extends Specification {
         "grails-codecs/src/test/groovy/org/grails/web/codecs/SHA256BytesCodec.groovy" | _
         "grails-codecs/src/test/groovy/org/grails/web/codecs/SHA256CodecTests.groovy" | _
 
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/beans/factory/GenericBeanFactoryAccessor.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/AbstractGrailsClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/AbstractInjectableGrailsClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/AnnotationDomainClassArtefactHandler.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/ArtefactHandlerAdapter.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/BootstrapArtefactHandler.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/ClassPropertyFetcher.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/ControllerArtefactHandler.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsApplication.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsBootstrapClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsControllerClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsDomainClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsDomainClassProperty.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsServiceClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsTagLibClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/DefaultGrailsUrlMappingsClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/ExternalGrailsDomainClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsBootstrapClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/InjectableGrailsClass.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/cfg/GrailsConfig.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/spring/DefaultRuntimeSpringConfiguration.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/spring/GrailsRuntimeConfigurator.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/spring/GrailsWebApplicationContext.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/spring/RuntimeSpringConfiguration.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/AbstractArtefactTypeAstTransformation.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/AllArtefactClassInjector.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/AnnotatedClassInjector.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/ClassInjector.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/DefaultGrailsDomainClassInjector.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/EntityASTTransformation.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/GrailsAwareClassLoader.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/GrailsAwareInjectionOperation.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/core/io/DefaultResourceLocator.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/domain/GrailsDomainClassCleaner.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/exceptions/GrailsConfigurationException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/exceptions/GrailsDomainException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/exceptions/GrailsException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/exceptions/GrailsRuntimeException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/io/support/GrailsIOUtils.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/io/support/IOUtils.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/lifecycle/ShutdownOperations.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/orm/support/TransactionManagerAware.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/plugins/AbstractGrailsPluginManager.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/plugins/DefaultGrailsPluginManager.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/plugins/DomainClassPluginSupport.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/plugins/GrailsVersionUtils.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/plugins/support/aware/ClassLoaderAware.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/plugins/support/aware/GrailsConfigurationAware.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/support/ClassEditor.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/support/PersistenceContextInterceptor.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/support/SoftThreadLocalMap.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/support/proxy/EntityProxyHandler.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/support/proxy/ProxyHandler.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/validation/AbstractVetoingConstraint.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/validation/DefaultConstraintEvaluator.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/validation/GrailsDomainClassValidator.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/validation/VetoingConstraint.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/validation/exceptions/ConstraintException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/binding/GrailsWebDataBinder.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/context/GrailsConfigUtils.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/context/ServletContextHolder.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/errors/GrailsExceptionResolver.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/mapping/CachingLinkGenerator.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/metaclass/ForwardMethod.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/metaclass/RenderDynamicMethod.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/DelegatingApplicationAttributes.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/GrailsFlashScope.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/GrailsUrlPathHelper.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/HttpHeaders.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/WrappedResponseHolder.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/GrailsDispatcherServlet.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/GrailsHttpSession.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/GrailsParameterMap.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/GrailsWebRequest.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/RedirectEventListener.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/exceptions/ControllerExecutionException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/servlet/mvc/exceptions/GrailsMVCException.groovy" | _
+        "grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/util/WebUtils.groovy" | _
+        "grails-compat/src/main/groovy/org/grails/databinding/SimpleDataBinder.groovy" | _
+        "grails-compat/src/main/groovy/org/grails/databinding/SimpleMapDataBindingSource.groovy" | _
+
 
     }
 
