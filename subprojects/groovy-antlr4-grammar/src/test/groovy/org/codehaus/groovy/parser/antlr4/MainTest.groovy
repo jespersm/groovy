@@ -351,7 +351,7 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/grails/boot/GrailsApp.groovy" | _
         "grails-core/src/main/groovy/grails/boot/GrailsAppBuilder.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/GrailsApplicationContextLoader.groovy" | _
-//FIXME        "grails-core/src/main/groovy/grails/boot/config/GrailsApplicationPostProcessor.groovy" | _
+        "grails-core/src/main/groovy/grails/boot/config/GrailsApplicationPostProcessor.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/GrailsAutoConfiguration.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/tools/ProfilingGrailsApplicationPostProcessor.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/tools/SettingsFile.groovy" | _

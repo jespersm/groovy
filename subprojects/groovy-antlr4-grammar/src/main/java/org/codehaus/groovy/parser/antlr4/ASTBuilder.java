@@ -1973,6 +1973,8 @@ public class ASTBuilder {
             }
 
             InnerClassNode classNode = new InnerClassNode(outer, outer.getName() + "$" + String.valueOf((this.anonymousClassesCount = ++this.anonymousClassesCount)), Opcodes.ACC_PUBLIC, ClassHelper.make(creatingClass.getName()));
+            classNode.setSuperClass(creatingClass);
+
 
             expression = setupNodeLocation(new ConstructorCallExpression(classNode, createArgumentList(ctx.argumentList())), ctx);
             expression.setUsingAnonymousInnerClass(true);
