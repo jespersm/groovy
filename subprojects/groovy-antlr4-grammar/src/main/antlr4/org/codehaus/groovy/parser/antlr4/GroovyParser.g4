@@ -297,6 +297,7 @@ expression:
     | KW_SUPER # superExpression
     | (KW_TRUE | KW_FALSE) #boolExpression
     | IDENTIFIER #variableExpression
+    | classNameExpression #variableExpression
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
     | closureExpressionRule #closureExpression

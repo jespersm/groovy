@@ -197,6 +197,43 @@ class MainTest extends Specification {
         "grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy" | _
 //FIXME        "grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy" | _
 
+        "grails-bootstrap/src/main/groovy/grails/build/proxy/SystemPropertiesAuthenticator.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/codegen/model/Model.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/codegen/model/ModelBuilder.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/config/ConfigMap.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/io/IOUtils.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/io/ResourceUtils.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/io/support/SystemOutErrCapturer.groovy" | addIgnore(MethodNode, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-bootstrap/src/main/groovy/grails/io/support/SystemStreamsRedirector.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/plugins/GrailsVersionUtils.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/plugins/VersionComparator.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/util/BuildSettings.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/util/CosineSimilarity.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/util/Described.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/util/Metadata.groovy" | _
+        "grails-bootstrap/src/main/groovy/grails/util/Named.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/codehaus/groovy/grails/io/support/GrailsResourceUtils.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/codehaus/groovy/grails/io/support/Resource.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/codehaus/groovy/grails/plugins/GrailsPluginInfo.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/build/parsing/ScriptNameResolver.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/config/CodeGenConfig.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/config/NavigableMap.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/exceptions/ExceptionUtils.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/exceptions/reporting/CodeSnippetPrinter.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/exceptions/reporting/DefaultStackTracePrinter.groovy" | addIgnore(ReturnStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-bootstrap/src/main/groovy/org/grails/exceptions/reporting/StackTracePrinter.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/io/support/ByteArrayResource.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/io/support/DevNullPrintStream.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/io/support/FactoriesLoaderSupport.groovy" | _
+        "grails-bootstrap/src/main/groovy/org/grails/io/support/MainClassFinder.groovy" | addIgnore(ReturnStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-bootstrap/src/main/groovy/org/grails/io/watch/FileExtensionFileChangeListener.groovy" | _
+        "grails-bootstrap/src/test/groovy/grails/build/logging/GrailsConsoleSpec.groovy" | _
+        "grails-bootstrap/src/test/groovy/grails/config/ConfigMapSpec.groovy" | _
+        "grails-bootstrap/src/test/groovy/grails/config/GrailsConfigSpec.groovy" | _
+        "grails-bootstrap/src/test/groovy/grails/io/IOUtilsSpec.groovy" | _
+        "grails-bootstrap/src/test/groovy/grails/util/EnvironmentTests.groovy" | _
+        "grails-bootstrap/src/test/groovy/org/codehaus/groovy/grails/cli/parsing/CommandLineParserSpec.groovy" | _
+
 
     }
 

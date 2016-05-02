@@ -353,11 +353,12 @@ public class ASTBuilder {
         }
 
         setupNodeLocation(classNode, ctx);
-        attachAnnotations(classNode, ctx.annotationClause());
 
         if (asBoolean(ctx.KW_TRAIT())) {
             attachTraitTransformAnnotation(classNode);
         }
+
+        attachAnnotations(classNode, ctx.annotationClause());
 
         moduleNode.addClass(classNode);
         if (asBoolean(ctx.extendsClause())) {
@@ -1200,7 +1201,15 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.VariableExpressionContext ctx) {
-        return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText()), ctx);
+        String variable;
+
+        if (asBoolean(ctx.classNameExpression())) {
+            variable = parseExpression(ctx.classNameExpression()).getText();
+        } else {
+            variable = ctx.IDENTIFIER().getText();
+        }
+
+        return setupNodeLocation(new VariableExpression(variable), ctx);
     }
 
     public Expression parseExpression(GroovyParser.FieldAccessExpressionContext ctx) {
