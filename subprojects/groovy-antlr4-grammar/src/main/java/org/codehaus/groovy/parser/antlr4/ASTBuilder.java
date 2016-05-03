@@ -542,7 +542,7 @@ public class ASTBuilder {
                     ? parseExpression(ctx.genericClassNameExpression())
                     : ClassHelper.OBJECT_TYPE;
 
-            Object defaultValue = getDefaultValueByType(typeDeclaration);
+            Object defaultValue = findDefaultValueByType(typeDeclaration);
             Expression initialValue = classNode.isInterface() && (null == initialierExpression)
                     ? (null == defaultValue ? null : new ConstantExpression(defaultValue))
                     : initialierExpression;
@@ -2224,25 +2224,24 @@ public class ASTBuilder {
         return asBoolean(t) ? DefaultGroovyMethods.getAt(t, new IntRange(true, 1, -2)) : t;
     }
 
-    public Object getDefaultValueByType(ClassNode type) {
-        if (ClassHelper.int_TYPE.equals(type))
-            return 0;
-        else if (ClassHelper.long_TYPE.equals(type))
-            return 0L;
-        else if (ClassHelper.double_TYPE.equals(type))
-            return 0.0;
-        else if (ClassHelper.float_TYPE.equals(type))
-            return 0f;
-        else if (ClassHelper.boolean_TYPE.equals(type))
-            return Boolean.FALSE;
-        else if (ClassHelper.short_TYPE.equals(type))
-            return (short)0;
-        else if (ClassHelper.byte_TYPE.equals(type))
-            return (byte)0;
-        else if (ClassHelper.char_TYPE.equals(type))
-            return (char)0;
-        else return null;
+
+    private static final Map<ClassNode, Object> TYPE_DEFAULT_VALUE_MAP = new HashMap<ClassNode, Object>() {
+        {
+            this.put(ClassHelper.int_TYPE,      0);
+            this.put(ClassHelper.long_TYPE,     0L);
+            this.put(ClassHelper.double_TYPE,   0.0D);
+            this.put(ClassHelper.float_TYPE,    0.0F);
+            this.put(ClassHelper.short_TYPE,    (short) 0);
+            this.put(ClassHelper.byte_TYPE,     (byte)  0);
+            this.put(ClassHelper.char_TYPE,     (char)  0);
+            this.put(ClassHelper.boolean_TYPE,  Boolean.FALSE);
+        }
+    };
+
+    private Object findDefaultValueByType(ClassNode type) {
+        return TYPE_DEFAULT_VALUE_MAP.get(type);
     }
+
 
     private String readSourceCode(SourceUnit sourceUnit) {
         String text = null;
