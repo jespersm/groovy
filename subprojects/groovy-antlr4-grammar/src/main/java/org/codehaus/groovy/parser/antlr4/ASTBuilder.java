@@ -78,32 +78,8 @@ public class ASTBuilder {
         this.startParsing(parser);
     }
 
-    // comments are treated as NL
-    public static final Set<Integer> EMPTY_CONTENT_TOKEN_TYPE_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.NL, GroovyParser.EOF, GroovyParser.SEMICOLON));
-
-
-    /**
-     * Check whether the source file just contains newlines, comments and semi colon
-     *
-     * @param tree
-     * @return
-     */
-    public boolean isEmpty(GroovyParser.CompilationUnitContext tree) {
-        for(ParseTree parseTree : tree.children) {
-            if (!(parseTree instanceof TerminalNode)) {
-                return false;
-            }
-
-            if (parseTree instanceof TerminalNode) {
-                int tokenType = ((TerminalNode) parseTree).getSymbol().getType();
-
-                if (!EMPTY_CONTENT_TOKEN_TYPE_SET.contains(tokenType)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+    private void addEmptyReturnStatement() {
+        moduleNode.addStatement(new ReturnStatement(new ConstantExpression(null)));
     }
 
     private void startParsing(GroovyParser parser) {
@@ -113,21 +89,20 @@ public class ASTBuilder {
             this.logTreeStr(tree);
         }
 
-        if (isEmpty(tree)) {
-            moduleNode.addStatement(new ReturnStatement(new ConstantExpression(null)));
-            return;
-        }
-
+        int cnt = 0;
         try {
             for (GroovyParser.ImportStatementContext it : tree.importStatement()) {
                 parseImportStatement(it);
             }
 
             for (ParseTree it : tree.children) {
-                if (it instanceof GroovyParser.ClassDeclarationContext)
+                if (it instanceof GroovyParser.ClassDeclarationContext) {
                     parseClassDeclaration((GroovyParser.ClassDeclarationContext)it);
-                else if (it instanceof GroovyParser.PackageDefinitionContext)
+
+                    cnt++;
+                } else if (it instanceof GroovyParser.PackageDefinitionContext) {
                     parsePackageDefinition((GroovyParser.PackageDefinitionContext)it);
+                }
             }
 
             for (GroovyParser.ScriptPartContext part : tree.scriptPart()) {
@@ -136,6 +111,13 @@ public class ASTBuilder {
                 } else {
                     moduleNode.addMethod(parseScriptMethod(part.methodDeclaration()));
                 }
+
+                cnt++;
+            }
+
+            if (0 == cnt) {
+                this.addEmptyReturnStatement();
+                return;
             }
         } catch (CompilationFailedException e) {
             log.severe(createExceptionMessage(e));
