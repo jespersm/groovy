@@ -385,11 +385,11 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/ArtefactHandler.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/ArtefactInfo.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/DomainClassArtefactHandler.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsApplication.groovy" | _
+        "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsApplication.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsClass.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsClassUtils.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsControllerClass.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsDomainClass.groovy" | _
+        "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsDomainClass.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsDomainClassProperty.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsDomainConfigurationUtil.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/commons/GrailsMetaClassUtils.groovy" | _
@@ -400,7 +400,7 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/GrailsASTUtils.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/GrailsArtefactClassInjector.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/compiler/injection/GrailsDomainClassInjector.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/codehaus/groovy/grails/plugins/GrailsPlugin.groovy" | _
+        "grails-core/src/main/groovy/org/codehaus/groovy/grails/plugins/GrailsPlugin.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/plugins/GrailsPluginManager.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/plugins/PluginManagerAware.groovy" | _
         "grails-core/src/main/groovy/org/codehaus/groovy/grails/plugins/support/aware/GrailsApplicationAware.groovy" | _
@@ -414,7 +414,7 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/grails/compiler/ValidateableTypeCheckingExtension.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/WhereQueryTypeCheckingExtension.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/injection/ApplicationClassInjector.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/grails/compiler/injection/EnhancesTraitTransformation.groovy" | _
+        "grails-core/src/main/groovy/org/grails/compiler/injection/EnhancesTraitTransformation.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/injection/GlobalGrailsClassInjectorTransformation.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/injection/GlobalImportTransformation.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/injection/GroovyEclipseCompilationHelper.groovy" | _
