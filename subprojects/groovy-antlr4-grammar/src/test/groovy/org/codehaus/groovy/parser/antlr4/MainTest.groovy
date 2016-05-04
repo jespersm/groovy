@@ -425,7 +425,7 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/grails/config/yaml/YamlPropertySourceLoader.groovy" | addIgnore([Parameter, IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-core/src/main/groovy/org/grails/core/artefact/ApplicationArtefactHandler.groovy" | _
         "grails-core/src/main/groovy/org/grails/core/cfg/GroovyConfigPropertySourceLoader.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/grails/core/exceptions/DefaultErrorsPrinter.groovy" | _
+        "grails-core/src/main/groovy/org/grails/core/exceptions/DefaultErrorsPrinter.groovy" | addIgnore([Parameter, IfStatement, ExpressionStatement, ContinueStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-core/src/main/groovy/org/grails/core/io/CachingPathMatchingResourcePatternResolver.groovy" | _
         "grails-core/src/main/groovy/org/grails/core/io/GrailsResource.groovy" | _
         "grails-core/src/main/groovy/org/grails/core/io/support/GrailsFactoriesLoader.groovy" | _
