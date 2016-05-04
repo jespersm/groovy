@@ -11,4 +11,4 @@ println a."${"$hello"}"('world') {
 a."${"$hello"}" 'world', {
 }
 
-
+a.<String, Object>someMethod 'hello', 'world';

@@ -23,6 +23,7 @@ import org.codehaus.groovy.ast.stmt.*
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.parser.antlr4.util.ASTComparatorCategory
 import org.codehaus.groovy.parser.antlr4.util.ASTWriter
+import org.codehaus.groovy.syntax.Token
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -418,10 +419,10 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/grails/compiler/injection/GlobalGrailsClassInjectorTransformation.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/injection/GlobalImportTransformation.groovy" | _
         "grails-core/src/main/groovy/org/grails/compiler/injection/GroovyEclipseCompilationHelper.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/grails/compiler/injection/TraitInjectionSupport.groovy" | _
+        "grails-core/src/main/groovy/org/grails/compiler/injection/TraitInjectionSupport.groovy" | addIgnore([Parameter, IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-core/src/main/groovy/org/grails/config/NavigableMapPropertySource.groovy" | _
         "grails-core/src/main/groovy/org/grails/config/PrefixedMapPropertySource.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/grails/config/yaml/YamlPropertySourceLoader.groovy" | _
+        "grails-core/src/main/groovy/org/grails/config/yaml/YamlPropertySourceLoader.groovy" | addIgnore([Parameter, IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-core/src/main/groovy/org/grails/core/artefact/ApplicationArtefactHandler.groovy" | _
         "grails-core/src/main/groovy/org/grails/core/cfg/GroovyConfigPropertySourceLoader.groovy" | _
 //FIXME        "grails-core/src/main/groovy/org/grails/core/exceptions/DefaultErrorsPrinter.groovy" | _
@@ -1020,9 +1021,9 @@ class MainTest extends Specification {
         "chap19/Listing_19_32_UntilControlStructure.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_39_GivenWhenThen.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_43_FetchOptionsScript.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-        "chap19/Listing_19_44_RubyStyleNewify.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-        "chap19/Listing_19_45_PythonStyleNewify.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-        "chap19/Listing_19_46_Terms.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap19/Listing_19_44_RubyStyleNewify.groovy" | addIgnore([AssertStatement, Token], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap19/Listing_19_45_PythonStyleNewify.groovy" | addIgnore([AssertStatement, Token], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "chap19/Listing_19_46_Terms.groovy" | addIgnore([AssertStatement, Token], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_48_No_IO.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_49_ArithmeticShell.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "chap19/Listing_19_50_TimedInterrupt.groovy" | addIgnore(AssertStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)

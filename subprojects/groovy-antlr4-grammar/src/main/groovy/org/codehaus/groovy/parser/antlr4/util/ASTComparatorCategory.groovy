@@ -12,7 +12,7 @@ import java.util.logging.Level
 @Log @SuppressWarnings("GroovyUnusedDeclaration")
 class ASTComparatorCategory {
     static { log.level = Level.WARNING }
-    static List<String> LOCATION_IGNORE_LIST = ["columnNumber", "lineNumber", "lastColumnNumber", "lastLineNumber"]
+    static List<String> LOCATION_IGNORE_LIST = ["columnNumber", "lineNumber", "lastColumnNumber", "lastLineNumber", "startLine"]
     static private List<String> EXPRESSION_IGNORE_LIST = ["text"] + LOCATION_IGNORE_LIST
 
     /**
@@ -40,7 +40,7 @@ class ASTComparatorCategory {
             (PropertyNode): ['declaringClass', 'initialValueExpression'],
             (Variable): [],
             (VariableScope): ["clazzScope", "parent"],
-            (Token): ["root", "startColumn", "startLine"],
+            (Token): ["root", "startColumn"],
             (AnnotationNode): (["text"] + LOCATION_IGNORE_LIST) as List<String>,
             (AssertStatement): ["text"],
             (BlockStatement): ["columnNumber", "lineNumber", "lastColumnNumber", "lastLineNumber", "text"],

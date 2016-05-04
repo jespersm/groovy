@@ -313,8 +313,8 @@ expression:
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
     // exclude this and super to support this(...) and super(...) in the constructors
-    | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?      callExpressionRule       #callExpression
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* callExpressionRule                       #callExpression
+    | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?              callExpressionRule      #callExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? callExpressionRule      #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
