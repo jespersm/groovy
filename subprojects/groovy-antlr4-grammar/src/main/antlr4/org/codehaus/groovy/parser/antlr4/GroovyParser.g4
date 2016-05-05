@@ -83,7 +83,7 @@ options { tokenVocab = GroovyLexer; }
 
 compilationUnit: SHEBANG_COMMENT? (NL*)
                  packageDefinition? (NL | SEMICOLON)*
-                 (importStatement (NL | SEMICOLON) | scriptPart (NL | SEMICOLON) | classDeclaration | (NL | SEMICOLON))* (NL | SEMICOLON)*
+                 (importStatement (NL | SEMICOLON) | classDeclaration | scriptPart (NL | SEMICOLON) | (NL | SEMICOLON))* (NL | SEMICOLON)*
                  (scriptPart)? (NL | SEMICOLON)*
                  EOF;
 
@@ -139,12 +139,9 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
     |
         genericClassNameExpression
     )
-    (IDENTIFIER | STRING) LPAREN NL* argumentDeclarationList NL* RPAREN throwsClause? (KW_DEFAULT annotationParameter | methodBody)?
+    (IDENTIFIER | STRING) LPAREN NL* argumentDeclarationList NL* RPAREN throwsClause? (KW_DEFAULT annotationParameter | blockStatementWithCurve)?
 ;
 
-methodBody:
-    LCURVE blockStatement? RCURVE
-;
 
 fieldDeclaration
 locals [Set<String> modifierAndDefSet = new HashSet<String>()]
@@ -156,9 +153,9 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
     singleDeclaration ( COMMA singleDeclaration)*
 ;
 constructorDeclaration: { GrammarPredicates.isCurrentClassName(_input, currentClassName) }?
-    VISIBILITY_MODIFIER? IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? LCURVE blockStatement? RCURVE ; // Inner NL 's handling.
-objectInitializer: LCURVE blockStatement? RCURVE ;
-classInitializer: KW_STATIC LCURVE blockStatement? RCURVE ;
+    VISIBILITY_MODIFIER? IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? blockStatementWithCurve ; // Inner NL 's handling.
+objectInitializer: blockStatementWithCurve ;
+classInitializer: KW_STATIC blockStatementWithCurve ;
 
 typeDeclaration:
     (genericClassNameExpression | KW_DEF)
@@ -224,13 +221,15 @@ statement:
     | IDENTIFIER COLON NL* statementBlock #labeledStatement
     ;
 
+blockStatementWithCurve : LCURVE blockStatement? RCURVE;
+
 statementBlock:
-    LCURVE blockStatement? RCURVE
+    blockStatementWithCurve
     | statement ;
 
-tryBlock: KW_TRY NL* LCURVE blockStatement? RCURVE NL*;
-catchBlock: KW_CATCH NL* LPAREN ((classNameExpression (BOR classNameExpression)* IDENTIFIER) | IDENTIFIER) RPAREN NL* LCURVE blockStatement? RCURVE NL*;
-finallyBlock: KW_FINALLY NL* LCURVE blockStatement? RCURVE;
+tryBlock: KW_TRY NL* blockStatementWithCurve NL*;
+catchBlock: KW_CATCH NL* LPAREN ((classNameExpression (BOR classNameExpression)* IDENTIFIER) | IDENTIFIER) RPAREN NL* blockStatementWithCurve NL*;
+finallyBlock: KW_FINALLY NL* blockStatementWithCurve;
 
 caseStatement: (KW_CASE expression COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)* );
 

@@ -259,8 +259,8 @@ public class ASTBuilder {
         boolean hasDef = asBoolean(ctx.KW_DEF);
 
         innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
-        Statement statement = asBoolean(ctx.methodBody())
-                ? parseStatement(ctx.methodBody().blockStatement())
+        Statement statement = asBoolean(ctx.blockStatementWithCurve())
+                ? parseBlockStatementWithCurve(ctx.blockStatementWithCurve())
                 : null;
 
         Parameter[] params = parseParameters(ctx.argumentDeclarationList());
@@ -476,7 +476,7 @@ public class ASTBuilder {
 
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
         if (isTrait(classNode)) {
-            if (null == ctx.methodBody() && !ctx.modifierAndDefSet.contains(KW_ABSTRACT_STR)) {
+            if (null == ctx.blockStatementWithCurve() && !ctx.modifierAndDefSet.contains(KW_ABSTRACT_STR)) {
                 throw createParsingFailedException(new InvalidSyntaxException("You defined a method without body. Try adding a body, or declare it abstract.", ctx));
             }
         }
@@ -548,12 +548,12 @@ public class ASTBuilder {
     }
 
     public void parseMember(ClassNode classNode, GroovyParser.ClassInitializerContext ctx) {
-        unpackStatement((BlockStatement)getOrCreateClinitMethod(classNode).getCode(), parseStatement(ctx.blockStatement()));
+        unpackStatement((BlockStatement)getOrCreateClinitMethod(classNode).getCode(),  parseBlockStatementWithCurve(ctx.blockStatementWithCurve()));
     }
 
     public void parseMember(ClassNode classNode, GroovyParser.ObjectInitializerContext ctx) {
         BlockStatement statement = new BlockStatement();
-        unpackStatement(statement, parseStatement(ctx.blockStatement()));
+        unpackStatement(statement, parseBlockStatementWithCurve(ctx.blockStatementWithCurve()));
         classNode.addObjectInitializerStatements(statement);
     }
 
@@ -564,7 +564,7 @@ public class ASTBuilder {
 
         ClassNode[] exceptions = parseThrowsClause(ctx.throwsClause());
         this.innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
-        final ConstructorNode constructorNode = classNode.addConstructor(modifiers, parseParameters(ctx.argumentDeclarationList()), exceptions, parseStatement(DefaultGroovyMethods.asType(ctx.blockStatement(), GroovyParser.BlockStatementContext.class)));
+        final ConstructorNode constructorNode = classNode.addConstructor(modifiers, parseParameters(ctx.argumentDeclarationList()), exceptions, parseBlockStatementWithCurve(ctx.blockStatementWithCurve()));
 
         for (InnerClassNode it : this.innerClassesDefinedInMethod.pop()) {
             it.setEnclosingMethod(constructorNode);
@@ -704,10 +704,15 @@ public class ASTBuilder {
         return setupNodeLocation(new ForStatement(parameter, parseExpression(ctx.expression()), parse(ctx.statementBlock())), ctx);
     }
 
+    public Statement parseBlockStatementWithCurve(GroovyParser.BlockStatementWithCurveContext ctx) {
+        return parseStatement(ctx.blockStatement());
+    }
+
     public Statement parse(GroovyParser.StatementBlockContext ctx) {
         if (asBoolean(ctx.statement()))
             return setupNodeLocation(parseStatement(ctx.statement()), ctx.statement());
-        else return parseStatement(ctx.blockStatement());
+        else
+            return parseBlockStatementWithCurve(ctx.blockStatementWithCurve());
     }
 
     public Statement parseStatement(GroovyParser.SwitchStatementContext ctx) {
@@ -799,18 +804,18 @@ public class ASTBuilder {
     public Statement parseStatement(GroovyParser.TryCatchFinallyStatementContext ctx) {
         Object finallyStatement;
 
-        GroovyParser.BlockStatementContext finallyBlockStatement = ctx.finallyBlock() != null ? ctx.finallyBlock().blockStatement() : null;
+        GroovyParser.BlockStatementWithCurveContext finallyBlockStatement = ctx.finallyBlock() != null ? ctx.finallyBlock().blockStatementWithCurve() : null;
         if (finallyBlockStatement != null) {
             BlockStatement fbs = new BlockStatement();
-            unpackStatement(fbs, parseStatement(finallyBlockStatement));
+            unpackStatement(fbs, parseBlockStatementWithCurve(finallyBlockStatement));
             finallyStatement = setupNodeLocation(fbs, finallyBlockStatement);
 
         } else finallyStatement = EmptyStatement.INSTANCE;
 
-        final TryCatchStatement statement = new TryCatchStatement(parseStatement(DefaultGroovyMethods.asType(ctx.tryBlock().blockStatement(), GroovyParser.BlockStatementContext.class)), (Statement)finallyStatement);
+        final TryCatchStatement statement = new TryCatchStatement(parseBlockStatementWithCurve(ctx.tryBlock().blockStatementWithCurve()), (Statement)finallyStatement);
 
         for (GroovyParser.CatchBlockContext it : ctx.catchBlock()) {
-            final Statement catchBlock = parseStatement(DefaultGroovyMethods.asType(it.blockStatement(), GroovyParser.BlockStatementContext.class));
+            final Statement catchBlock = parseBlockStatementWithCurve(it.blockStatementWithCurve());
             final String var = it.IDENTIFIER().getText();
 
             List<GroovyParser.ClassNameExpressionContext> classNameExpression = it.classNameExpression();
