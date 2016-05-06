@@ -1078,6 +1078,71 @@ class MainTest extends Specification {
     }
 
 
+
+    @Unroll
+    def "test comments for #path"() {
+        def filename = path;
+
+        setup:
+        def file = new File("$RESOURCES_PATH/$path")
+        def moduleNodeNew = new Main(Configuration.NEW).process(file)
+        def moduleNodeOld = new Main(Configuration.OLD).process(file)
+        def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
+        config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
+        List<ClassNode> classes = new LinkedList(moduleNodeNew.classes).sort { c1, c2 -> c1.name <=> c2.name }
+
+        expect:
+        moduleNodeNew
+        moduleNodeOld
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeOld == moduleNodeOld2
+        }
+        and:
+        ASTWriter.astToString(moduleNodeNew) == ASTWriter.astToString(moduleNodeOld2)
+        and:
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeNew == moduleNodeOld, "Fail in $path"
+        }
+        and:
+        classes[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')            == '/** * test class Comments */'
+        and:
+        classes[0].fields[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')  == '/**     * test Comments.SOME_VAR     */'
+        and:
+        classes[0].fields[1].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')  == '/**     * test Comments.SOME_VAR2     */'
+        and:
+        classes[0].declaredConstructors[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '') == '/**     * test Comments.constructor1     */'
+        and:
+        classes[0].methods[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '') == '/**     * test Comments.m1     */'
+        and:
+        classes[0].methods[1].nodeMetaData[ASTBuilder.DOC_COMMENT] == null
+        and:
+        classes[0].methods[2].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '') == '/**     * test Comments.m3     */'
+
+        and:
+        classes[1].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')            == '/**     * test class InnerClazz     */'
+        and:
+        classes[1].fields[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')  == '/**         * test InnerClazz.SOME_VAR3         */'
+        and:
+        classes[1].fields[1].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')  == '/**         * test InnerClazz.SOME_VAR4         */'
+        and:
+        classes[1].methods[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '') == '/**         * test Comments.m4         */'
+        and:
+        classes[1].methods[1].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '') == '/**         * test Comments.m5         */'
+
+        and:
+        classes[2].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')            == '/**     * test class InnerEnum     */'
+        and:
+        classes[2].fields[0].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')  == '/**         * InnerEnum.NEW         */'
+        and:
+        classes[2].fields[1].nodeMetaData[ASTBuilder.DOC_COMMENT].replaceAll(/\r?\n/, '')  == '/**         * InnerEnum.OLD         */'
+
+        where:
+        path | config
+        "Comments.groovy" | _
+
+    }
+
+
     @Unroll
     def "test by evaluating script: #path"() {
         def filename = path;
@@ -1096,32 +1161,6 @@ class MainTest extends Specification {
 
     }
 
-
-    /*
-	@Unroll
-    def "test invalid class modifiers #path"() {
-        expect:
-        def file = new File("$RESOURCES_PATH/$path")
-
-        def errorCollectorNew = new Main(Configuration.NEW).process(file).context.errorCollector
-        def errorCollectorOld = new Main(Configuration.OLD).process(file).context.errorCollector
-        def errorCollectorOld2 = new Main(Configuration.OLD).process(file).context.errorCollector
-
-
-        def cl = { ErrorCollector errorCollector, int it -> def s = new StringWriter(); errorCollector.getError(it).write(new PrintWriter(s)); s.toString() }
-        def errOld1 = (0..<errorCollectorOld.errorCount).collect cl.curry(errorCollectorOld)
-        def errOld2 = (0..<errorCollectorOld2.errorCount).collect cl.curry(errorCollectorOld2)
-        def errNew = (0..<errorCollectorNew.errorCount).collect cl.curry(errorCollectorNew)
-
-        assert errOld1 == errOld2
-        assert errOld1 == errNew
-
-        where:
-        path | output
-        "ClassModifiersInvalid_Issue1_2.groovy" | _
-        "ClassModifiersInvalid_Issue2_2.groovy" | _
-    }
-    */
 
     @Unroll
     def "test invalid files #path"() {

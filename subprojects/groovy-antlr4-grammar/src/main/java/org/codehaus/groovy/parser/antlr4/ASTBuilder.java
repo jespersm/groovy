@@ -58,6 +58,8 @@ public class ASTBuilder {
 
     public static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
     public static final String KW_ABSTRACT_STR = "abstract";
+    public static final String DOC_COMMENT = "docComment";
+    public static final String DOC_COMMENT_PREFIX = "/**";
 
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
@@ -405,6 +407,9 @@ public class ASTBuilder {
                 log.warning(createExceptionMessage(e));
             }
         }
+
+        this.attachDocCommentAsMetaData(classNode, ctx);
+
         return classNode;
     }
 
@@ -426,14 +431,20 @@ public class ASTBuilder {
         return listExpression;
     }
 
+
+
     public void parseClassBody(ClassNode classNode, GroovyParser.ClassBodyContext ctx) {
         for(GroovyParser.EnumConstantContext node : ctx.enumConstant()) {
 
-            setupNodeLocation(EnumHelper.addEnumConstant(classNode, node.IDENTIFIER().getText(), createEnumConstantInitExpression(node.argumentList())), node.IDENTIFIER().getSymbol());
+            FieldNode enumConstant = EnumHelper.addEnumConstant(classNode, node.IDENTIFIER().getText(), createEnumConstantInitExpression(node.argumentList()));
+            setupNodeLocation(enumConstant, node.IDENTIFIER().getSymbol());
+
+            this.attachDocCommentAsMetaData(enumConstant, node);
         }
 
         parseMembers(classNode, ctx.classMember());
     }
+
 
     public void parseMembers(ClassNode classNode, List<GroovyParser.ClassMemberContext> ctx) {
         for (GroovyParser.ClassMemberContext member : ctx) {
@@ -454,7 +465,14 @@ public class ASTBuilder {
                 parseMember(classNode, (GroovyParser.ClassInitializerContext)memberContext);
             else
                 assert false : "Unknown class member type.";
-            if (asBoolean(memberNode)) setupNodeLocation(memberNode, member);
+
+
+            if (asBoolean(memberNode)) {
+                setupNodeLocation(memberNode, member);
+
+                this.attachDocCommentAsMetaData(memberNode, member);
+            }
+
             if (member.getChildCount() > 1) {
                 assert memberNode != null;
                 for (int i = 0; i < member.children.size() - 2; i++) {
@@ -2213,6 +2231,49 @@ public class ASTBuilder {
     public String parseString(TerminalNode node) {
         String t = node.getText();
         return asBoolean(t) ? DefaultGroovyMethods.getAt(t, new IntRange(true, 1, -2)) : t;
+    }
+
+    /**
+     * Attach doc comment to member node as meta data
+     */
+    private void attachDocCommentAsMetaData(ASTNode node, ParserRuleContext ctx) {
+        ParseTree docCommentNode = this.findDocCommentByNode(ctx);
+
+        if (null == docCommentNode) {
+            return;
+        }
+
+        node.putNodeMetaData(DOC_COMMENT, docCommentNode.getText());
+    }
+
+    private ParseTree findDocCommentByNode(ParserRuleContext node) {
+        ParseTree docCommentNode = null;
+
+        for (ParseTree child : node.getParent().children) {
+            if (node == child) {
+                return docCommentNode;
+            }
+
+            if (!(child instanceof TerminalNode)) {
+                docCommentNode = null;
+
+                continue;
+            }
+
+
+            // doc comments are treated as NL
+            if (((TerminalNode) child).getSymbol().getType() != GroovyParser.NL) {
+                continue;
+            }
+
+            if (!child.getText().startsWith(DOC_COMMENT_PREFIX)) {
+                continue;
+            }
+
+            docCommentNode = child;
+        }
+
+        throw new GroovyBugError("node can not be found"); // The exception should never be thrown!
     }
 
 
