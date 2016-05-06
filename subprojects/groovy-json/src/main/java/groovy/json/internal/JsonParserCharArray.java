@@ -43,8 +43,7 @@ public class JsonParserCharArray extends BaseJsonParser {
         __index = 0;
         charArray = cs;
         lastIndex = cs.length - 1;
-        Object value = decodeValue();
-        return value;
+        return decodeValue();
     }
 
     protected final boolean hasMore() {
@@ -158,7 +157,7 @@ public class JsonParserCharArray extends BaseJsonParser {
         return decodeValueInternal();
     }
 
-    private final Object decodeValueInternal() {
+    private Object decodeValueInternal() {
         Object value = null;
         skipWhiteSpace();
 
@@ -213,7 +212,7 @@ public class JsonParserCharArray extends BaseJsonParser {
 
     int[] endIndex = new int[1];
 
-    private final Object decodeNumber() {
+    private Object decodeNumber() {
         Number num = CharScanner.parseJsonNumber(charArray, __index, charArray.length, endIndex);
         __index = endIndex[0];
 
@@ -363,8 +362,7 @@ public class JsonParserCharArray extends BaseJsonParser {
             }
         } catch (Exception ex) {
             if (ex instanceof JsonException) {
-                JsonException jsonException = (JsonException) ex;
-                throw jsonException;
+                throw (JsonException) ex;
             }
             throw new JsonException(exceptionDetails("issue parsing JSON array"), ex);
         }

@@ -331,7 +331,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     }
 
     @SuppressWarnings("unchecked")
-    private void addPrivateFieldOrMethodAccess(Expression source, ClassNode cn, StaticTypesMarker type, ASTNode accessedMember) {
+    private static void addPrivateFieldOrMethodAccess(Expression source, ClassNode cn, StaticTypesMarker type, ASTNode accessedMember) {
         Set<ASTNode> set = (Set<ASTNode>) cn.getNodeMetaData(type);
         if (set==null) {
             set = new LinkedHashSet<ASTNode>();
@@ -398,7 +398,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
     /**
      * wrap type in Class&lt;&gt; if usingClass==true
      */
-    private ClassNode makeType(ClassNode cn, boolean usingClass) {
+    private static ClassNode makeType(ClassNode cn, boolean usingClass) {
         if (usingClass) {
             ClassNode clazzType = CLASS_Type.getPlainNodeReference();
             clazzType.setGenericsTypes(new GenericsType[] {new GenericsType(cn)});
@@ -867,7 +867,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return true;
     }
 
-    private ClassNode adjustTypeForSpreading(ClassNode inferredRightExpressionType, Expression leftExpression) {
+    private static ClassNode adjustTypeForSpreading(ClassNode inferredRightExpressionType, Expression leftExpression) {
         // imagine we have: list*.foo = 100
         // then the assignment must be checked against [100], not 100
         ClassNode wrappedRHS = inferredRightExpressionType;
@@ -2016,7 +2016,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private ClassNode wrapClosureType(final ClassNode returnType) {
+    private static ClassNode wrapClosureType(final ClassNode returnType) {
         ClassNode inferredType = CLOSURE_TYPE.getPlainNodeReference();
         inferredType.setGenericsTypes(new GenericsType[]{new GenericsType(wrapTypeIfNecessary(returnType))});
         return inferredType;
@@ -2755,7 +2755,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private void doAddDelegateReceiver(final List<Receiver<String>> receivers, final StringBuilder path, final ClassNode delegate) {
+    private static void doAddDelegateReceiver(final List<Receiver<String>> receivers, final StringBuilder path, final ClassNode delegate) {
         receivers.add(new Receiver<String>(delegate, path.toString()));
         if (isTraitHelper(delegate)) {
             receivers.add(new Receiver<String>(delegate.getOuterClass(), path.toString()));
@@ -2897,27 +2897,34 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
                 List<MethodNode> mn = null;
                 Receiver<String> chosenReceiver = null;
                 for (Receiver<String> currentReceiver : receivers) {
-                    mn = findMethod(currentReceiver.getType(), name, args);
+                    ClassNode receiverType = currentReceiver.getType();
+                    mn = findMethod(receiverType, name, args);
 
                     // if the receiver is "this" or "implicit this", then we must make sure that the compatible
                     // methods are only static if we are in a static context
-                    if (!mn.isEmpty() && typeCheckingContext.isInStaticContext && (call.isImplicitThis()
-                            || (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()))) {
-                        // we create a separate method list just to be able to print out
+                    // if we are not in a static context but the the current receiver is a static class, we must
+                    // ensure that all methods are either static or declared by the current receiver or a superclass
+                    if (!mn.isEmpty()
+                            && (typeCheckingContext.isInStaticContext || (receiverType.getModifiers() & Opcodes.ACC_STATIC) != 0)
+                            && (call.isImplicitThis() || (objectExpression instanceof VariableExpression && ((VariableExpression) objectExpression).isThisExpression()))) {
+                        // we create separate method lists just to be able to print out
                         // a nice error message to the user
-                        List<MethodNode> staticMethods = new LinkedList<MethodNode>();
-                        List<MethodNode> nonStaticMethods = new LinkedList<MethodNode>();
+                        // a method is accessible if it is static, or if we are not in a static context and it is
+                        // declared by the current receiver or a superclass
+                        List<MethodNode> accessibleMethods = new LinkedList<MethodNode>();
+                        List<MethodNode> inaccessibleMethods = new LinkedList<MethodNode>();
                         for (final MethodNode node : mn) {
-                            if (node.isStatic()) {
-                                staticMethods.add(node);
+                            if (node.isStatic()
+                                    || (!typeCheckingContext.isInStaticContext && implementsInterfaceOrIsSubclassOf(receiverType, node.getDeclaringClass()))) {
+                                accessibleMethods.add(node);
                             } else {
-                                nonStaticMethods.add(node);
+                                inaccessibleMethods.add(node);
                             }
                         }
-                        mn = staticMethods;
-                        if (staticMethods.isEmpty()) {
+                        mn = accessibleMethods;
+                        if (accessibleMethods.isEmpty()) {
                             // choose an arbitrary method to display an error message
-                            MethodNode node = nonStaticMethods.get(0);
+                            MethodNode node = inaccessibleMethods.get(0);
                             ClassNode owner = node.getDeclaringClass();
                             addStaticTypeError("Non static method " + owner.getName() + "#" + node.getName() + " cannot be called from static context", call);
                         }
@@ -3037,7 +3044,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      *@param args the arguments of the method call
      * @param returnType the original return type, as inferred by the type checker   @return fixed return type if the selected method is {@link org.codehaus.groovy.runtime.DefaultGroovyMethods#withTraits(Object, Class[]) withTraits}
      */
-    private ClassNode adjustWithTraits(final MethodNode directMethodCallCandidate, final ClassNode receiver, final ClassNode[] args, final ClassNode returnType) {
+    private static ClassNode adjustWithTraits(final MethodNode directMethodCallCandidate, final ClassNode receiver, final ClassNode[] args, final ClassNode returnType) {
         if (directMethodCallCandidate instanceof ExtensionMethodNode) {
             ExtensionMethodNode emn = (ExtensionMethodNode) directMethodCallCandidate;
             if ("withTraits".equals(emn.getName()) && "DefaultGroovyMethods".equals(emn.getExtensionMethodNode().getDeclaringClass().getNameWithoutPackage())) {
@@ -3062,7 +3069,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
      * @param name  the name of the method
      * @param args the argument classes
      */
-    private void addArrayMethods(List<MethodNode> methods, ClassNode receiver, String name, ClassNode[] args) {
+    private static void addArrayMethods(List<MethodNode> methods, ClassNode receiver, String name, ClassNode[] args) {
         if (args.length!=1) return;
         if (!receiver.isArray()) return;
         if (!isIntCategory(getUnwrapper(args[0]))) return;
@@ -3133,7 +3140,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return owners;
     }
 
-    private void addSelfTypes(final ClassNode receiver, final List<Receiver<String>> owners) {
+    private static void addSelfTypes(final ClassNode receiver, final List<Receiver<String>> owners) {
         LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
         for (ClassNode selfType : Traits.collectSelfTypes(receiver, selfTypes)) {
             owners.add(Receiver.<String>make(selfType));
@@ -3568,7 +3575,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return null;
     }
 
-    private ClassNode inferSAMTypeGenericsInAssignment(ClassNode samUsage, MethodNode sam, ClassNode closureType, ClosureExpression closureExpression) {
+    private static ClassNode inferSAMTypeGenericsInAssignment(ClassNode samUsage, MethodNode sam, ClassNode closureType, ClosureExpression closureExpression) {
         // if the sam type or closure type do not provide generics information, 
         // we cannot infer anything, thus we simply return the provided samUsage
         GenericsType[] samGt = samUsage.getGenericsTypes();
@@ -3727,7 +3734,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return result;
     }
 
-    private List<MethodNode> addGeneratedMethods(final ClassNode receiver, final List<MethodNode> methods) {
+    private static List<MethodNode> addGeneratedMethods(final ClassNode receiver, final List<MethodNode> methods) {
         // using a comparator of parameters
         List<MethodNode> result = new LinkedList<MethodNode>();
         for (MethodNode method : methods) {
@@ -4094,7 +4101,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return ret;
     }
 
-    private ClassNode makeSelf(ClassNode trait) {
+    private static ClassNode makeSelf(ClassNode trait) {
         ClassNode ret = trait;
         LinkedHashSet<ClassNode> selfTypes = new LinkedHashSet<ClassNode>();
         Traits.collectSelfTypes(ret, selfTypes);
@@ -4300,7 +4307,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return applyGenericsContext(resolvedPlaceholders, returnType);
     }
 
-    private void resolvePlaceholdersFromExplicitTypeHints(final MethodNode method, final GenericsType[] explicitTypeHints, final Map<String, GenericsType> resolvedPlaceholders) {
+    private static void resolvePlaceholdersFromExplicitTypeHints(final MethodNode method, final GenericsType[] explicitTypeHints, final Map<String, GenericsType> resolvedPlaceholders) {
         if (explicitTypeHints!=null) {
             GenericsType[] methodGenericTypes = method.getGenericsTypes();
             if (methodGenericTypes!=null && methodGenericTypes.length==explicitTypeHints.length) {
@@ -4313,7 +4320,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         }
     }
 
-    private void extractGenericsConnectionsForSuperClassAndInterfaces(final Map<String, GenericsType> resolvedPlaceholders, final Map<String, GenericsType> connections) {
+    private static void extractGenericsConnectionsForSuperClassAndInterfaces(final Map<String, GenericsType> resolvedPlaceholders, final Map<String, GenericsType> connections) {
         for (GenericsType value : new HashSet<GenericsType>(connections.values())) {
             if (!value.isPlaceholder() && !value.isWildcard()) {
                 ClassNode valueType = value.getType();
@@ -4553,7 +4560,7 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return true;
     }
 
-    private String toMethodGenericTypesString(MethodNode node) {
+    private static String toMethodGenericTypesString(MethodNode node) {
         GenericsType[] genericsTypes = node.getGenericsTypes();
         if (genericsTypes ==null) return "";
         StringBuilder sb = new StringBuilder("<");
@@ -4582,11 +4589,11 @@ public class StaticTypeCheckingVisitor extends ClassCodeVisitorSupport {
         return sb.toString();
     }
 
-    private void putSetterInfo(Expression exp, SetterInfo info) {
+    private static void putSetterInfo(Expression exp, SetterInfo info) {
         exp.putNodeMetaData(SetterInfo.class, info);
     }
 
-    private SetterInfo removeSetterInfo(Expression exp) {
+    private static SetterInfo removeSetterInfo(Expression exp) {
         Object nodeMetaData = exp.getNodeMetaData(SetterInfo.class);
         if (nodeMetaData!=null) {
             exp.removeNodeMetaData(SetterInfo.class);

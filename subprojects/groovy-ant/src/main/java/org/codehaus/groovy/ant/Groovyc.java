@@ -162,15 +162,9 @@ import org.codehaus.groovy.tools.javac.JavaAwareCompilationUnit;
  * &lt;/project&gt;
  * </pre>
  * <p>
- * Based heavily on the Javac implementation in Ant.
+ * Based heavily on the implementation of the Javac task in Apache Ant.
  * <p>
  * Can also be used from {@link groovy.util.AntBuilder} to allow the build file to be scripted in Groovy.
- *
- * @author <a href="mailto:james@coredevelopers.net">James Strachan</a>
- * @author Hein Meling
- * @author <a href="mailto:russel.winder@concertant.com">Russel Winder</a>
- * @author Danno Ferrin
- * @author Paul King
  */
 public class Groovyc extends MatchingTask {
     private static final URL[] EMPTY_URL_ARRAY = new URL[0];
@@ -215,7 +209,6 @@ public class Groovyc extends MatchingTask {
     private String configscript;
 
     private Set<String> scriptExtensions = new LinkedHashSet<String>();
-
 
     /**
      * If true, generates metadata for reflection on method parameter names (jdk8+ only).  Defaults to false.
@@ -292,20 +285,27 @@ public class Groovyc extends MatchingTask {
     }
 
     /**
-     * Sets the bytecode compatibility mode
+     * Sets the bytecode compatibility mode. The parameter can take
+     * one of the values <tt>1.8</tt>, <tt>1.7</tt>, <tt>1.6</tt>, <tt>1.5</tt> or <tt>1.4</tt>.
      *
      * @param version the bytecode compatibility mode
      */
     public void setTargetBytecode(String version) {
-        if (CompilerConfiguration.PRE_JDK5.equals(version) || CompilerConfiguration.POST_JDK5.equals(version)) {
-            this.targetBytecode = version;
+        
+        for (String allowedJdk : CompilerConfiguration.ALLOWED_JDKS) {
+            if (allowedJdk.equals(version)) {
+                this.targetBytecode = version;
+                break;
+            }
         }
     }
 
     /**
      * Retrieves the compiler bytecode compatibility mode.
      *
-     * @return bytecode compatibility mode. Can be either <tt>1.5</tt> or <tt>1.4</tt>.
+     * @return bytecode compatibility mode. Can be one of the values
+     *         <tt>1.8</tt>, <tt>1.7</tt>, <tt>1.6</tt>, <tt>1.5</tt> or
+     *         <tt>1.4</tt>.
      */
     public String getTargetBytecode() {
         return this.targetBytecode;
@@ -1188,7 +1188,7 @@ public class Groovyc extends MatchingTask {
             String[] filenames = FileSystemCompiler.generateFileNamesFromOptions(cli);
             boolean fileNameErrors = filenames == null;
 
-            fileNameErrors = fileNameErrors && !FileSystemCompiler.validateFiles(filenames);
+            fileNameErrors = fileNameErrors || !FileSystemCompiler.validateFiles(filenames);
 
             if (targetBytecode != null) {
                 configuration.setTargetBytecode(targetBytecode);

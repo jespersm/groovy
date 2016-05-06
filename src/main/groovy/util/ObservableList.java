@@ -26,9 +26,11 @@ import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 /**
  * List decorator that will trigger PropertyChangeEvents when a value changes.<br>
@@ -137,6 +139,19 @@ public class ObservableList implements List {
     public void add(int index, Object element) {
         int oldSize = size();
         delegate.add(index, element);
+        fireAddWithTest(element, index, oldSize);
+    }
+
+    public boolean add(Object o) {
+        int oldSize = size();
+        boolean success = delegate.add(o);
+        if (success) {
+            fireAddWithTest(o, oldSize, oldSize);
+        }
+        return success;
+    }
+
+    private void fireAddWithTest(Object element, int index, int oldSize) {
         if (test != null) {
             Object result = test.call(element);
             if (result != null && result instanceof Boolean && (Boolean) result) {
@@ -149,49 +164,8 @@ public class ObservableList implements List {
         }
     }
 
-    public boolean add(Object o) {
-        int oldSize = size();
-        boolean success = delegate.add(o);
-        if (success) {
-            if (test != null) {
-                Object result = test.call(o);
-                if (result != null && result instanceof Boolean && (Boolean) result) {
-                    fireElementAddedEvent(size() - 1, o);
-                    fireSizeChangedEvent(oldSize, size());
-                }
-            } else {
-                fireElementAddedEvent(size() - 1, o);
-                fireSizeChangedEvent(oldSize, size());
-            }
-        }
-        return success;
-    }
-
     public boolean addAll(Collection c) {
-        int oldSize = size();
-        int index = size() - 1;
-        index = index < 0 ? 0 : index;
-
-        boolean success = delegate.addAll(c);
-        if (success && c != null) {
-            List values = new ArrayList();
-            for (Object element : c) {
-                if (test != null) {
-                    Object result = test.call(element);
-                    if (result != null && result instanceof Boolean && (Boolean) result) {
-                        values.add(element);
-                    }
-                } else {
-                    values.add(element);
-                }
-            }
-            if (!values.isEmpty()) {
-                fireMultiElementAddedEvent(index, values);
-                fireSizeChangedEvent(oldSize, size());
-            }
-        }
-
-        return success;
+        return addAll(size(), c);
     }
 
     public boolean addAll(int index, Collection c) {
@@ -299,11 +273,14 @@ public class ObservableList implements List {
         }
 
         List values = new ArrayList();
-        if (c != null) {
-            for (Object element : c) {
-                if (delegate.contains(element)) {
-                    values.add(element);
-                }
+        // GROOVY-7783 use Sets for O(1) performance for contains
+        Set delegateSet = new HashSet<Object>(delegate);
+        if (!(c instanceof Set)) {
+            c = new HashSet<Object>(c);
+        }
+        for (Object element : c) {
+            if (delegateSet.contains(element)) {
+                values.add(element);
             }
         }
 
@@ -323,11 +300,13 @@ public class ObservableList implements List {
         }
 
         List values = new ArrayList();
-        if (c != null) {
-            for (Object element : delegate) {
-                if (!c.contains(element)) {
-                    values.add(element);
-                }
+        // GROOVY-7783 use Set for O(1) performance for contains
+        if (!(c instanceof Set)) {
+            c = new HashSet<Object>(c);
+        }
+        for (Object element : delegate) {
+            if (!c.contains(element)) {
+                values.add(element);
             }
         }
 

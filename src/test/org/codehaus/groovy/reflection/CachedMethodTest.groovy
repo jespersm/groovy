@@ -16,15 +16,10 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package groovy.json.internal;
+package org.codehaus.groovy.reflection
 
-/**
- * @author Richard Hightower
- */
-public class Byt {
-
-    public static void charTo(byte[] b, char val) {
-        b[1] = (byte) (val);
-        b[0] = (byte) (val >>> 8);
+class CachedMethodTest extends GroovyTestCase {
+    void testCachedMethodCompareTo() {
+        assert String.metaClass.methods.size() == String.metaClass.methods.unique().size()
     }
 }

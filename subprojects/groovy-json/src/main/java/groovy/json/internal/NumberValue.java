@@ -99,7 +99,7 @@ public class NumberValue extends java.lang.Number implements Value {
         return false;
     }
 
-    private final Object doToValue() {
+    private Object doToValue() {
         switch (type) {
             case DOUBLE:
                 return bigDecimalValue();
@@ -130,9 +130,8 @@ public class NumberValue extends java.lang.Number implements Value {
         if (startIndex != value1.startIndex) return false;
         if (!Arrays.equals(buffer, value1.buffer)) return false;
         if (type != value1.type) return false;
-        if (value != null ? !value.equals(value1.value) : value1.value != null) return false;
+        return value != null ? value.equals(value1.value) : value1.value == null;
 
-        return true;
     }
 
     public int hashCode() {

@@ -175,7 +175,7 @@ public class ParameterTypes
      * and if the method is a vargs method. This method will then transform the given
      * arguments to make the method callable
      *
-     * @param argumentArray the arguments used to call the method
+     * @param argumentArrayOrig the arguments used to call the method
      * @param paramTypes    the types of the parameters the method takes
      */
     private static Object[] fitToVargs(Object[] argumentArrayOrig, CachedClass[] paramTypes) {
@@ -250,7 +250,7 @@ public class ParameterTypes
         return false;
     }
 
-    private boolean isValidExactMethod(Class[] arguments, CachedClass[] pt) {
+    private static boolean isValidExactMethod(Class[] arguments, CachedClass[] pt) {
         // lets check the parameter types match
         int size = pt.length;
         for (int i = 0; i < size; i++) {
@@ -297,7 +297,7 @@ public class ParameterTypes
         return MetaClassHelper.isAssignableFrom(toTestAgainst, component);
     }
 
-    private boolean isValidVarargsMethod(Class[] arguments, int size, CachedClass[] pt, int paramMinus1) {
+    private static boolean isValidVarargsMethod(Class[] arguments, int size, CachedClass[] pt, int paramMinus1) {
         // first check normal number of parameters
         for (int i = 0; i < paramMinus1; i++) {
             if (pt[i].isAssignableFrom(arguments[i])) continue;
@@ -369,7 +369,7 @@ public class ParameterTypes
         return false;
     }
 
-    private Class getArgClass(Object arg) {
+    private static Class getArgClass(Object arg) {
         Class cls;
         if (arg == null) {
             cls = null;

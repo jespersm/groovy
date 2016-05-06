@@ -249,7 +249,7 @@ public class CompilerConfiguration {
      * @param key the name of the system property.
      * @return value of the system property or null
      */
-    private String safeGetSystemProperty(String key){
+    private static String safeGetSystemProperty(String key){
         return safeGetSystemProperty(key, null);
     }
 
@@ -265,7 +265,7 @@ public class CompilerConfiguration {
      * @param def a default value.
      * @return  value of the system property or null
      */
-    private String safeGetSystemProperty(String key, String def){
+    private static String safeGetSystemProperty(String key, String def){
         try {
             return System.getProperty(key, def);
         } catch (SecurityException t){
