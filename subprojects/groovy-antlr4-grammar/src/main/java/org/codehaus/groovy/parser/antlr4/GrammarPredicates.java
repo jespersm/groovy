@@ -27,18 +27,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class GrammarPredicates {
-    private static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyParser.KW_ABSTRACT, GroovyParser.KW_AS, GroovyParser.KW_ASSERT, GroovyParser.KW_BREAK, GroovyParser.KW_CASE, GroovyParser.KW_CATCH, GroovyParser.KW_CLASS, GroovyParser.KW_CONST, GroovyParser.KW_CONTINUE, GroovyParser.KW_DEF, GroovyParser.KW_DEFAULT, GroovyParser.KW_DO, GroovyParser.KW_ELSE, GroovyParser.KW_ENUM, GroovyParser.KW_EXTENDS, GroovyParser.KW_FALSE, GroovyParser.KW_FINAL, GroovyParser.KW_FINALLY, GroovyParser.KW_FOR, GroovyParser.KW_GOTO, GroovyParser.KW_IF, GroovyParser.KW_IMPLEMENTS, GroovyParser.KW_IMPORT, GroovyParser.KW_IN, GroovyParser.KW_INSTANCEOF, GroovyParser.KW_INTERFACE, GroovyParser.KW_NATIVE, GroovyParser.KW_NEW, GroovyParser.KW_NULL, GroovyParser.KW_PACKAGE, GroovyParser.KW_RETURN, GroovyParser.KW_STATIC, GroovyParser.KW_STRICTFP, GroovyParser.KW_SUPER, GroovyParser.KW_SWITCH, GroovyParser.KW_SYNCHRONIZED, GroovyParser.KW_THIS, GroovyParser.KW_THREADSAFE, GroovyParser.KW_THROW, GroovyParser.KW_THROWS, GroovyParser.KW_TRANSIENT, GroovyParser.KW_TRAIT, GroovyParser.KW_TRUE, GroovyParser.KW_TRY, GroovyParser.KW_VOLATILE, GroovyParser.KW_WHILE, GroovyParser.BUILT_IN_TYPE, GroovyParser.VISIBILITY_MODIFIER));
+    private static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyLangParser.KW_ABSTRACT, GroovyLangParser.KW_AS, GroovyLangParser.KW_ASSERT, GroovyLangParser.KW_BREAK, GroovyLangParser.KW_CASE, GroovyLangParser.KW_CATCH, GroovyLangParser.KW_CLASS, GroovyLangParser.KW_CONST, GroovyLangParser.KW_CONTINUE, GroovyLangParser.KW_DEF, GroovyLangParser.KW_DEFAULT, GroovyLangParser.KW_DO, GroovyLangParser.KW_ELSE, GroovyLangParser.KW_ENUM, GroovyLangParser.KW_EXTENDS, GroovyLangParser.KW_FALSE, GroovyLangParser.KW_FINAL, GroovyLangParser.KW_FINALLY, GroovyLangParser.KW_FOR, GroovyLangParser.KW_GOTO, GroovyLangParser.KW_IF, GroovyLangParser.KW_IMPLEMENTS, GroovyLangParser.KW_IMPORT, GroovyLangParser.KW_IN, GroovyLangParser.KW_INSTANCEOF, GroovyLangParser.KW_INTERFACE, GroovyLangParser.KW_NATIVE, GroovyLangParser.KW_NEW, GroovyLangParser.KW_NULL, GroovyLangParser.KW_PACKAGE, GroovyLangParser.KW_RETURN, GroovyLangParser.KW_STATIC, GroovyLangParser.KW_STRICTFP, GroovyLangParser.KW_SUPER, GroovyLangParser.KW_SWITCH, GroovyLangParser.KW_SYNCHRONIZED, GroovyLangParser.KW_THIS, GroovyLangParser.KW_THREADSAFE, GroovyLangParser.KW_THROW, GroovyLangParser.KW_THROWS, GroovyLangParser.KW_TRANSIENT, GroovyLangParser.KW_TRAIT, GroovyLangParser.KW_TRUE, GroovyLangParser.KW_TRY, GroovyLangParser.KW_VOLATILE, GroovyLangParser.KW_WHILE, GroovyLangParser.BUILT_IN_TYPE, GroovyLangParser.VISIBILITY_MODIFIER));
 
     public static boolean isClassName(TokenStream nameOrPath) {
         int index = 1;
         Token token = nameOrPath.LT(index);
 
-        while (nameOrPath.LT(index+1).getType() == GroovyParser.DOT) {
+        while (nameOrPath.LT(index+1).getType() == GroovyLangParser.DOT) {
             index += 2;
             token = nameOrPath.LT(index);
         }
 
-        return GroovyParser.BUILT_IN_TYPE == token.getType() || Character.isUpperCase(token.getText().codePointAt(0));
+        return GroovyLangParser.BUILT_IN_TYPE == token.getType() || Character.isUpperCase(token.getText().codePointAt(0));
     }
 
     public static boolean isKeyword(TokenStream tokenStream, int... excludedKeywords) {
@@ -54,7 +54,7 @@ public class GrammarPredicates {
     }
 
     public static boolean isCurrentClassName(TokenStream tokenStream, String currentClassName) {
-        return tokenStream.LT(tokenStream.LT(1).getType() == GroovyParser.VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName);
+        return tokenStream.LT(tokenStream.LT(1).getType() == GroovyLangParser.VISIBILITY_MODIFIER ? 2 : 1).getText().equals(currentClassName);
     }
 
     public static boolean isFollowedByJavaLetterInGString(CharStream cs) {
@@ -94,10 +94,10 @@ public class GrammarPredicates {
         Token token = tokenStream.LT(index);
         int tokenType = token.getType();
 
-        if (tokenType == GroovyParser.GSTRING_START) { // gstring
-            index = consumeTokenPair(tokenStream, index, GroovyParser.GSTRING_START, GroovyParser.GSTRING_END);
-        } else if (tokenType == GroovyParser.LCURVE) { // closure
-            index = consumeTokenPair(tokenStream, index, GroovyParser.LCURVE, GroovyParser.RCURVE);
+        if (tokenType == GroovyLangParser.GSTRING_START) { // gstring
+            index = consumeTokenPair(tokenStream, index, GroovyLangParser.GSTRING_START, GroovyLangParser.GSTRING_END);
+        } else if (tokenType == GroovyLangParser.LCURVE) { // closure
+            index = consumeTokenPair(tokenStream, index, GroovyLangParser.LCURVE, GroovyLangParser.RCURVE);
         }
 
         if (-1 == index) { // EOF reached.
@@ -108,9 +108,9 @@ public class GrammarPredicates {
         do {
             token = tokenStream.LT(++index);
             tokenType = token.getType();
-        } while (tokenType == GroovyParser.NL);
+        } while (tokenType == GroovyLangParser.NL);
 
-        return tokenType == GroovyParser.LPAREN;
+        return tokenType == GroovyLangParser.LPAREN;
     }
 
     private static int consumeTokenPair(TokenStream tokenStream, int index, int beginTokenType, int endTokenType) {
@@ -123,7 +123,7 @@ public class GrammarPredicates {
             token = tokenStream.LT(++index);
             tokenType = token.getType();
 
-            if (tokenType == GroovyParser.EOF) {
+            if (tokenType == GroovyLangParser.EOF) {
                 return -1;
             } else if (tokenType == beginTokenType) {
                 tokenCnt++;
