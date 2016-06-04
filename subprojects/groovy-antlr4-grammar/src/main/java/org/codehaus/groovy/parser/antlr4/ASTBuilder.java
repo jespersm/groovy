@@ -1512,9 +1512,8 @@ public class ASTBuilder {
         boolean hasExpression = asBoolean(cmdExpressionRuleContext.expression());
         boolean hasPropertyAccess = asBoolean(cmdExpressionRuleContext.p1) || asBoolean(cmdExpressionRuleContext.p2) || asBoolean(cmdExpressionRuleContext.p3);
 
-        Expression expression = hasExpression ? parseExpression(cmdExpressionRuleContext.expression()) : VariableExpression.THIS_EXPRESSION;
-        expression = parseCallExpressionRule(cmdExpressionRuleContext.c, cmdExpressionRuleContext.n, null, expression, null);
-        ((MethodCallExpression)expression).setImplicitThis(!hasExpression);
+        Expression expression = hasExpression ? parseExpression(cmdExpressionRuleContext.expression()) : null;
+        expression = parseCallExpressionRule(cmdExpressionRuleContext.c, cmdExpressionRuleContext.n, null, expression, cmdExpressionRuleContext.genericDeclarationList());
         if (hasExpression) {
             Token op = cmdExpressionRuleContext.op;
             ((MethodCallExpression)expression).setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
@@ -1528,7 +1527,6 @@ public class ASTBuilder {
 
             expression = parseCallExpressionRule(null, nonKwCallExpressionRuleContext, null, expression, null);
 
-            ((MethodCallExpression)expression).setImplicitThis(false);
         }
 
         if (hasPropertyAccess) {
@@ -1541,23 +1539,10 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {
-        Expression expression = parseCallExpressionRule(ctx.callExpressionRule(), null, ctx.closureCallExpressionRule(), asBoolean(ctx.expression()) ? parseExpression(ctx.expression()) : null, ctx.genericDeclarationList());
+        Expression expression = parseCallExpressionRule(null, null, ctx.closureCallExpressionRule(), null, null);
 
-        if (expression instanceof ConstructorCallExpression) {
-            return expression;
-        }
-
-        MethodCallExpression method = (MethodCallExpression) expression;
-
-        if (asBoolean(ctx.expression())) {
-            Token op = ctx.op;
-            method.setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
-            method.setSafe(op.getType() == GroovyParser.SAFE_DOT);
-        }
-
-        return setupNodeLocation(method, ctx);
+        return setupNodeLocation(expression, ctx);
     }
-
     /**
      * If argument list contains closure and named argument, the argument list's struture looks like as follows:
      *
@@ -1618,7 +1603,9 @@ public class ASTBuilder {
                 );
             } else {
                 method = nonKwCallExpressionRuleContext.IDENTIFIER() != null ? new ConstantExpression(nonKwCallExpressionRuleContext.IDENTIFIER().getText())
-                        : (nonKwCallExpressionRuleContext.STRING() != null ? parseConstantStringToken(nonKwCallExpressionRuleContext.STRING().getSymbol()) : parseExpression(nonKwCallExpressionRuleContext.gstring()));
+                        : (nonKwCallExpressionRuleContext.STRING() != null ? parseConstantStringToken(nonKwCallExpressionRuleContext.STRING().getSymbol())
+                                                                           : (null != nonKwCallExpressionRuleContext.KW_THIS() ? new ConstantExpression(nonKwCallExpressionRuleContext.KW_THIS().getText())
+                                                                                                                               : new ConstantExpression(nonKwCallExpressionRuleContext.KW_SUPER().getText())));
             }
         }
 

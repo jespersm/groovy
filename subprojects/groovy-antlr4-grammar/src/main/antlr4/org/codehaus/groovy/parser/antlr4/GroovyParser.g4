@@ -308,12 +308,9 @@ expression:
 
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    | expression op=(DOT | SAFE_DOT | STAR_DOT) c=callExpressionRule      (nonKwCallExpressionRule)+ (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
-    |                                           n=nonKwCallExpressionRule (nonKwCallExpressionRule)+ (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? c=callExpressionRule      (nonKwCallExpressionRule)* (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
+    |                                                                           n=nonKwCallExpressionRule (nonKwCallExpressionRule)* (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
 
-    // exclude this and super to support this(...) and super(...) in the constructors
-    | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?              callExpressionRule #callExpression
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? callExpressionRule #callExpression
     | closureCallExpressionRule                                                                    #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
@@ -359,8 +356,8 @@ callExpressionRule:
                   ;
 nonKwCallExpressionRule:
 // @baseContext{callExpressionRule} does not work in antlr4.5.3
-                    (IDENTIFIER   | STRING | gstring) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
-                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring) argumentList
+                    (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) argumentList
                   ;
 closureCallExpressionRule
 // @baseContext{callExpressionRule} does not work in antlr4.5.3
