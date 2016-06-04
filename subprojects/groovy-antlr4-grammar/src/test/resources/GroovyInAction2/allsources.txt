@@ -316,7 +316,7 @@
 [SKIP]	./chap10/Listing_10_41_JavaGreeter.txt
 [PASS]	./chap10/Listing_10_42_StaticCompileDispatch.groovy
 [PASS]	./chap10/Listing_10_43_MonkeyPatching.groovy
-[FIXME]	./chap10/Listing_10_44_BookingDSL.groovy    // issue#45(command expression failed to be recognized due to the ambiguities)
+[PASS]	./chap10/Listing_10_44_BookingDSL.groovy
 [PASS]	./chap10/Listing_10_45_MultiValidation.groovy
 [PASS]	./chap10/Listing_10_46_RobotExtension.groovy
 [PASS]	./chap10/Listing_10_47_SQLExtension.groovy
