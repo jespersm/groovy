@@ -234,7 +234,8 @@ finallyBlock: KW_FINALLY NL* blockStatementWithCurve;
 caseStatement: (KW_CASE expression COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)* );
 
 /* FIXME  cmdExpressionRule is buggy, waiting for full support */
-cmdExpressionRule: (expression op=(DOT | SAFE_DOT | STAR_DOT))? IDENTIFIER ( argumentList IDENTIFIER)+ argumentList prop=IDENTIFIER? ;
+cmdExpressionRule: (n=nonKwCallExpressionRule | ((expression op=(DOT | SAFE_DOT | STAR_DOT)) c=callExpressionRule)) (nonKwCallExpressionRule)+ prop=IDENTIFIER?;
+//cmdExpressionRule: (expression op=(DOT | SAFE_DOT | STAR_DOT))?? IDENTIFIER ( argumentList IDENTIFIER)+ argumentList prop=IDENTIFIER? ;
 pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
@@ -312,8 +313,9 @@ expression:
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
     // exclude this and super to support this(...) and super(...) in the constructors
-    | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?              callExpressionRule      #callExpression
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? callExpressionRule      #callExpression
+    | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?              callExpressionRule #callExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? callExpressionRule #callExpression
+    | closureCallExpressionRule                                                                    #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
 
@@ -352,8 +354,19 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
-callExpressionRule: (selectorName | STRING | gstring | c=closureExpressionRule) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
-                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | c=closureExpressionRule) argumentList
+callExpressionRule:
+                    (selectorName | STRING | gstring) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring) argumentList
+                  ;
+nonKwCallExpressionRule:
+// @baseContext{callExpressionRule} does not work in antlr4.5.3
+                    (IDENTIFIER   | STRING | gstring) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring) argumentList
+                  ;
+closureCallExpressionRule
+// @baseContext{callExpressionRule} does not work in antlr4.5.3
+                  : (c=closureExpressionRule        ) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (c=closureExpressionRule        ) argumentList
                   ;
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;

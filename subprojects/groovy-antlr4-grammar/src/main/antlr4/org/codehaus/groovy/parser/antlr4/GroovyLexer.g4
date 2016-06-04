@@ -85,10 +85,10 @@ lexer grammar GroovyLexer;
 
 
 
-LINE_COMMENT: '//' .*?  ('\n' | EOF) { setText("//LINE_COMMENT"); } -> type(NL) ;
+LINE_COMMENT: '//' .*?  ('\n' | EOF)                           -> type(NL) ;
 DOC_COMMENT: '/**' .*? '*/'                                    -> type(NL) ;
-BLOCK_COMMENT: '/*' .*? '*/' { setText("/*BLOCK_COMMENT*/"); } -> type(NL) ;
-SHEBANG_COMMENT: { tokenIndex == 0 }? '#!' .*? '\n'  -> skip ;
+BLOCK_COMMENT: '/*' .*? '*/'                                   -> type(NL) ;
+SHEBANG_COMMENT: { tokenIndex == 0 }? '#!' .*? '\n'            -> skip     ;
 
 WS: [ \t]+ -> skip ;
 
