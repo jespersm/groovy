@@ -16,14 +16,39 @@
  *  specific language governing permissions and limitations
  *  under the License.
  */
-package org.codehaus.groovy.tools.shell.util
+package org.codehaus.groovy.transform.traitx
 
-interface PackageHelper {
+import org.codehaus.groovy.ast.ClassNode
 
-    public static final String IMPORT_COMPLETION_PREFERENCE_KEY = 'disable-import-completion'
+class Groovy7846Bug extends GroovyTestCase {
 
-    Set<String> getContents(final String packagename)
+    void testTraitsShouldAllowGenerifiedReturnTypesInStaticMethods() {
+        def cl = new GroovyClassLoader()
+        cl.parseClass('''
 
-    void reset()
-
+class Foo {
+    static <T> T withClient(@DelegatesTo(Foo) Closure<T> callable ) {
+        callable.call()
+    }
 }
+trait TraitWithStaticMethod<D>  {
+
+    static Collection<D> asCollection(D type) {
+        return [type]
+    }
+
+    static <T> T withClient(@DelegatesTo(Foo) Closure<T> callable ) {
+        callable.call()
+    }
+}
+''')
+        Class cls = cl.parseClass('''
+class Bar implements TraitWithStaticMethod<Bar> {}
+
+''')
+
+        assert new ClassNode(cls).methods
+        assert cls.withClient { true }
+    }
+}
+

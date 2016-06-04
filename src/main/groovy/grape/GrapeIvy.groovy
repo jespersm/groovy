@@ -338,8 +338,12 @@ class GrapeIvy implements GrapeEngine {
     }
 
     void processRunners(InputStream is, String name, ClassLoader loader) {
-        is.text.readLines().each {
-            GroovySystem.RUNNER_REGISTRY[name] = loader.loadClass(it.trim()).newInstance()
+        is.text.readLines()*.trim().findAll{ !it.isEmpty() && it[0] != '#' }.each {
+            try {
+                GroovySystem.RUNNER_REGISTRY[name] = loader.loadClass(it).newInstance()
+            } catch (Exception ex) {
+                throw new IllegalStateException("Error registering runner class '" + it + "'", ex)
+            }
         }
     }
 

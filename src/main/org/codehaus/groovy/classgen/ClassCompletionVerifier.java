@@ -35,6 +35,7 @@ import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.TupleExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import org.codehaus.groovy.ast.stmt.CatchStatement;
+import org.codehaus.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.runtime.MetaClassHelper;
@@ -68,6 +69,7 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
         if (source != null && !source.getErrorCollector().hasErrors()) {
             checkClassForIncorrectModifiers(node);
             checkInterfaceMethodVisibility(node);
+            checkAbstractMethodVisibility(node);
             checkClassForOverwritingFinal(node);
             checkMethodsForIncorrectModifiers(node);
             checkMethodsForWeakerAccess(node);
@@ -83,33 +85,48 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     }
 
     private void checkNoStaticMethodWithSameSignatureAsNonStatic(final ClassNode node) {
-        Map<String, MethodNode> result = new HashMap<String, MethodNode>();
-        // add in unimplemented abstract methods from the interfaces
-        for (ClassNode iface : node.getInterfaces()) {
-            Map<String, MethodNode> ifaceMethodsMap = iface.getDeclaredMethodsMap();
-            for (String methSig : ifaceMethodsMap.keySet()) {
-                if (!result.containsKey(methSig)) {
-                    MethodNode methNode = ifaceMethodsMap.get(methSig);
-                    result.put(methSig, methNode);
-                }
-            }
+        ClassNode parent = node.getSuperClass();
+        Map<String, MethodNode> result;
+        // start with methods from the parent if any
+        if (parent != null) {
+            result = parent.getDeclaredMethodsMap();
+        } else {
+            result = new HashMap<String, MethodNode>();
         }
+        // add in unimplemented abstract methods from the interfaces
+        ClassNodeUtils.addInterfaceMethods(node, result);
         for (MethodNode methodNode : node.getMethods()) {
             MethodNode mn = result.get(methodNode.getTypeDescriptor());
-            if (mn!=null && methodNode.isStatic() && !methodNode.isStaticConstructor()) {
+            if (mn != null && (mn.isStatic() ^ methodNode.isStatic()) && !methodNode.isStaticConstructor()) {
+                if (!mn.isAbstract()) continue;
                 ClassNode declaringClass = mn.getDeclaringClass();
                 ClassNode cn = declaringClass.getOuterClass();
-                if (cn==null && declaringClass.isResolved()) {
+                if (cn == null && declaringClass.isResolved()) {
                     // in case of a precompiled class, the outerclass is unknown
                     Class typeClass = declaringClass.getTypeClass();
                     typeClass = typeClass.getEnclosingClass();
-                    if (typeClass!=null) {
+                    if (typeClass != null) {
                         cn = ClassHelper.make(typeClass);
                     }
                 }
-                if (cn==null || !Traits.isTrait(cn)) {
-                    addError("Method '" + mn.getName() + "' is already defined in " + getDescription(node) + ". You cannot have " +
-                            "both a static and a non static method with the same signature", methodNode);
+                if (cn == null || !Traits.isTrait(cn)) {
+                    ASTNode errorNode = methodNode;
+                    String name = mn.getName();
+                    if (errorNode.getLineNumber() == -1) {
+                        // try to get a better error message location based on the property
+                        for (PropertyNode propertyNode : node.getProperties()) {
+                            if (name.startsWith("set") || name.startsWith("get") || name.startsWith("is")) {
+                                String propName = Verifier.capitalize(propertyNode.getField().getName());
+                                String shortName = name.substring(name.startsWith("is") ? 2 : 3);
+                                if (propName.equals(shortName)) {
+                                    errorNode = propertyNode;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    addError("The " + getDescription(methodNode) + " is already defined in " + getDescription(node) +
+                            ". You cannot have both a static and an instance method with the same signature", errorNode);
                 }
             }
             result.put(methodNode.getTypeDescriptor(), methodNode);
@@ -123,6 +140,21 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
                 addError("Method '" + method.getName() + "' is private but should be public in " + getDescription(currentClass) + ".", method);
             } else if (method.isProtected()) {
                 addError("Method '" + method.getName() + "' is protected but should be public in " + getDescription(currentClass) + ".", method);
+            }
+        }
+    }
+
+    private void checkAbstractMethodVisibility(ClassNode node) {
+        // we only do check abstract classes (including enums), no interfaces or non-abstract classes
+        if (!isAbstract(node.getModifiers()) || isInterface(node.getModifiers())) return;
+
+        List<MethodNode> abstractMethods = node.getAbstractMethods();
+        if (abstractMethods == null || abstractMethods.isEmpty()) return;
+
+        for (MethodNode method : abstractMethods) {
+            if (method.isPrivate()) {
+                addError("Method '" + method.getName() + "' from " + getDescription(node) +
+                        " must not be private as it is declared as an abstract method.", method);
             }
         }
     }
@@ -291,6 +323,13 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
     private void addInvalidUseOfFinalError(MethodNode method, Parameter[] parameters, ClassNode superCN) {
         StringBuilder msg = new StringBuilder();
         msg.append("You are not allowed to override the final method ").append(method.getName());
+        appendParamsDescription(parameters, msg);
+        msg.append(" from ").append(getDescription(superCN));
+        msg.append(".");
+        addError(msg.toString(), method);
+    }
+
+    private void appendParamsDescription(Parameter[] parameters, StringBuilder msg) {
         msg.append("(");
         boolean needsComma = false;
         for (Parameter parameter : parameters) {
@@ -301,25 +340,14 @@ public class ClassCompletionVerifier extends ClassCodeVisitorSupport {
             }
             msg.append(parameter.getType());
         }
-        msg.append(") from ").append(getDescription(superCN));
-        msg.append(".");
-        addError(msg.toString(), method);
+        msg.append(")");
     }
 
     private void addWeakerAccessError(ClassNode cn, MethodNode method, Parameter[] parameters, MethodNode superMethod) {
         StringBuilder msg = new StringBuilder();
         msg.append(method.getName());
-        msg.append("(");
-        boolean needsComma = false;
-        for (Parameter parameter : parameters) {
-            if (needsComma) {
-                msg.append(",");
-            } else {
-                needsComma = true;
-            }
-            msg.append(parameter.getType());
-        }
-        msg.append(") in ");
+        appendParamsDescription(parameters, msg);
+        msg.append(" in ");
         msg.append(cn.getName());
         msg.append(" cannot override ");
         msg.append(superMethod.getName());
