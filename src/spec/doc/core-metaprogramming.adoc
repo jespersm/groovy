@@ -90,7 +90,7 @@ include::{projectdir}/src/spec/test/metaprogramming/GroovyObjectTest.groovy[tags
 
 ==== get/setMetaClass
 
-You can a access a objects `metaClass` or set your own `MetaClass` implementation for changing the default interception mechanism. For example you can write your own implementation of the `MetaClass` interface and assign to it to objects and accordingly change the interception mechanism:
+You can a access an object's `metaClass` or set your own `MetaClass` implementation for changing the default interception mechanism. For example you can write your own implementation of the `MetaClass` interface and assign to it to objects and accordingly change the interception mechanism:
 
 [source,groovy]
 ----
@@ -979,6 +979,16 @@ include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=
 [source,groovy]
 ----
 include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tupleconstructor_example_allNames,indent=0]
+----
+|pre|empty|A closure containing statements to be inserted at the start of the generated constructor(s)|
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tupleconstructor_example_pre,indent=0]
+----
+|post|empty|A closure containing statements to be inserted at the end of the generated constructor(s)|
+[source,groovy]
+----
+include::{projectdir}/src/spec/test/CodeGenerationASTTransformsTest.groovy[tags=tupleconstructor_example_post,indent=0]
 ----
 |=======================================================================
 

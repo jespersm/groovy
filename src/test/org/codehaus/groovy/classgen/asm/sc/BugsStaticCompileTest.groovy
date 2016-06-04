@@ -22,8 +22,6 @@ import groovy.transform.stc.BugsSTCTest
 
 /**
  * Unit tests for static type checking : bugs.
- *
- * @author Cedric Champeau
  */
 class BugsStaticCompileTest extends BugsSTCTest implements StaticCompilationTestSupport {
 
@@ -1437,6 +1435,34 @@ println someInt
             assert !(foo?.bar == 7)
             assert !(foo?.bar > 7)
             assert foo?.bar < 7
+        '''
+    }
+
+    // GROOVY-7841
+    void testAssertionOfNonZeroPrimitiveEdgeCases() {
+        assertScript '''
+            assert 4294967296
+            assert 0.1f
+            assert 0.1d
+        '''
+    }
+
+    // GROOVY-7784
+    void testWithSamAndVarArgs() {
+        assertScript '''
+            class Foo {
+                static foo(Integer x, Iterable y, String... z) { [*y.toList(), *z].join('-') }
+            }
+
+            class Groovy7784 {
+                static emptyVarArgs() { Foo.foo(42, { ['foo', 'bar'].iterator() }) }
+                static singleVarArgs() { Foo.foo(42, { ['foo', 'bar'].iterator() }, 'baz') }
+                static multiVarArgs() { Foo.foo(42, { ['foo', 'bar'].iterator() }, 'baz1', 'baz2') }
+            }
+
+            assert Groovy7784.emptyVarArgs() == 'foo-bar'
+            assert Groovy7784.singleVarArgs() == 'foo-bar-baz'
+            assert Groovy7784.multiVarArgs() == 'foo-bar-baz1-baz2'
         '''
     }
 }

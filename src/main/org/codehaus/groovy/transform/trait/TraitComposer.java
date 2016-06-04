@@ -62,6 +62,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -70,6 +71,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.codehaus.groovy.ast.tools.GenericsUtils.correctToGenericsSpecRecurse;
+import static org.codehaus.groovy.ast.tools.GenericsUtils.newClass;
 
 /**
  * This class contains a static utility method {@link #doExtendTraits(org.codehaus.groovy.ast.ClassNode, org.codehaus.groovy.control.SourceUnit, org.codehaus.groovy.control.CompilationUnit)}
@@ -149,7 +151,7 @@ public abstract class TraitComposer {
                 System.arraycopy(methodNode.getParameters(), 1, params, 0, params.length);
                 Map<String,ClassNode> methodGenericsSpec = new LinkedHashMap<String, ClassNode>(genericsSpec);
                 MethodNode originalMethod = trait.getMethod(name, params);
-                // Original method may be null in case of a private method
+                // Original method may be null for the case of private or static methods
                 if (originalMethod!=null) {
                     methodGenericsSpec = GenericsUtils.addMethodGenerics(originalMethod, methodGenericsSpec);
                 }
@@ -319,10 +321,19 @@ public abstract class TraitComposer {
         if (!copied.isEmpty()) {
             forwarder.addAnnotations(copied);
         }
-        if (originalMethod!=null) {
+        if (originalMethod != null) {
             GenericsType[] newGt = GenericsUtils.applyGenericsContextToPlaceHolders(genericsSpec, originalMethod.getGenericsTypes());
             newGt = removeNonPlaceHolders(newGt);
             forwarder.setGenericsTypes(newGt);
+        } else {
+            // null indicates a static method which may still need generics correction
+            GenericsType[] genericsTypes = helperMethod.getGenericsTypes();
+            if (genericsTypes != null) {
+                Map<String, ClassNode> methodSpec = new HashMap<String, ClassNode>();
+                methodSpec = GenericsUtils.addMethodGenerics(helperMethod, methodSpec);
+                GenericsType[] newGt = GenericsUtils.applyGenericsContextToPlaceHolders(methodSpec, helperMethod.getGenericsTypes());
+                forwarder.setGenericsTypes(newGt);
+            }
         }
         // add a helper annotation indicating that it is a bridge method
         AnnotationNode bridgeAnnotation = new AnnotationNode(Traits.TRAITBRIDGE_CLASSNODE);
