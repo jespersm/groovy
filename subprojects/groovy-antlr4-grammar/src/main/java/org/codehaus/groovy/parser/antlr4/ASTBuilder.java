@@ -628,8 +628,8 @@ public class ASTBuilder {
             return parseStatement((GroovyParser.WhileStatementContext)ctx);
         if (ctx instanceof GroovyParser.ControlStatementContext)
             return parseStatement((GroovyParser.ControlStatementContext)ctx);
-        if (ctx instanceof GroovyParser.CommandExpressionStatementContext)
-            return parseStatement((GroovyParser.CommandExpressionStatementContext)ctx);
+//        if (ctx instanceof GroovyParser.CommandExpressionStatementContext)
+//            return parseStatement((GroovyParser.CommandExpressionStatementContext)ctx);
         if (ctx instanceof GroovyParser.NewInstanceStatementContext)
             return parseStatement((GroovyParser.NewInstanceStatementContext)ctx);
         if (ctx instanceof GroovyParser.AssertStatementContext)
@@ -850,39 +850,6 @@ public class ASTBuilder {
     }
 
 
-    public Statement parseStatement(GroovyParser.CommandExpressionStatementContext ctx) {
-        GroovyParser.CmdExpressionRuleContext cmdExpressionRuleContext = ctx.cmdExpressionRule();
-
-        boolean hasExpression = asBoolean(cmdExpressionRuleContext.expression());
-        boolean hasPropertyAccess = asBoolean(cmdExpressionRuleContext.prop);
-
-        Expression expression = hasExpression ? parseExpression(cmdExpressionRuleContext.expression()) : VariableExpression.THIS_EXPRESSION;
-        expression = parseCallExpressionRule(cmdExpressionRuleContext.c, cmdExpressionRuleContext.n, null, expression, null);
-        ((MethodCallExpression)expression).setImplicitThis(!hasExpression);
-        if (hasExpression) {
-            Token op = cmdExpressionRuleContext.op;
-            ((MethodCallExpression)expression).setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
-            ((MethodCallExpression)expression).setSafe(op.getType() == GroovyParser.SAFE_DOT);
-        }
-
-        for (GroovyParser.NonKwCallExpressionRuleContext nonKwCallExpressionRuleContext : cmdExpressionRuleContext.nonKwCallExpressionRule()) {
-            if (nonKwCallExpressionRuleContext == cmdExpressionRuleContext.n) {
-                continue;
-            }
-
-            expression = parseCallExpressionRule(null, nonKwCallExpressionRuleContext, null, expression, null);
-
-            ((MethodCallExpression)expression).setImplicitThis(false);
-        }
-
-        if (hasPropertyAccess) {
-            expression = new PropertyExpression(expression, cmdExpressionRuleContext.prop.getText());
-        }
-
-        return setupNodeLocation(new ExpressionStatement(expression), ctx);
-    }
-
-
     /**
      * Parse path expression.
      *
@@ -927,6 +894,8 @@ public class ASTBuilder {
             return parseExpression((GroovyParser.ConstantDecimalExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.TernaryExpressionContext)
             return parseExpression((GroovyParser.TernaryExpressionContext)ctx);
+        else if (ctx instanceof GroovyParser.CmdExpressionContext)
+            return parseExpression((GroovyParser.CmdExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.CallExpressionContext)
             return parseExpression((GroovyParser.CallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.CastExpressionContext)
@@ -1537,6 +1506,38 @@ public class ASTBuilder {
         }
         BinaryExpression binaryExpression = new BinaryExpression(leftExpression, createToken(ctx.LBRACK(), 1), rightExpression);
         return setupNodeLocation(binaryExpression, ctx);
+    }
+
+    public Expression parseExpression(GroovyParser.CmdExpressionContext cmdExpressionRuleContext) {
+        boolean hasExpression = asBoolean(cmdExpressionRuleContext.expression());
+        boolean hasPropertyAccess = asBoolean(cmdExpressionRuleContext.p1) || asBoolean(cmdExpressionRuleContext.p2) || asBoolean(cmdExpressionRuleContext.p3);
+
+        Expression expression = hasExpression ? parseExpression(cmdExpressionRuleContext.expression()) : VariableExpression.THIS_EXPRESSION;
+        expression = parseCallExpressionRule(cmdExpressionRuleContext.c, cmdExpressionRuleContext.n, null, expression, null);
+        ((MethodCallExpression)expression).setImplicitThis(!hasExpression);
+        if (hasExpression) {
+            Token op = cmdExpressionRuleContext.op;
+            ((MethodCallExpression)expression).setSpreadSafe(op.getType() == GroovyParser.STAR_DOT);
+            ((MethodCallExpression)expression).setSafe(op.getType() == GroovyParser.SAFE_DOT);
+        }
+
+        for (GroovyParser.NonKwCallExpressionRuleContext nonKwCallExpressionRuleContext : cmdExpressionRuleContext.nonKwCallExpressionRule()) {
+            if (nonKwCallExpressionRuleContext == cmdExpressionRuleContext.n) {
+                continue;
+            }
+
+            expression = parseCallExpressionRule(null, nonKwCallExpressionRuleContext, null, expression, null);
+
+            ((MethodCallExpression)expression).setImplicitThis(false);
+        }
+
+        if (hasPropertyAccess) {
+            expression = asBoolean(cmdExpressionRuleContext.p1) ? new PropertyExpression(expression, cmdExpressionRuleContext.p1.getText())
+                                                                : asBoolean(cmdExpressionRuleContext.p2) ? new PropertyExpression(expression, parseConstantStringToken(cmdExpressionRuleContext.p2))
+                                                                                                         : new PropertyExpression(expression, parseExpression(cmdExpressionRuleContext.p3));
+        }
+
+        return setupNodeLocation(expression, cmdExpressionRuleContext);
     }
 
     public Expression parseExpression(GroovyParser.CallExpressionContext ctx) {

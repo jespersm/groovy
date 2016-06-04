@@ -216,9 +216,8 @@ statement:
     | KW_THROW expression #throwStatement
     | KW_ASSERT expression ((COLON|COMMA) NL* expression)? #assertStatement
     | KW_SYNCHRONIZED LPAREN expression RPAREN NL* statementBlock # synchronizedStatement
-    | cmdExpressionRule #commandExpressionStatement
-    | expression #expressionStatement
     | IDENTIFIER COLON NL* statementBlock #labeledStatement
+    | expression #expressionStatement
     ;
 
 blockStatementWithCurve : LCURVE blockStatement? RCURVE;
@@ -233,9 +232,6 @@ finallyBlock: KW_FINALLY NL* blockStatementWithCurve;
 
 caseStatement: (KW_CASE expression COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)* );
 
-/* FIXME  cmdExpressionRule is buggy, waiting for full support */
-cmdExpressionRule: (n=nonKwCallExpressionRule | ((expression op=(DOT | SAFE_DOT | STAR_DOT)) c=callExpressionRule)) (nonKwCallExpressionRule)+ prop=IDENTIFIER?;
-//cmdExpressionRule: (expression op=(DOT | SAFE_DOT | STAR_DOT))?? IDENTIFIER ( argumentList IDENTIFIER)+ argumentList prop=IDENTIFIER? ;
 pathExpression: (IDENTIFIER DOT)* IDENTIFIER ;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
@@ -311,6 +307,9 @@ expression:
 
 
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
+
+    | expression op=(DOT | SAFE_DOT | STAR_DOT) c=callExpressionRule      (nonKwCallExpressionRule)+ (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
+    |                                           n=nonKwCallExpressionRule (nonKwCallExpressionRule)+ (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
 
     // exclude this and super to support this(...) and super(...) in the constructors
     | { !GrammarPredicates.isKeyword(_input, KW_THIS, KW_SUPER) }?              callExpressionRule #callExpression

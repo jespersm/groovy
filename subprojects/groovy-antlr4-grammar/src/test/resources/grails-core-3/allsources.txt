@@ -25,9 +25,9 @@
 [PASS]	grails-async/src/test/groovy/grails/async/DelegateAsyncSpec.groovy
 [PASS]	grails-async/src/test/groovy/grails/async/PromiseListSpec.groovy
 [PASS]	grails-async/src/test/groovy/grails/async/PromiseMapSpec.groovy
-[FIXME]	grails-async/src/test/groovy/grails/async/PromiseSpec.groovy                   // issue#45(command expression failed to be recognized due to the ambiguities)
+[PASS]	grails-async/src/test/groovy/grails/async/PromiseSpec.groovy
 [PASS]	grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy
-[FIXME]	grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy // issue#45(command expression failed to be recognized due to the ambiguities)
+[PASS]	grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy
 
 [PASS]	grails-bootstrap/src/main/groovy/grails/build/proxy/SystemPropertiesAuthenticator.groovy
 [PASS]	grails-bootstrap/src/main/groovy/grails/codegen/model/Model.groovy

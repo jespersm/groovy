@@ -126,6 +126,7 @@ class MainTest extends Specification {
         "Enums_issue31.groovy" | _
         "CallExpression_issue33_1.groovy" | _
         "CallExpression_issue33_2.groovy" | addIgnore(Parameter, ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "CallExpression_issue33_3.groovy" | addIgnore([Parameter, IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "Closure_Call_Issue40.groovy" | _
         "CommandExpression_issue41.groovy" | _
         "SynchronizedStatement.groovy" | _
@@ -194,9 +195,9 @@ class MainTest extends Specification {
         "grails-async/src/test/groovy/grails/async/DelegateAsyncSpec.groovy" | _
         "grails-async/src/test/groovy/grails/async/PromiseListSpec.groovy" | addIgnore(ThrowStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-async/src/test/groovy/grails/async/PromiseMapSpec.groovy" | addIgnore(ThrowStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "grails-async/src/test/groovy/grails/async/PromiseSpec.groovy" | _
+        "grails-async/src/test/groovy/grails/async/PromiseSpec.groovy" | _
         "grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy" | _
-//FIXME        "grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy" | _
+        "grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy" | _
 
 //        "grails-bootstrap/src/main/groovy/grails/build/proxy/SystemPropertiesAuthenticator.groovy" | _
         "grails-bootstrap/SystemPropertiesAuthenticator.groovy" | _
