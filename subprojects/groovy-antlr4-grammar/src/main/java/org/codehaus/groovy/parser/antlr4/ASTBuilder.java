@@ -1174,10 +1174,8 @@ public class ASTBuilder {
         Expression left = parseExpression(ctx.e);
 
         GroovyParser.SelectorNameContext fieldName = ctx.selectorName();
-        Expression right = fieldName != null ? new ConstantExpression(fieldName.getText())
-                                             : (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol())
-                                                                     : ctx.gstring() != null ? parseExpression(ctx.gstring()) : parseExpression(ctx.mne)
-                                                );
+        Expression right = this.parseName(ctx.selectorName(), ctx.STRING(), ctx.gstring(), ctx.mne);
+
         Expression node = null;
         switch (op.getType()) {
             case GroovyParser.ATTR_DOT:
@@ -1511,7 +1509,7 @@ public class ASTBuilder {
 
     public Expression parseExpression(GroovyParser.CmdExpressionContext cmdExpressionRuleContext) {
         boolean hasExpression = asBoolean(cmdExpressionRuleContext.expression());
-        boolean hasPropertyAccess = asBoolean(cmdExpressionRuleContext.p1) || asBoolean(cmdExpressionRuleContext.p2) || asBoolean(cmdExpressionRuleContext.p3);
+        boolean hasPropertyAccess = asBoolean(cmdExpressionRuleContext.IDENTIFIER()) || asBoolean(cmdExpressionRuleContext.STRING()) || asBoolean(cmdExpressionRuleContext.gstring());
 
         Expression expression = hasExpression ? parseExpression(cmdExpressionRuleContext.expression()) : null;
         expression = parseCallExpressionRule(cmdExpressionRuleContext.c, cmdExpressionRuleContext.n, null, expression, cmdExpressionRuleContext.genericDeclarationList());
@@ -1531,9 +1529,7 @@ public class ASTBuilder {
         }
 
         if (hasPropertyAccess) {
-            expression = asBoolean(cmdExpressionRuleContext.p1) ? new PropertyExpression(expression, cmdExpressionRuleContext.p1.getText())
-                                                                : asBoolean(cmdExpressionRuleContext.p2) ? new PropertyExpression(expression, parseConstantStringToken(cmdExpressionRuleContext.p2))
-                                                                                                         : new PropertyExpression(expression, parseExpression(cmdExpressionRuleContext.p3));
+            expression = new PropertyExpression(expression, this.parseName(cmdExpressionRuleContext.IDENTIFIER(), cmdExpressionRuleContext.STRING(), cmdExpressionRuleContext.gstring()));
         }
 
         return setupNodeLocation(expression, cmdExpressionRuleContext);
@@ -1588,6 +1584,45 @@ public class ASTBuilder {
         return argumentListExpression;
     }
 
+    private Expression parseName(ParseTree... nodes) {
+        for (ParseTree node : nodes) {
+            if (null == node) {
+                continue;
+            }
+
+            if (node instanceof TerminalNode) {
+                TerminalNode tn = ((TerminalNode) node);
+                Token token = tn.getSymbol();
+                int type = token.getType();
+
+                // STRING
+                if (GroovyParser.STRING == type) {
+                    return parseConstantStringToken(token);
+                }
+
+                // IDENTIFIER, KW_THIS, KW_SUPER
+                return new ConstantExpression(tn.getText());
+            }
+
+            // selectorName
+            if (node instanceof GroovyParser.SelectorNameContext) {
+                return new ConstantExpression(((GroovyParser.SelectorNameContext) node).getText());
+            }
+
+            // gstring
+            if (node instanceof GroovyParser.GstringContext) {
+                return parseExpression((GroovyParser.GstringContext) node);
+            }
+
+            // LPAREN expression RPAREN
+            if (node instanceof GroovyParser.ExpressionContext) {
+                return parseExpression((GroovyParser.ExpressionContext) node);
+            }
+        }
+
+        return null;
+    }
+
     /*
      * "@baseContext" does not support in antlr4.5.3, so parse CallExpressionRule and ClosureCallExpressionRule in the same time, which is not elegant currently.
      */
@@ -1599,15 +1634,9 @@ public class ASTBuilder {
             method = new ConstantExpression("call");
         } else {
             if (asBoolean(ctx)) {
-                method = ctx.selectorName() != null ? new ConstantExpression(ctx.selectorName().getText())
-                        : (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol())
-                                                : ctx.gstring() != null ? parseExpression(ctx.gstring()) : parseExpression(ctx.mne)
-                );
+                method = this.parseName(ctx.selectorName(), ctx.STRING(), ctx.gstring(), ctx.mne);
             } else {
-                method = nonKwCallExpressionRuleContext.IDENTIFIER() != null ? new ConstantExpression(nonKwCallExpressionRuleContext.IDENTIFIER().getText())
-                        : (nonKwCallExpressionRuleContext.STRING() != null ? parseConstantStringToken(nonKwCallExpressionRuleContext.STRING().getSymbol())
-                                                                           : (null != nonKwCallExpressionRuleContext.KW_THIS() ? new ConstantExpression(nonKwCallExpressionRuleContext.KW_THIS().getText())
-                                                                                                                               : new ConstantExpression(nonKwCallExpressionRuleContext.KW_SUPER().getText())));
+                method = this.parseName(nonKwCallExpressionRuleContext.IDENTIFIER(), nonKwCallExpressionRuleContext.STRING(), nonKwCallExpressionRuleContext.KW_THIS(), nonKwCallExpressionRuleContext.KW_SUPER());
             }
         }
 

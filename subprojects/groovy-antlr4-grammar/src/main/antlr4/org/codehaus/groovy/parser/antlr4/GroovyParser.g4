@@ -308,8 +308,8 @@ expression:
 
     | expression LBRACK (expression (COMMA expression)*)? RBRACK #indexExpression
 
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? c=callExpressionRule      (nonKwCallExpressionRule)* (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
-    |                                                                           n=nonKwCallExpressionRule (nonKwCallExpressionRule)* (p1=IDENTIFIER | p2=STRING | p3=gstring)?   # cmdExpression
+    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? c=callExpressionRule      (nonKwCallExpressionRule)* (IDENTIFIER | STRING | gstring)?   # cmdExpression
+    |                                                                           n=nonKwCallExpressionRule (nonKwCallExpressionRule)* (IDENTIFIER | STRING | gstring)?   # cmdExpression
 
     | closureCallExpressionRule                                                                    #callExpression
 
