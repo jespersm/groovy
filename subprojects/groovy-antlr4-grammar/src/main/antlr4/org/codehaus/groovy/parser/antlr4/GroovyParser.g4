@@ -300,7 +300,7 @@ expression:
     | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
     | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
-    | expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring) #fieldAccessExpression
+    | e=expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) #fieldAccessExpression
     | LPAREN expression RPAREN #parenthesisExpression
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
@@ -351,8 +351,8 @@ expression:
 ;
 
 callExpressionRule:
-                    (selectorName | STRING | gstring) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
-                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring) argumentList
+                    (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) argumentList
                   ;
 nonKwCallExpressionRule:
 // @baseContext{callExpressionRule} does not work in antlr4.5.3

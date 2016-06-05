@@ -127,6 +127,7 @@ class MainTest extends Specification {
         "CallExpression_issue33_1.groovy" | _
         "CallExpression_issue33_2.groovy" | addIgnore(Parameter, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "CallExpression_issue33_3.groovy" | addIgnore([Parameter, IfStatement, ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "CallExpression_issue33_4.groovy" | _
         "Closure_Call_Issue40.groovy" | _
         "CommandExpression_issue41.groovy" | _
         "SynchronizedStatement.groovy" | _
@@ -135,6 +136,7 @@ class MainTest extends Specification {
         "Enums_Inner.groovy" | _
         "Interface.groovy" | _
         "ClassMembers_Issue3_3.groovy" | _
+        "FieldAccess_1.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 

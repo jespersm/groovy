@@ -1171,12 +1171,13 @@ public class ASTBuilder {
 
     public Expression parseExpression(GroovyParser.FieldAccessExpressionContext ctx) {
         Token op = ctx.op;
-        Expression left = parseExpression(ctx.expression());
+        Expression left = parseExpression(ctx.e);
 
         GroovyParser.SelectorNameContext fieldName = ctx.selectorName();
-        Expression right = fieldName != null ? new ConstantExpression(fieldName.getText()) :
-                (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
-                );
+        Expression right = fieldName != null ? new ConstantExpression(fieldName.getText())
+                                             : (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol())
+                                                                     : ctx.gstring() != null ? parseExpression(ctx.gstring()) : parseExpression(ctx.mne)
+                                                );
         Expression node = null;
         switch (op.getType()) {
             case GroovyParser.ATTR_DOT:
@@ -1599,7 +1600,8 @@ public class ASTBuilder {
         } else {
             if (asBoolean(ctx)) {
                 method = ctx.selectorName() != null ? new ConstantExpression(ctx.selectorName().getText())
-                        : (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol()) : parseExpression(ctx.gstring())
+                        : (ctx.STRING() != null ? parseConstantStringToken(ctx.STRING().getSymbol())
+                                                : ctx.gstring() != null ? parseExpression(ctx.gstring()) : parseExpression(ctx.mne)
                 );
             } else {
                 method = nonKwCallExpressionRuleContext.IDENTIFIER() != null ? new ConstantExpression(nonKwCallExpressionRuleContext.IDENTIFIER().getText())

@@ -98,6 +98,8 @@ public class GrammarPredicates {
             index = consumeTokenPair(tokenStream, index, GroovyLangParser.GSTRING_START, GroovyLangParser.GSTRING_END);
         } else if (tokenType == GroovyLangParser.LCURVE) { // closure
             index = consumeTokenPair(tokenStream, index, GroovyLangParser.LCURVE, GroovyLangParser.RCURVE);
+        } else if (tokenType == GroovyLangParser.LPAREN) { // LPAREN expression RPAREN
+            index = consumeTokenPair(tokenStream, index, GroovyLangParser.LPAREN, GroovyLangParser.RPAREN);
         }
 
         if (-1 == index) { // EOF reached.
