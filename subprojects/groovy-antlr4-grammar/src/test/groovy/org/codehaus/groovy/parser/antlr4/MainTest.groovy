@@ -447,10 +447,10 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/grails/transaction/transform/RollbackTransform.groovy" | _
         "grails-core/src/main/groovy/org/grails/transaction/transform/TransactionalTransform.groovy" | _
         "grails-core/src/main/groovy/org/grails/validation/ConstraintEvalUtils.groovy" | _
-//FIXME        "grails-core/src/test/groovy/grails/artefact/EnhancesSpec.groovy" | _
+        "grails-core/src/test/groovy/grails/artefact/EnhancesSpec.groovy" | _
         "grails-core/src/test/groovy/grails/config/ConfigPropertiesSpec.groovy" | _
         "grails-core/src/test/groovy/grails/transaction/TransactionalTransformSpec.groovy" | _
-//FIXME        "grails-core/src/test/groovy/grails/util/GrailsMetaClassUtilsSpec.groovy" | _
+        "grails-core/src/test/groovy/grails/util/GrailsMetaClassUtilsSpec.groovy" | addIgnore([PackageNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-core/src/test/groovy/grails/web/CamelCaseUrlConverterSpec.groovy" | _
         "grails-core/src/test/groovy/grails/web/HyphenatedUrlConverterSpec.groovy" | _
         "grails-core/src/test/groovy/org/codehaus/groovy/grails/commons/GrailsArrayUtilsSpec.groovy" | _
