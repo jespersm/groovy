@@ -55,11 +55,12 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
 
 @SuppressWarnings("all")
 public class ASTBuilder {
-
     public static final String GROOVY_TRANSFORM_TRAIT = "groovy.transform.Trait";
-    public static final String KW_ABSTRACT_STR = "abstract";
     public static final String DOC_COMMENT = "docComment";
     public static final String DOC_COMMENT_PREFIX = "/**";
+    public static final String ABSTRACT = "abstract";
+    public static final String DEF = "def";
+    public static final String CALL = "call";
 
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
@@ -256,7 +257,7 @@ public class ASTBuilder {
         boolean hasVisibilityModifier = ((Boolean)(iterator.hasNext() ? iterator.next() : false));
         boolean hasModifier = 0 != ctx.memberModifier().size();
         boolean hasAnnotation = 0 != ctx.annotationClause().size();
-        boolean hasReturnType = (asBoolean(ctx.typeDeclaration()) && !"def".equals(ctx.typeDeclaration().getText()))
+        boolean hasReturnType = (asBoolean(ctx.typeDeclaration()) && !DEF.equals(ctx.typeDeclaration().getText()))
                 || asBoolean(ctx.genericClassNameExpression());
         boolean hasDef = asBoolean(ctx.KW_DEF);
 
@@ -494,7 +495,7 @@ public class ASTBuilder {
 
     public AnnotatedNode parseMember(ClassNode classNode, GroovyParser.MethodDeclarationContext ctx) {
         if (isTrait(classNode)) {
-            if (null == ctx.blockStatementWithCurve() && !ctx.modifierAndDefSet.contains(KW_ABSTRACT_STR)) {
+            if (null == ctx.blockStatementWithCurve() && !ctx.modifierAndDefSet.contains(ABSTRACT)) {
                 throw createParsingFailedException(new InvalidSyntaxException("You defined a method without body. Try adding a body, or declare it abstract.", ctx));
             }
         }
@@ -900,8 +901,6 @@ public class ASTBuilder {
             return parseExpression((GroovyParser.CallExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.CastExpressionContext)
             return parseExpression((GroovyParser.CastExpressionContext)ctx);
-        else if (ctx instanceof GroovyParser.ElvisExpressionContext)
-            return parseExpression((GroovyParser.ElvisExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.BinaryExpressionContext)
             return parseExpression((GroovyParser.BinaryExpressionContext)ctx);
         else if (ctx instanceof GroovyParser.NullExpressionContext)
@@ -1068,17 +1067,18 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyParser.TernaryExpressionContext ctx) {
-        BooleanExpression boolExpr = new BooleanExpression(parseExpression(ctx.expression(0)));
-        Expression trueExpr = parseExpression(ctx.expression(1));
-        Expression falseExpr = parseExpression(ctx.expression(2));
-        return setupNodeLocation(new TernaryExpression(boolExpr, trueExpr, falseExpr), ctx);
+        if (asBoolean(ctx.ELVIS())) { // elvisExpression
+            Expression baseExpr = parseExpression(ctx.expression(0));
+            Expression falseExpr = parseExpression(ctx.expression(1));
+            return setupNodeLocation(new ElvisOperatorExpression(baseExpr, falseExpr), ctx);
+        } else { // ternaryExpression
+            BooleanExpression boolExpr = new BooleanExpression(parseExpression(ctx.expression(0)));
+            Expression trueExpr = parseExpression(ctx.expression(1));
+            Expression falseExpr = parseExpression(ctx.expression(2));
+            return setupNodeLocation(new TernaryExpression(boolExpr, trueExpr, falseExpr), ctx);
+        }
     }
 
-    public Expression parseExpression(GroovyParser.ElvisExpressionContext ctx) {
-        Expression baseExpr = parseExpression(ctx.expression(0));
-        Expression falseExpr = parseExpression(ctx.expression(1));
-        return setupNodeLocation(new ElvisOperatorExpression(baseExpr, falseExpr), ctx);
-    }
 
     protected Expression unaryMinusExpression(GroovyParser.ExpressionContext ctx) {
         // if we are a number literal then let's just parse it
@@ -1380,7 +1380,7 @@ public class ASTBuilder {
 
                 if (!asBoolean(closureExpressionRule.CLOSURE_ARG_SEPARATOR())) {
 
-                    MethodCallExpression methodCallExpression = new MethodCallExpression(expression, "call", new ArgumentListExpression());
+                    MethodCallExpression methodCallExpression = new MethodCallExpression(expression, CALL, new ArgumentListExpression());
 
                     expressions.add(setupNodeLocation(methodCallExpression, expression));
                 } else {
@@ -1631,7 +1631,7 @@ public class ASTBuilder {
         boolean isClosureCall = asBoolean(closureCallExpressionRuleContext);
 
         if (isClosureCall) {
-            method = new ConstantExpression("call");
+            method = new ConstantExpression(CALL);
         } else {
             if (asBoolean(ctx)) {
                 method = this.parseName(ctx.selectorName(), ctx.STRING(), ctx.gstring(), ctx.mne);

@@ -104,6 +104,7 @@ class MainTest extends Specification {
         "SubscriptOperator.groovy" | _
         "AnnotationDeclaration.groovy" | _
         "TernaryAndElvis_Issue57.groovy" | _
+        "TernaryAndElvis_01.groovy" | _
         "TestClass1.groovy" | _
         "ThrowDeclarations_Issue_28_1.groovy" | _
         "Assert_Statements.groovy" | _
@@ -439,12 +440,12 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/org/grails/core/util/IncludeExcludeSupport.groovy" | _
         "grails-core/src/main/groovy/org/grails/dev/support/DevelopmentShutdownHook.groovy" | _
         "grails-core/src/main/groovy/org/grails/plugins/CoreGrailsPlugin.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/grails/plugins/support/WatchPattern.groovy" | _
+        "grails-core/src/main/groovy/org/grails/plugins/support/WatchPattern.groovy" | addIgnore([IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-core/src/main/groovy/org/grails/spring/beans/factory/HotSwappableTargetSourceFactoryBean.groovy" | _
         "grails-core/src/main/groovy/org/grails/spring/context/ApplicationContextExtension.groovy" | _
         "grails-core/src/main/groovy/org/grails/spring/context/support/MapBasedSmartPropertyOverrideConfigurer.groovy" | _
         "grails-core/src/main/groovy/org/grails/transaction/transform/RollbackTransform.groovy" | _
-//FIXME        "grails-core/src/main/groovy/org/grails/transaction/transform/TransactionalTransform.groovy" | _
+        "grails-core/src/main/groovy/org/grails/transaction/transform/TransactionalTransform.groovy" | _
         "grails-core/src/main/groovy/org/grails/validation/ConstraintEvalUtils.groovy" | _
 //FIXME        "grails-core/src/test/groovy/grails/artefact/EnhancesSpec.groovy" | _
         "grails-core/src/test/groovy/grails/config/ConfigPropertiesSpec.groovy" | _

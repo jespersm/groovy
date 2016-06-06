@@ -343,8 +343,7 @@ expression:
     | expression NL* AND NL* expression #binaryExpression
     | expression NL* OR NL* expression #binaryExpression
 
-    |<assoc=right> expression NL* QUESTION NL* expression NL* COLON NL* expression #ternaryExpression
-    | expression NL* ELVIS NL* expression #elvisExpression
+    |<assoc=right> expression NL* (QUESTION NL* expression NL* COLON | ELVIS) NL* expression #ternaryExpression
 
     |<assoc=right> expression (ASSIGN | PLUS_ASSIGN | MINUS_ASSIGN | MULT_ASSIGN | DIV_ASSIGN | MOD_ASSIGN | BAND_ASSIGN | XOR_ASSIGN | BOR_ASSIGN | LSHIFT_ASSIGN | RSHIFT_ASSIGN | RUSHIFT_ASSIGN) NL* expression #assignmentExpression
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
