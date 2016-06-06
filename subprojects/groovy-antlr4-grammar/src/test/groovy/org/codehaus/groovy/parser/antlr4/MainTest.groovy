@@ -511,6 +511,29 @@ class MainTest extends Specification {
         "grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathCollectionDataBindingSourceSpec.groovy" | _
         "grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathResultMapSpec.groovy" | _
 
+        "grails-docs/src/main/groovy/grails/doc/DocEngine.groovy" | addIgnore([ExpressionStatement, IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/DocPublisher.groovy" | addIgnore([ExpressionStatement, IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/LegacyDocMigrator.groovy" | addIgnore([ExpressionStatement, Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/PdfBuilder.groovy" | _
+        "grails-docs/src/main/groovy/grails/doc/ant/DocPublisherTask.groovy" | addIgnore([IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/filters/HeaderFilter.groovy" | _
+        "grails-docs/src/main/groovy/grails/doc/filters/LinkTestFilter.groovy" | addIgnore([IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/filters/ListFilter.groovy" | _
+        "grails-docs/src/main/groovy/grails/doc/gradle/MigrateLegacyDocs.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/gradle/PublishGuide.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/gradle/PublishPdf.groovy" | _
+        "grails-docs/src/main/groovy/grails/doc/internal/FileResourceChecker.groovy" | _
+        "grails-docs/src/main/groovy/grails/doc/internal/LegacyTocStrategy.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/internal/UserGuideNode.groovy" | _
+        "grails-docs/src/main/groovy/grails/doc/internal/YamlTocStrategy.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/macros/GspTagSourceMacro.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-docs/src/main/groovy/grails/doc/macros/HiddenMacro.groovy" | _
+        "grails-docs/src/test/groovy/grails/doc/internal/LegacyTocStrategySpec.groovy" | _
+        "grails-docs/src/test/groovy/grails/doc/internal/StringEscapeCategoryTests.groovy" | _
+        "grails-docs/src/test/groovy/grails/doc/internal/YamlTocStrategySpec.groovy" | _
+        "grails-docs/src/test/groovy/grails/doc/macros/GspTagSourceMacroTest.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+
+
     }
 
 
