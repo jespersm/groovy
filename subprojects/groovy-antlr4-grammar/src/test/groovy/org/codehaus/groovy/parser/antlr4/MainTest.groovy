@@ -355,6 +355,7 @@ class MainTest extends Specification {
         "grails-core/src/main/groovy/grails/beans/util/LazyBeanMap.groovy" | _
         "grails-core/src/main/groovy/grails/boot/GrailsApp.groovy" | _
         "grails-core/src/main/groovy/grails/boot/GrailsAppBuilder.groovy" | _
+        "grails-core/src/main/groovy/grails/boot/GrailsPluginApplication.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/GrailsApplicationContextLoader.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/GrailsApplicationPostProcessor.groovy" | _
         "grails-core/src/main/groovy/grails/boot/config/GrailsAutoConfiguration.groovy" | _
@@ -477,6 +478,38 @@ class MainTest extends Specification {
         "grails-core/src/test/groovy/org/grails/transaction/ChainedTransactionManagerPostProcessorSpec.groovy" | _
         "grails-core/src/test/groovy/org/grails/util/TypeConvertingMapTests.groovy" | _
 
+        "grails-databinding/src/main/groovy/grails/databinding/SimpleDataBinder.groovy" | addIgnore([Parameter, ExpressionStatement, IfStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-databinding/src/main/groovy/grails/databinding/SimpleMapDataBindingSource.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/BindUsing.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/BindingFormat.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/ClosureValueConverter.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/IndexedPropertyReferenceDescriptor.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/AbstractStructuredDateBindingEditor.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/CurrencyValueConverter.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/DateConversionHelper.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/FormattedDateValueConverter.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredCalendarBindingEditor.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredDateBindingEditor.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredSqlDateBindingEditor.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/converters/TimeZoneConverter.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/xml/GPathResultCollectionDataBindingSource.groovy" | _
+        "grails-databinding/src/main/groovy/org/grails/databinding/xml/GPathResultMap.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/BindUsingSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/BindingErrorSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/BindingFormatSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/BindingListenerSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/CollectionBindingSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/CustomTypeConverterSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/IncludeExcludeBindingSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderEnumBindingSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderEnumValueConverterSpec.groovy" | addIgnore([FieldNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderSpec.groovy" | _
+        "grails-databinding/src/test/groovy/grails/databinding/XMLBindingSpec.groovy" | _
+        "grails-databinding/src/test/groovy/org/grails/databinding/compiler/BindingFormatCompilationErrorsSpec.groovy" | _
+        "grails-databinding/src/test/groovy/org/grails/databinding/converters/CurrencyConversionSpec.groovy" | _
+        "grails-databinding/src/test/groovy/org/grails/databinding/converters/DateConversionHelperSpec.groovy" | _
+        "grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathCollectionDataBindingSourceSpec.groovy" | _
+        "grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathResultMapSpec.groovy" | _
 
     }
 

@@ -1,4 +1,4 @@
-/* source codes of grails-core 3.1.5 */
+/* SOURCE CODES FROM grails-core-3.1.8(https://github.com/grails/grails-core) */
 
 [PASS]	buildSrc/src/main/groovy/org/grails/gradle/GrailsBuildPlugin.groovy
 [PASS]	grails-async/src/main/groovy/grails/async/DelegateAsync.groovy
@@ -30,7 +30,6 @@
 [PASS]	grails-async/src/test/groovy/grails/async/PromiseSpec.groovy
 [PASS]	grails-async/src/test/groovy/grails/async/ReactorPromiseFactorySpec.groovy
 [PASS]	grails-async/src/test/groovy/grails/async/SynchronousPromiseFactorySpec.groovy
-
 [PASS]	grails-bootstrap/src/main/groovy/grails/build/proxy/SystemPropertiesAuthenticator.groovy
 [PASS]	grails-bootstrap/src/main/groovy/grails/codegen/model/Model.groovy
 [PASS]	grails-bootstrap/src/main/groovy/grails/codegen/model/ModelBuilder.groovy
@@ -67,7 +66,6 @@
 [PASS]	grails-bootstrap/src/test/groovy/grails/io/IOUtilsSpec.groovy
 [PASS]	grails-bootstrap/src/test/groovy/grails/util/EnvironmentTests.groovy
 [PASS]	grails-bootstrap/src/test/groovy/org/codehaus/groovy/grails/cli/parsing/CommandLineParserSpec.groovy
-
 [PASS]	grails-codecs/src/main/groovy/org/grails/plugins/codecs/Base64CodecExtensionMethods.groovy
 [PASS]	grails-codecs/src/main/groovy/org/grails/plugins/codecs/DigestUtils.groovy
 [PASS]	grails-codecs/src/main/groovy/org/grails/plugins/codecs/HexCodecExtensionMethods.groovy
@@ -85,7 +83,6 @@
 [PASS]	grails-codecs/src/test/groovy/org/grails/web/codecs/SHA1CodecTests.groovy
 [PASS]	grails-codecs/src/test/groovy/org/grails/web/codecs/SHA256BytesCodec.groovy
 [PASS]	grails-codecs/src/test/groovy/org/grails/web/codecs/SHA256CodecTests.groovy
-
 [PASS]	grails-compat/src/main/groovy/org/codehaus/groovy/grails/beans/factory/GenericBeanFactoryAccessor.groovy
 [PASS]	grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/AbstractGrailsClass.groovy
 [PASS]	grails-compat/src/main/groovy/org/codehaus/groovy/grails/commons/AbstractInjectableGrailsClass.groovy
@@ -166,7 +163,6 @@
 [PASS]	grails-compat/src/main/groovy/org/codehaus/groovy/grails/web/util/WebUtils.groovy
 [PASS]	grails-compat/src/main/groovy/org/grails/databinding/SimpleDataBinder.groovy
 [PASS]	grails-compat/src/main/groovy/org/grails/databinding/SimpleMapDataBindingSource.groovy
-
 [PASS]	grails-console/src/main/groovy/grails/ui/command/GrailsApplicationContextCommandRunner.groovy
 [PASS]	grails-console/src/main/groovy/grails/ui/console/GrailsSwingConsole.groovy
 [PASS]	grails-console/src/main/groovy/grails/ui/console/support/GroovyConsoleApplicationContext.groovy
@@ -177,10 +173,10 @@
 [PASS]	grails-console/src/main/groovy/grails/ui/shell/support/GroovyshWebApplicationContext.groovy
 [PASS]	grails-console/src/main/groovy/grails/ui/support/DevelopmentGrailsApplication.groovy
 [PASS]	grails-console/src/main/groovy/grails/ui/support/DevelopmentWebApplicationContext.groovy
-
 [PASS]	grails-core/src/main/groovy/grails/beans/util/LazyBeanMap.groovy
 [PASS]	grails-core/src/main/groovy/grails/boot/GrailsApp.groovy
 [PASS]	grails-core/src/main/groovy/grails/boot/GrailsAppBuilder.groovy
+[PASS]	grails-core/src/main/groovy/grails/boot/GrailsPluginApplication.groovy
 [PASS]	grails-core/src/main/groovy/grails/boot/config/GrailsApplicationContextLoader.groovy
 [PASS]	grails-core/src/main/groovy/grails/boot/config/GrailsApplicationPostProcessor.groovy
 [PASS]	grails-core/src/main/groovy/grails/boot/config/GrailsAutoConfiguration.groovy
@@ -302,39 +298,39 @@
 [PASS]	grails-core/src/test/groovy/org/grails/spring/context/ApplicationContextExtensionSpec.groovy
 [PASS]	grails-core/src/test/groovy/org/grails/transaction/ChainedTransactionManagerPostProcessorSpec.groovy
 [PASS]	grails-core/src/test/groovy/org/grails/util/TypeConvertingMapTests.groovy
+[PASS]	grails-databinding/src/main/groovy/grails/databinding/SimpleDataBinder.groovy
+[PASS]	grails-databinding/src/main/groovy/grails/databinding/SimpleMapDataBindingSource.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/BindUsing.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/BindingFormat.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/ClosureValueConverter.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/IndexedPropertyReferenceDescriptor.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/AbstractStructuredDateBindingEditor.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/CurrencyValueConverter.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/DateConversionHelper.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/FormattedDateValueConverter.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredCalendarBindingEditor.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredDateBindingEditor.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredSqlDateBindingEditor.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/converters/TimeZoneConverter.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/xml/GPathResultCollectionDataBindingSource.groovy
+[PASS]	grails-databinding/src/main/groovy/org/grails/databinding/xml/GPathResultMap.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/BindUsingSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/BindingErrorSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/BindingFormatSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/BindingListenerSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/CollectionBindingSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/CustomTypeConverterSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/IncludeExcludeBindingSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderEnumBindingSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderEnumValueConverterSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/grails/databinding/XMLBindingSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/org/grails/databinding/compiler/BindingFormatCompilationErrorsSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/org/grails/databinding/converters/CurrencyConversionSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/org/grails/databinding/converters/DateConversionHelperSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathCollectionDataBindingSourceSpec.groovy
+[PASS]	grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathResultMapSpec.groovy
 
-[TODO]	grails-databinding/src/main/groovy/grails/databinding/SimpleDataBinder.groovy
-[TODO]	grails-databinding/src/main/groovy/grails/databinding/SimpleMapDataBindingSource.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/BindUsing.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/BindingFormat.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/ClosureValueConverter.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/IndexedPropertyReferenceDescriptor.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/AbstractStructuredDateBindingEditor.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/CurrencyValueConverter.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/DateConversionHelper.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/FormattedDateValueConverter.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredCalendarBindingEditor.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredDateBindingEditor.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/StructuredSqlDateBindingEditor.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/converters/TimeZoneConverter.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/xml/GPathResultCollectionDataBindingSource.groovy
-[TODO]	grails-databinding/src/main/groovy/org/grails/databinding/xml/GPathResultMap.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/BindUsingSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/BindingErrorSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/BindingFormatSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/BindingListenerSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/CollectionBindingSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/CustomTypeConverterSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/IncludeExcludeBindingSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderEnumBindingSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderEnumValueConverterSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/SimpleDataBinderSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/grails/databinding/XMLBindingSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/org/grails/databinding/compiler/BindingFormatCompilationErrorsSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/org/grails/databinding/converters/CurrencyConversionSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/org/grails/databinding/converters/DateConversionHelperSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathCollectionDataBindingSourceSpec.groovy
-[TODO]	grails-databinding/src/test/groovy/org/grails/databinding/xml/GPathResultMapSpec.groovy
 [TODO]	grails-docs/src/main/groovy/grails/doc/DocEngine.groovy
 [TODO]	grails-docs/src/main/groovy/grails/doc/DocPublisher.groovy
 [TODO]	grails-docs/src/main/groovy/grails/doc/LegacyDocMigrator.groovy
@@ -698,7 +694,6 @@
 [TODO]	grails-taglib/src/main/groovy/org/grails/taglib/encoder/WithCodecHelper.groovy
 [TODO]	grails-taglib/src/test/groovy/org/grails/taglib/GroovyPageAttributesTests.groovy
 [TODO]	grails-taglib/src/test/groovy/org/grails/taglib/GroovyPageTagWriterSpec.groovy
-[TODO]	grails-taglib/src/test/groovy/org/grails/taglib/encoder/OutputEncodingSettingsSpec.groovy
 [TODO]	grails-taglib/src/test/groovy/org/grails/taglib/encoder/WithCodecHelperSpec.groovy
 [TODO]	grails-test-suite-base/src/main/groovy/org/grails/plugins/web/AbstractGrailsPluginTests.groovy
 [TODO]	grails-test-suite-base/src/main/groovy/org/grails/web/servlet/mvc/AbstractGrailsControllerTests.groovy

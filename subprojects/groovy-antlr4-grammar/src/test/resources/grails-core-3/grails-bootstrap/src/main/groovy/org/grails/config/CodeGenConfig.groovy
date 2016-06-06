@@ -38,6 +38,8 @@ import org.yaml.snakeyaml.Yaml
 class CodeGenConfig implements Cloneable, ConfigMap {
     final NavigableMap configMap
 
+    GroovyClassLoader groovyClassLoader = new GroovyClassLoader(CodeGenConfig.getClassLoader())
+
     CodeGenConfig() {
         configMap = new NavigableMap()
     }
@@ -135,6 +137,16 @@ class CodeGenConfig implements Cloneable, ConfigMap {
             if(!environmentSpecific.isEmpty()) {
                 mergeMap(environmentSpecific, false)
             }
+        }
+    }
+
+    void loadGroovy(File groovyConfig) {
+        if(groovyConfig.exists()) {
+            def envName = Environment.current.name
+            def configSlurper = new ConfigSlurper(envName)
+            configSlurper.classLoader = groovyClassLoader
+            def configObject = configSlurper.parse(groovyConfig.toURI().toURL())
+            mergeMap(configObject, false)
         }
     }
 
@@ -251,7 +263,16 @@ class CodeGenConfig implements Cloneable, ConfigMap {
     public <T> T getProperty(String name, Class<T> requiredType) {
         return convertToType( configMap.getProperty(name), requiredType )
     }
-    
+
+    @Override
+    def <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
+        def v = getProperty(key, targetType)
+        if(v == null) {
+            return defaultValue
+        }
+        return v
+    }
+
     public void setProperty(String name, Object value) {
         configMap.setProperty(name, value)
     }

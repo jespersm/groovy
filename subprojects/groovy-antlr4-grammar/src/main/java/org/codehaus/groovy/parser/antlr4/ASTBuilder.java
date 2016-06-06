@@ -1597,26 +1597,30 @@ public class ASTBuilder {
 
                 // STRING
                 if (GroovyParser.STRING == type) {
-                    return parseConstantStringToken(token);
+                    return setupNodeLocation(parseConstantStringToken(token), token);
                 }
 
                 // IDENTIFIER, KW_THIS, KW_SUPER
-                return new ConstantExpression(tn.getText());
+                return setupNodeLocation(new ConstantExpression(tn.getText()), token);
             }
 
-            // selectorName
-            if (node instanceof GroovyParser.SelectorNameContext) {
-                return new ConstantExpression(((GroovyParser.SelectorNameContext) node).getText());
-            }
+            if (node instanceof ParserRuleContext) {
+                ParserRuleContext ctx = (ParserRuleContext) node;
 
-            // gstring
-            if (node instanceof GroovyParser.GstringContext) {
-                return parseExpression((GroovyParser.GstringContext) node);
-            }
+                // selectorName
+                if (ctx instanceof GroovyParser.SelectorNameContext) {
+                    return setupNodeLocation(new ConstantExpression(ctx.getText()), ctx);
+                }
 
-            // LPAREN expression RPAREN
-            if (node instanceof GroovyParser.ExpressionContext) {
-                return parseExpression((GroovyParser.ExpressionContext) node);
+                // gstring
+                if (ctx instanceof GroovyParser.GstringContext) {
+                    return setupNodeLocation(parseExpression((GroovyParser.GstringContext) ctx), ctx);
+                }
+
+                // LPAREN expression RPAREN
+                if (ctx instanceof GroovyParser.ExpressionContext) {
+                    return setupNodeLocation(parseExpression((GroovyParser.ExpressionContext) ctx), ctx);
+                }
             }
         }
 
