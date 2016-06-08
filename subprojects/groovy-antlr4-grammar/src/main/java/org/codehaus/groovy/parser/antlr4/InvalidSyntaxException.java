@@ -21,7 +21,11 @@ package org.codehaus.groovy.parser.antlr4;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 /**
- * Created by Daniel on 2016/4/5.
+ *
+ * An exception indicating invalid syntax in the inputted Groovy source code.
+ *
+ * @author  <a href="mailto:daniel.sun@groovyhelp.com">Daniel.Sun</a>
+ * @date    2016/4/5.
  */
 public class InvalidSyntaxException extends RuntimeException {
     public InvalidSyntaxException(String message, ParserRuleContext ctx) {

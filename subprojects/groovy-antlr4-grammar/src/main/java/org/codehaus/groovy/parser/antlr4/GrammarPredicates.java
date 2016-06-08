@@ -29,6 +29,14 @@ import java.util.Set;
 public class GrammarPredicates {
     private static final Set<Integer> KW_SET = new HashSet<Integer>(Arrays.asList(GroovyLangParser.KW_ABSTRACT, GroovyLangParser.KW_AS, GroovyLangParser.KW_ASSERT, GroovyLangParser.KW_BREAK, GroovyLangParser.KW_CASE, GroovyLangParser.KW_CATCH, GroovyLangParser.KW_CLASS, GroovyLangParser.KW_CONST, GroovyLangParser.KW_CONTINUE, GroovyLangParser.KW_DEF, GroovyLangParser.KW_DEFAULT, GroovyLangParser.KW_DO, GroovyLangParser.KW_ELSE, GroovyLangParser.KW_ENUM, GroovyLangParser.KW_EXTENDS, GroovyLangParser.KW_FALSE, GroovyLangParser.KW_FINAL, GroovyLangParser.KW_FINALLY, GroovyLangParser.KW_FOR, GroovyLangParser.KW_GOTO, GroovyLangParser.KW_IF, GroovyLangParser.KW_IMPLEMENTS, GroovyLangParser.KW_IMPORT, GroovyLangParser.KW_IN, GroovyLangParser.KW_INSTANCEOF, GroovyLangParser.KW_INTERFACE, GroovyLangParser.KW_NATIVE, GroovyLangParser.KW_NEW, GroovyLangParser.KW_NULL, GroovyLangParser.KW_PACKAGE, GroovyLangParser.KW_RETURN, GroovyLangParser.KW_STATIC, GroovyLangParser.KW_STRICTFP, GroovyLangParser.KW_SUPER, GroovyLangParser.KW_SWITCH, GroovyLangParser.KW_SYNCHRONIZED, GroovyLangParser.KW_THIS, GroovyLangParser.KW_THREADSAFE, GroovyLangParser.KW_THROW, GroovyLangParser.KW_THROWS, GroovyLangParser.KW_TRANSIENT, GroovyLangParser.KW_TRAIT, GroovyLangParser.KW_TRUE, GroovyLangParser.KW_TRY, GroovyLangParser.KW_VOLATILE, GroovyLangParser.KW_WHILE, GroovyLangParser.BUILT_IN_TYPE, GroovyLangParser.VISIBILITY_MODIFIER));
 
+    public static boolean isInvalidMethodDeclaration(TokenStream tokenStream) {
+        int tokenType = tokenStream.LT(1).getType();
+
+        return (tokenType == GroovyLangParser.IDENTIFIER || tokenType == GroovyLangParser.STRING)
+                && (tokenStream.LT(2).getType() == GroovyLangParser.LPAREN);
+
+    }
+
     public static boolean isClassName(TokenStream nameOrPath) {
         int index = 1;
         Token token = nameOrPath.LT(index);

@@ -27,7 +27,6 @@ options { tokenVocab = GroovyLexer; }
 }
 
 @members {
-    private String currentClassName = null; // Used for correct constructor recognition.
 
     private boolean ellipsisEnabled = false;
 
@@ -87,9 +86,8 @@ compilationUnit: SHEBANG_COMMENT? (NL*)
                  (scriptPart)? (NL | SEMICOLON)*
                  EOF;
 
-scriptPart:
-    methodDeclaration
-    | statement
+scriptPart: { !GrammarPredicates.isInvalidMethodDeclaration(_input) }? methodDeclaration[null]
+          | statement
 ;
 
 packageDefinition:
@@ -98,29 +96,29 @@ importStatement:
     (annotationClause (NL | annotationClause)*)? KW_IMPORT KW_STATIC? (IDENTIFIER (DOT IDENTIFIER)* (DOT MULT)?) (KW_AS IDENTIFIER)?;
 
 classDeclaration
-locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum = false, boolean isInterface = false]
+locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum = false, boolean isInterface = false, String className = null]
 :
     (
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
-    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE {$isInterface=true;} | KW_TRAIT | KW_ENUM {$isEnum=true;}) IDENTIFIER { currentClassName = $IDENTIFIER.text; }
+    )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE {$isInterface=true;} | KW_TRAIT | KW_ENUM {$isEnum=true;}) IDENTIFIER { $className = $IDENTIFIER.text; }
     ({!$isEnum}? genericDeclarationList? (extendsClause[$isInterface])?
     |
     )
     implementsClause? (NL)*
-    classBody[$isEnum];
+    classBody[$isEnum, $className];
 
-classMember:
-    constructorDeclaration | methodDeclaration | fieldDeclaration | objectInitializer | classInitializer | classDeclaration ;
+classMember[String className]:
+    methodDeclaration[$className] | fieldDeclaration | objectInitializer | classInitializer | classDeclaration ;
 
 enumConstant: IDENTIFIER (LPAREN argumentList RPAREN)?;
 
-classBody[boolean isEnum]
+classBody[boolean isEnum, String className]
     : LCURVE NL*
       ({$isEnum}? (enumConstant NL* COMMA NL*)* enumConstant NL* COMMA?
       |
       )
-      (classMember | NL | SEMICOLON)*
+      (classMember[$className] | NL | SEMICOLON)*
       RCURVE;
 
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
@@ -128,8 +126,11 @@ extendsClause[boolean isInterface]
     :  KW_EXTENDS genericClassNameExpression (COMMA {$isInterface}?<fail={"Only interface allows multi-inheritance"}> genericClassNameExpression)* ;
 
 // Members
-methodDeclaration
-locals [Set<String> modifierAndDefSet = new HashSet<String>()]
+methodDeclaration[String classNameParam]
+locals [Set<String> modifierAndDefSet = new HashSet<String>(), String className = null]
+@init {
+    $className = $classNameParam;
+}
 :
     (
         (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
@@ -138,10 +139,9 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
         )?
     |
         genericClassNameExpression
-    )
+    )?
     (IDENTIFIER | STRING) LPAREN NL* argumentDeclarationList NL* RPAREN throwsClause? (KW_DEFAULT annotationParameter | blockStatementWithCurve)?
 ;
-
 
 fieldDeclaration
 locals [Set<String> modifierAndDefSet = new HashSet<String>()]
@@ -152,8 +152,7 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
         | genericClassNameExpression)
     singleDeclaration ( COMMA singleDeclaration)*
 ;
-constructorDeclaration: { GrammarPredicates.isCurrentClassName(_input, currentClassName) }?
-    VISIBILITY_MODIFIER? IDENTIFIER LPAREN argumentDeclarationList RPAREN throwsClause? blockStatementWithCurve ; // Inner NL 's handling.
+
 objectInitializer: blockStatementWithCurve ;
 classInitializer: KW_STATIC blockStatementWithCurve ;
 
@@ -192,7 +191,7 @@ declarationRule:  ( ((annotationClause NL*)* KW_FINAL? ((annotationClause NL*)* 
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;
-newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN NL* argumentList? NL* RPAREN) (classBody[false])?;
+newInstanceRule: KW_NEW (classNameExpression (LT GT)? | genericClassNameExpression) (LPAREN NL* argumentList? NL* RPAREN) (classBody[false, null])?;
 newArrayRule: KW_NEW classNameExpression (LBRACK expression RBRACK)+ ;
 
 statement:

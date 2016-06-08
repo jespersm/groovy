@@ -552,14 +552,14 @@ class MainTest extends Specification {
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/agent/AgentTasksEnhancer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/commands/ApplicationContextCommandTask.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsExtension.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME "java.lang.OutOfMemoryError: Java heap space"       "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsPluginGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+//tested separately in "test GrailsGradlePlugin for #path"       "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsPluginGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/IntegrationTestGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/PluginDefiner.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/doc/GrailsDocGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/doc/PublishGuideTask.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspathToolingModelBuilder.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfileGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfileGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfilePublishGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/tasks/ProfileCompilerTask.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/publishing/GrailsCentralPublishGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
@@ -569,10 +569,40 @@ class MainTest extends Specification {
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/util/SourceSets.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/watch/GrailsWatchPlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/watch/WatchConfig.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/GrailsWebGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/GrailsWebGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPageCompileTask.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPagePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+    }
 
+    @Unroll
+    def "test GrailsGradlePlugin for #path"() { // "and: ASTWriter.astToString(moduleNodeNew) == ASTWriter.astToString(moduleNodeOld2)" will cause java.lang.OutOfMemoryError
+        def filename = path;
+
+        setup:
+        def file = new File("$RESOURCES_PATH/grails-core-3/$path")
+        def moduleNodeNew = new Main(Configuration.NEW).process(file)
+        def moduleNodeOld = new Main(Configuration.OLD).process(file)
+        def moduleNodeOld2 = new Main(Configuration.OLD).process(file)
+        config = config.is(_) ? ASTComparatorCategory.DEFAULT_CONFIGURATION : config
+        def moduleNodeNewAstStr = moduleNodeNew ? ASTWriter.astToString(moduleNodeNew) : null;
+        def moduleNodeOld2AstStr = moduleNodeOld2 ? ASTWriter.astToString(moduleNodeOld2) : null;
+        def astStrCompareResult = moduleNodeNewAstStr && moduleNodeOld2AstStr && (moduleNodeNewAstStr == moduleNodeOld2AstStr)
+
+        expect:
+        moduleNodeNew
+        moduleNodeOld
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeOld == moduleNodeOld2
+        }
+        and:
+        astStrCompareResult
+        and:
+        ASTComparatorCategory.apply(config) {
+            assert moduleNodeNew == moduleNodeOld, "Fail in $path"
+        }
+        where:
+        path | config
+        "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
     }
 
 

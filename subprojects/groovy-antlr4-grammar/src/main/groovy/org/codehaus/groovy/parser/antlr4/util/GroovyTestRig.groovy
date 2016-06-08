@@ -26,7 +26,10 @@ import org.codehaus.groovy.parser.antlr4.GroovyLangLexer
 import org.codehaus.groovy.parser.antlr4.GroovyLangParser
 
 /**
- * Created by Daniel on 2016/3/18.
+ * A basic debugging tool for investigating the parse trees and tokens of Groovy source code
+ *
+ * @author  <a href="mailto:daniel.sun@groovyhelp.com">Daniel.Sun</a>
+ * @date    2016/3/18.
  */
 @Log
 public class GroovyTestRig extends TestRig {

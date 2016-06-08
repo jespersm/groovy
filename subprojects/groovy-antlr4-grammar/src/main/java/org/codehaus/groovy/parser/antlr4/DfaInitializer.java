@@ -22,7 +22,11 @@ import org.antlr.v4.runtime.atn.ATN;
 import org.antlr.v4.runtime.dfa.DFA;
 
 /**
- * Created by Daniel on 2016/5/2.
+ *
+ * Create the brand-new DFA array for lexer and parser to avoid memory leak
+ *
+ * @author  <a href="mailto:daniel.sun@groovyhelp.com">Daniel.Sun</a>
+ * @date    2016/5/2.
  */
 public class DfaInitializer {
     private ATN atn;
