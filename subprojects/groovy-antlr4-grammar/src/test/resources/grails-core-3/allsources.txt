@@ -351,7 +351,6 @@
 [PASS]	grails-docs/src/test/groovy/grails/doc/internal/StringEscapeCategoryTests.groovy
 [PASS]	grails-docs/src/test/groovy/grails/doc/internal/YamlTocStrategySpec.groovy
 [PASS]	grails-docs/src/test/groovy/grails/doc/macros/GspTagSourceMacroTest.groovy
-
 [PASS]	grails-encoder/src/main/groovy/org/grails/buffer/StreamCharBufferMetaUtils.groovy
 [PASS]	grails-encoder/src/main/groovy/org/grails/encoder/CodecMetaClassSupport.groovy
 [PASS]	grails-encoder/src/main/groovy/org/grails/encoder/impl/HTMLCodecFactory.groovy
@@ -391,6 +390,7 @@
 [TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/GrailsWebGradlePlugin.groovy
 [TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPageCompileTask.groovy
 [TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPagePlugin.groovy
+
 [TODO]	grails-gsp/src/main/groovy/org/grails/gsp/GroovyPagesMetaUtils.groovy
 [TODO]	grails-gsp/src/main/groovy/org/grails/gsp/compiler/GroovyPageCompiler.groovy
 [TODO]	grails-gsp/src/test/groovy/org/grails/gsp/GroovyPagesTemplateEngineTests.groovy
