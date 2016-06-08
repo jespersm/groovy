@@ -352,19 +352,20 @@
 [PASS]	grails-docs/src/test/groovy/grails/doc/internal/YamlTocStrategySpec.groovy
 [PASS]	grails-docs/src/test/groovy/grails/doc/macros/GspTagSourceMacroTest.groovy
 
-[TODO]	grails-encoder/src/main/groovy/org/grails/buffer/StreamCharBufferMetaUtils.groovy
-[TODO]	grails-encoder/src/main/groovy/org/grails/encoder/CodecMetaClassSupport.groovy
-[TODO]	grails-encoder/src/main/groovy/org/grails/encoder/impl/HTMLCodecFactory.groovy
-[TODO]	grails-encoder/src/main/groovy/org/grails/encoder/impl/JSONCodecFactory.groovy
-[TODO]	grails-encoder/src/main/groovy/org/grails/encoder/impl/JavaScriptCodec.groovy
-[TODO]	grails-encoder/src/main/groovy/org/grails/encoder/impl/StandaloneCodecLookup.groovy
-[TODO]	grails-encoder/src/main/groovy/org/grails/encoder/impl/URLCodecFactory.groovy
-[TODO]	grails-encoder/src/test/groovy/org/grails/buffer/StreamCharBufferGroovyTests.groovy
-[TODO]	grails-encoder/src/test/groovy/org/grails/charsequences/CharSequencesSpec.groovy
-[TODO]	grails-encoder/src/test/groovy/org/grails/encoder/ChainedEncodersSpec.groovy
-[TODO]	grails-encoder/src/test/groovy/org/grails/encoder/impl/BasicCodecLookupSpec.groovy
-[TODO]	grails-encoder/src/test/groovy/org/grails/encoder/impl/HTMLEncoderSpec.groovy
-[TODO]	grails-encoder/src/test/groovy/org/grails/encoder/impl/JavaScriptCodecTests.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/buffer/StreamCharBufferMetaUtils.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/encoder/CodecMetaClassSupport.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/encoder/impl/HTMLCodecFactory.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/encoder/impl/JSONCodecFactory.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/encoder/impl/JavaScriptCodec.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/encoder/impl/StandaloneCodecLookup.groovy
+[PASS]	grails-encoder/src/main/groovy/org/grails/encoder/impl/URLCodecFactory.groovy
+[PASS]	grails-encoder/src/test/groovy/org/grails/buffer/StreamCharBufferGroovyTests.groovy
+[PASS]	grails-encoder/src/test/groovy/org/grails/charsequences/CharSequencesSpec.groovy
+[PASS]	grails-encoder/src/test/groovy/org/grails/encoder/ChainedEncodersSpec.groovy
+[PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/BasicCodecLookupSpec.groovy
+[PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/HTMLEncoderSpec.groovy
+[PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/JavaScriptCodecTests.groovy
+
 [TODO]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/DefaultGrailsClasspath.groovy
 [TODO]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspath.groovy
 [TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/agent/AgentTasksEnhancer.groovy

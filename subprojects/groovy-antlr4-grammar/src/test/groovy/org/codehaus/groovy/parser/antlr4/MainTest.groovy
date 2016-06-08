@@ -533,6 +533,19 @@ class MainTest extends Specification {
         "grails-docs/src/test/groovy/grails/doc/internal/YamlTocStrategySpec.groovy" | _
         "grails-docs/src/test/groovy/grails/doc/macros/GspTagSourceMacroTest.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
+        "grails-encoder/src/main/groovy/org/grails/buffer/StreamCharBufferMetaUtils.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/main/groovy/org/grails/encoder/CodecMetaClassSupport.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/main/groovy/org/grails/encoder/impl/HTMLCodecFactory.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/main/groovy/org/grails/encoder/impl/JSONCodecFactory.groovy" | _
+        "grails-encoder/src/main/groovy/org/grails/encoder/impl/JavaScriptCodec.groovy" | addIgnore([ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/main/groovy/org/grails/encoder/impl/StandaloneCodecLookup.groovy" | addIgnore([Parameter], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/main/groovy/org/grails/encoder/impl/URLCodecFactory.groovy" | _
+        "grails-encoder/src/test/groovy/org/grails/buffer/StreamCharBufferGroovyTests.groovy" | _
+        "grails-encoder/src/test/groovy/org/grails/charsequences/CharSequencesSpec.groovy" | addIgnore([ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/test/groovy/org/grails/encoder/ChainedEncodersSpec.groovy" | addIgnore([ExpressionStatement], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/test/groovy/org/grails/encoder/impl/BasicCodecLookupSpec.groovy" | _
+        "grails-encoder/src/test/groovy/org/grails/encoder/impl/HTMLEncoderSpec.groovy" | addIgnore([ExpressionStatement, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-encoder/src/test/groovy/org/grails/encoder/impl/JavaScriptCodecTests.groovy" | _
 
     }
 

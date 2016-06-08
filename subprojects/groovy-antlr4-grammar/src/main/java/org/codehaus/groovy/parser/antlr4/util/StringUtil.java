@@ -27,40 +27,56 @@ import java.util.regex.Pattern;
 
 public class StringUtil {
     public static String replaceHexEscapes(String text) {
-        Pattern p = Pattern.compile("\\\\u([0-9abcdefABCDEF]{4})");
+        Pattern p = Pattern.compile("(\\\\*)\\\\u([0-9abcdefABCDEF]{4})");
 	    return DefaultGroovyMethods.replaceAll(text, p, new Closure<Void>(null, null) {
-		    Object doCall(String _0, String _1) {
-			    return Character.toChars(Integer.parseInt(_1, 16));
+		    Object doCall(String _0, String _1, String _2) {
+				if (null != _1 && _1.length() % 2 == 1) {
+					return _0;
+				}
+
+			    return _1 + new String(Character.toChars(Integer.parseInt(_2, 16)));
 		    }
 	    });
     }
 
 	public static String replaceOctalEscapes(String text) {
-	    Pattern p = Pattern.compile("\\\\([0-3]?[0-7]?[0-7])");
+	    Pattern p = Pattern.compile("(\\\\*)\\\\([0-3]?[0-7]?[0-7])");
 	    return DefaultGroovyMethods.replaceAll(text, p, new Closure<Void>(null, null) {
-		    Object doCall(String _0, String _1) {
-			    return Character.toChars(Integer.parseInt(_1, 8));
+		    Object doCall(String _0, String _1, String _2) {
+				if (null != _1 && _1.length() % 2 == 1) {
+					return _0;
+				}
+
+			    return _1 + new String(Character.toChars(Integer.parseInt(_2, 8)));
 		    }
 	    });
     }
 
-    private static Map<Character, Character> standardEscapes = new HashMap<Character, Character>();
-	static {
-        standardEscapes.put('b', '\b');
-        standardEscapes.put('t', '\t');
-        standardEscapes.put('n', '\n');
-        standardEscapes.put('f', '\f');
-        standardEscapes.put('r', '\r');
-    }
+    private static Map<Character, Character> standardEscapes = new HashMap<Character, Character>() {
+		{
+			this.put('b', '\b');
+			this.put('t', '\t');
+			this.put('n', '\n');
+			this.put('f', '\f');
+			this.put('r', '\r');
+		}
+	};
 
 	public static String replaceStandardEscapes(String text) {
-	    Pattern p = Pattern.compile("\\\\([btnfr\"'\\\\])");
-	    return DefaultGroovyMethods.replaceAll(text, p, new Closure<Void>(null, null) {
-		    Object doCall(String _0, String _1) {
-			    Character character = standardEscapes.get(_1.charAt(0));
-			    return character != null ? character : _1;
-		    }
-	    });
+	    Pattern p = Pattern.compile("(\\\\*)\\\\([btnfr\"'])");
+
+	    String result = DefaultGroovyMethods.replaceAll(text, p, new Closure<Void>(null, null) {
+							Object doCall(String _0, String _1, String _2) {
+								if (null != _1 && _1.length() % 2 == 1) {
+									return _0;
+								}
+
+								Character character = standardEscapes.get(_2.charAt(0));
+								return _1 + (character != null ? character : _2);
+							}
+						});
+
+		return result.replace("\\\\", "\\");
     }
 
 	public static final int SLASHY = 0;
@@ -85,7 +101,7 @@ public class StringUtil {
 		return text;
 	}
 
-	public static String replaceEscapes(String text) {
+	private static String replaceEscapes(String text) {
 		text = text.replace("\\$", "$");
 		text = text.replaceAll("\\\\\r?\n", "");
 
@@ -95,4 +111,5 @@ public class StringUtil {
 	public static String removeCR(String text) {
         return text.replace("\r\n", "\n");
     }
+
 }
