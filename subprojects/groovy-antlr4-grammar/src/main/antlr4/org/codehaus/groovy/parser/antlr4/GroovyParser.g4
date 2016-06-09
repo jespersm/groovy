@@ -300,7 +300,7 @@ expression:
     | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
     | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
     | e=expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) #fieldAccessExpression
-    | LPAREN expression RPAREN #parenthesisExpression
+
     | MULT expression #spreadExpression
     | expression (DECREMENT | INCREMENT)  #postfixExpression
 
@@ -313,6 +313,7 @@ expression:
     | closureCallExpressionRule                                                                    #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
+    | LPAREN expression RPAREN #parenthesisExpression
 
     | (NOT | BNOT) expression #unaryExpression
 

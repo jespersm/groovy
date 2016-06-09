@@ -660,7 +660,7 @@ class MainTest extends Specification {
         where:
         path | config
         "grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsGradlePlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "grails-plugin-controllers/src/main/groovy/grails/artefact/controller/support/ResponseRenderer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-plugin-controllers/src/main/groovy/grails/artefact/controller/support/ResponseRenderer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-plugin-converters/src/main/groovy/org/grails/web/converters/AbstractParsingParameterCreationListener.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, FieldNode, PropertyNode, MethodNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
     }
