@@ -1630,8 +1630,12 @@ public class ASTBuilder {
             if (asBoolean(ctx)) {
                 method = this.parseName(ctx.selectorName(), ctx.STRING(), ctx.gstring(), ctx.mne);
             } else {
-                method = this.parseName(nonKwCallExpressionRuleContext.IDENTIFIER(), nonKwCallExpressionRuleContext.STRING(), nonKwCallExpressionRuleContext.KW_THIS(), nonKwCallExpressionRuleContext.KW_SUPER());
+                method = this.parseName(nonKwCallExpressionRuleContext.IDENTIFIER(), nonKwCallExpressionRuleContext.STRING(), nonKwCallExpressionRuleContext.gstring(), nonKwCallExpressionRuleContext.KW_THIS(), nonKwCallExpressionRuleContext.KW_SUPER());
             }
+        }
+
+        if (null == method) {
+            throw new IllegalStateException("method should not be null");
         }
 
         TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? closureCallExpressionRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
