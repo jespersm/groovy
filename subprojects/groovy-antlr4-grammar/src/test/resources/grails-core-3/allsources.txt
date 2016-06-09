@@ -365,31 +365,31 @@
 [PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/HTMLEncoderSpec.groovy
 [PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/JavaScriptCodecTests.groovy
 
-[TODO]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/DefaultGrailsClasspath.groovy
-[TODO]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspath.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/agent/AgentTasksEnhancer.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/commands/ApplicationContextCommandTask.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsExtension.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsPluginGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/IntegrationTestGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/PluginDefiner.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/doc/GrailsDocGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/doc/PublishGuideTask.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspathToolingModelBuilder.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfileGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfilePublishGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/tasks/ProfileCompilerTask.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/publishing/GrailsCentralPublishGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/publishing/GrailsPublishExtension.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/run/FindMainClassTask.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/run/GrailsRunTask.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/util/SourceSets.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/watch/GrailsWatchPlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/watch/WatchConfig.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/GrailsWebGradlePlugin.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPageCompileTask.groovy
-[TODO]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPagePlugin.groovy
+[PASS]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/DefaultGrailsClasspath.groovy
+[PASS]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspath.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/agent/AgentTasksEnhancer.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/commands/ApplicationContextCommandTask.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsExtension.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/GrailsPluginGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/IntegrationTestGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/core/PluginDefiner.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/doc/GrailsDocGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/doc/PublishGuideTask.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspathToolingModelBuilder.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfileGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/GrailsProfilePublishGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/profiles/tasks/ProfileCompilerTask.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/publishing/GrailsCentralPublishGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/publishing/GrailsPublishExtension.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/run/FindMainClassTask.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/run/GrailsRunTask.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/util/SourceSets.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/watch/GrailsWatchPlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/watch/WatchConfig.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/GrailsWebGradlePlugin.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPageCompileTask.groovy
+[PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/web/gsp/GroovyPagePlugin.groovy
 
 [TODO]	grails-gsp/src/main/groovy/org/grails/gsp/GroovyPagesMetaUtils.groovy
 [TODO]	grails-gsp/src/main/groovy/org/grails/gsp/compiler/GroovyPageCompiler.groovy
@@ -444,6 +444,9 @@
 [TODO]	grails-plugin-converters/src/test/groovy/org/grails/web/converters/ConverterUtilSpec.groovy
 [TODO]	grails-plugin-converters/src/test/groovy/org/grails/web/converters/marshaller/json/DomainClassMarshallerSpec.groovy
 [TODO]	grails-plugin-converters/src/test/groovy/org/grails/web/converters/marshaller/json/ValidationErrorsMarshallerSpec.groovy
+
+
+
 [TODO]	grails-plugin-databinding/src/main/groovy/org/grails/databinding/converters/web/LocaleAwareBigDecimalConverter.groovy
 [TODO]	grails-plugin-databinding/src/main/groovy/org/grails/databinding/converters/web/LocaleAwareNumberConverter.groovy
 [TODO]	grails-plugin-databinding/src/main/groovy/org/grails/plugins/databinding/DataBindingGrailsPlugin.groovy
