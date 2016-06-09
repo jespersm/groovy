@@ -61,6 +61,9 @@ public class ASTBuilder {
     public static final String ABSTRACT = "abstract";
     public static final String DEF = "def";
     public static final String CALL = "call";
+    public static final String PUBLIC = "public";
+    public static final String PRIVATE = "private";
+    public static final String PROTECTED = "protected";
 
     public ASTBuilder(final SourceUnit sourceUnit, ClassLoader classLoader) {
         this.classLoader = classLoader;
@@ -503,8 +506,8 @@ public class ASTBuilder {
                         }
 
                         MethodNode methodNode;
-                        if (!asBoolean(ctx.STRING()) // constructor's name should not be defined by STRING
-                                && !(asBoolean(ctx.typeDeclaration()) || asBoolean(ctx.genericClassNameExpression())) // constructor should has not return type
+                        if (asBoolean(ctx.IDENTIFIER()) // constructor's name should only be defined by IDENTIFIER
+                                && !(asBoolean(ctx.typeDeclaration()) || asBoolean(ctx.genericClassNameExpression())) // constructor should not has return type
                                 && asBoolean(ctx.blockStatementWithCurve()) // constructor should have block statement
                                 && methodName.equals(ctx.className) // constructor should has same name with class's
                                 && (ctx.modifierAndDefSet.isEmpty() || (1 == ctx.modifierAndDefSet.size() && CONSTRUCTOR_VISIBILITY_MODIFIER_SET.contains(ctx.modifierAndDefSet.toArray()[0]))) // constructor's modifier should has only public, protected, private and default(nothing)
@@ -618,8 +621,6 @@ public class ASTBuilder {
             return parseStatement((GroovyLangParser.WhileStatementContext)ctx);
         if (ctx instanceof GroovyLangParser.ControlStatementContext)
             return parseStatement((GroovyLangParser.ControlStatementContext)ctx);
-//        if (ctx instanceof GroovyLangParser.CommandExpressionStatementContext)
-//            return parseStatement((GroovyLangParser.CommandExpressionStatementContext)ctx);
         if (ctx instanceof GroovyLangParser.NewInstanceStatementContext)
             return parseStatement((GroovyLangParser.NewInstanceStatementContext)ctx);
         if (ctx instanceof GroovyLangParser.AssertStatementContext)
@@ -2196,11 +2197,11 @@ public class ASTBuilder {
 
     public int parseVisibilityModifiers(TerminalNode modifier) {
         assert modifier.getSymbol().getType() == GroovyLangLexer.VISIBILITY_MODIFIER;
-        if (DefaultGroovyMethods.isCase("public", modifier.getSymbol().getText()))
+        if (DefaultGroovyMethods.isCase(PUBLIC, modifier.getSymbol().getText()))
             return Opcodes.ACC_PUBLIC;
-        else if (DefaultGroovyMethods.isCase("private", modifier.getSymbol().getText()))
+        else if (DefaultGroovyMethods.isCase(PRIVATE, modifier.getSymbol().getText()))
             return Opcodes.ACC_PRIVATE;
-        else if (DefaultGroovyMethods.isCase("protected", modifier.getSymbol().getText()))
+        else if (DefaultGroovyMethods.isCase(PROTECTED, modifier.getSymbol().getText()))
             return Opcodes.ACC_PROTECTED;
         else
             throw new AssertionError(modifier.getSymbol().getText() + " is not a valid visibility modifier!");
@@ -2280,7 +2281,7 @@ public class ASTBuilder {
         return classNode.getAnnotations(ClassHelper.make(GROOVY_TRANSFORM_TRAIT)).size() > 0;
     }
 
-    private static Set<String> CONSTRUCTOR_VISIBILITY_MODIFIER_SET = new HashSet(Arrays.asList("public", "protected", "private"));
+    private static Set<String> CONSTRUCTOR_VISIBILITY_MODIFIER_SET = new HashSet(Arrays.asList(PUBLIC, PROTECTED, PRIVATE));
 
     private static final Map<ClassNode, Object> TYPE_DEFAULT_VALUE_MAP = new HashMap<ClassNode, Object>() {
         {
