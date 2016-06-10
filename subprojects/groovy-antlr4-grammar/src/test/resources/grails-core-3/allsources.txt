@@ -696,6 +696,7 @@
 [TODO]	grails-taglib/src/test/groovy/org/grails/taglib/GroovyPageAttributesTests.groovy
 [TODO]	grails-taglib/src/test/groovy/org/grails/taglib/GroovyPageTagWriterSpec.groovy
 [TODO]	grails-taglib/src/test/groovy/org/grails/taglib/encoder/WithCodecHelperSpec.groovy
+
 [TODO]	grails-test-suite-base/src/main/groovy/org/grails/plugins/web/AbstractGrailsPluginTests.groovy
 [TODO]	grails-test-suite-base/src/main/groovy/org/grails/web/servlet/mvc/AbstractGrailsControllerTests.groovy
 [TODO]	grails-test-suite-base/src/main/groovy/org/grails/web/taglib/AbstractGrailsTagTests.groovy
