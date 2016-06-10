@@ -1501,7 +1501,7 @@ class MainTest extends Specification {
         where:
         path | compilerConfiguration
         "Assert_issue9.groovy" | CompilerConfiguration.DEFAULT
-
+        "CallExpression_issue33_5.groovy" | CompilerConfiguration.DEFAULT
     }
 
 
