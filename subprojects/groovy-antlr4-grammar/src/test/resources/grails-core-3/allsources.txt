@@ -364,7 +364,6 @@
 [PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/BasicCodecLookupSpec.groovy
 [PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/HTMLEncoderSpec.groovy
 [PASS]	grails-encoder/src/test/groovy/org/grails/encoder/impl/JavaScriptCodecTests.groovy
-
 [PASS]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/DefaultGrailsClasspath.groovy
 [PASS]	grails-gradle-model/src/main/groovy/org/grails/gradle/plugin/model/GrailsClasspath.groovy
 [PASS]	grails-gradle-plugin/src/main/groovy/org/grails/gradle/plugin/agent/AgentTasksEnhancer.groovy
@@ -502,6 +501,8 @@
 [TODO]	grails-plugin-mimetypes/src/test/groovy/org/codehaus/groovy/grails/plugins/web/api/RequestAndResponseMimeTypesApiSpec.groovy
 [TODO]	grails-plugin-mimetypes/src/test/groovy/org/codehaus/groovy/grails/web/mime/AcceptHeaderParserTests.groovy
 [TODO]	grails-plugin-mimetypes/src/test/groovy/org/codehaus/groovy/grails/web/mime/MimeUtilitySpec.groovy
+
+
 [TODO]	grails-plugin-rest/src/main/groovy/grails/artefact/controller/RestResponder.groovy
 [TODO]	grails-plugin-rest/src/main/groovy/grails/compiler/traits/RestResponderTraitInjector.groovy
 [TODO]	grails-plugin-rest/src/main/groovy/grails/rest/Link.groovy
