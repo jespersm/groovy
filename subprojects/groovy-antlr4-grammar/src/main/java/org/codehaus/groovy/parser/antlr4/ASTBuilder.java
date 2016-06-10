@@ -402,7 +402,7 @@ public class ASTBuilder {
         if (classNode.isInterface()) { // FIXME why interface has null mixin
             try {
                 // FIXME Hack with visibility.
-                Field field = classNode.getClass().getDeclaredField("mixins");
+                Field field = ClassNode.class.getDeclaredField("mixins");
                 field.setAccessible(true);
                 field.set(classNode, null);
             } catch (IllegalAccessException e) {
