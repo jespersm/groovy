@@ -138,6 +138,7 @@ class MainTest extends Specification {
         "Interface.groovy" | _
         "ClassMembers_Issue3_3.groovy" | _
         "FieldAccess_1.groovy" | _
+        "BreakAndContinue.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
@@ -714,7 +715,7 @@ class MainTest extends Specification {
         "grails-plugin-rest/src/main/groovy/grails/rest/render/xml/XmlCollectionRenderer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-plugin-rest/src/main/groovy/grails/rest/render/xml/XmlRenderer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-plugin-rest/src/main/groovy/org/grails/plugins/web/rest/plugin/RestResponderGrailsPlugin.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME support "break outer"        "grails-plugin-rest/src/main/groovy/org/grails/plugins/web/rest/render/DefaultRendererRegistry.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-plugin-rest/src/main/groovy/org/grails/plugins/web/rest/render/DefaultRendererRegistry.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-plugin-rest/src/main/groovy/org/grails/plugins/web/rest/render/ServletRenderContext.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-plugin-rest/src/main/groovy/org/grails/plugins/web/rest/render/html/DefaultHtmlRenderer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-plugin-rest/src/main/groovy/org/grails/plugins/web/rest/render/json/DefaultJsonRenderer.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)

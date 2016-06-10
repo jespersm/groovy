@@ -210,7 +210,7 @@ statement:
         )
       RCURVE #switchStatement
     |  tryBlock ((catchBlock+ finallyBlock?) | finallyBlock) #tryCatchFinallyStatement
-    | (KW_CONTINUE | KW_BREAK) #controlStatement
+    | (KW_CONTINUE | KW_BREAK) IDENTIFIER? #controlStatement
     | KW_RETURN expression? #returnStatement
     | KW_THROW expression #throwStatement
     | KW_ASSERT expression ((COLON|COMMA) NL* expression)? #assertStatement

@@ -762,12 +762,14 @@ public class ASTBuilder {
     }
 
     public Statement parseStatement(GroovyLangParser.ControlStatementContext ctx) {
-        // TODO check validity. Labeling support.
+        // TODO check validity.
         // Fake inspection result should be suppressed.
         //noinspection GroovyConditionalWithIdenticalBranches
+        String label = asBoolean(ctx.IDENTIFIER()) ? ctx.IDENTIFIER().getText() : null;
+
         return setupNodeLocation(asBoolean(ctx.KW_BREAK())
-                ? new BreakStatement()
-                : new ContinueStatement(), ctx);
+                ? new BreakStatement(label)
+                : new ContinueStatement(label), ctx);
     }
 
     public Statement parseStatement(GroovyLangParser.ReturnStatementContext ctx) {
