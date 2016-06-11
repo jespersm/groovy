@@ -1623,6 +1623,16 @@ public class ASTBuilder {
         return null;
     }
 
+    public TupleExpression parseArgumentListRule(GroovyLangParser.ArgumentListRuleContext argumentListRuleContext) {
+        TupleExpression argumentListExpression = (TupleExpression) createArgumentList(argumentListRuleContext.argumentList());
+
+        for (GroovyLangParser.ClosureExpressionRuleContext closureExpressionRuleContext : argumentListRuleContext.closureExpressionRule()) {
+            argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
+        }
+
+        return convertArgumentList(argumentListExpression);
+    }
+
     /*
      * "@baseContext" does not support in antlr4.5.3, so parse CallExpressionRule and ClosureCallExpressionRule in the same time, which is not elegant currently.
      */
@@ -1649,15 +1659,8 @@ public class ASTBuilder {
         List<GroovyLangParser.ArgumentListRuleContext> argumentListRuleContextList = isClosureCall ? closureCallExpressionRuleContext.argumentListRule() : asBoolean(ctx) ? ctx.argumentListRule() : nonKwCallExpressionRuleContext.argumentListRule();
         if (asBoolean(argumentListRuleContextList)) {
             for (GroovyLangParser.ArgumentListRuleContext argumentListRuleContext : argumentListRuleContextList) {
-                TupleExpression argumentListExpression = (TupleExpression) createArgumentList(argumentListRuleContext.argumentList());
-
-                for (GroovyLangParser.ClosureExpressionRuleContext closureExpressionRuleContext : argumentListRuleContext.closureExpressionRule()) {
-                    argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
-                }
-
-                argumentListExpressionList.add(convertArgumentList(argumentListExpression));
+                argumentListExpressionList.add(parseArgumentListRule(argumentListRuleContext));
             }
-
         } else {
             TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? closureCallExpressionRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
 
@@ -1682,14 +1685,16 @@ public class ASTBuilder {
 
         methodCallExpression.setImplicitThis(implicitThis);
 
-        methodCallExpression = DefaultGroovyMethods.inject(argumentListExpressionList.subList(1, argumentListExpressionList.size()), methodCallExpression, new Closure<MethodCallExpression>(null, null) {
-            public MethodCallExpression doCall(MethodCallExpression expr, TupleExpression argumentListExpression) {
-                MethodCallExpression mce = new MethodCallExpression(expr, CALL, argumentListExpression);
-                mce.setImplicitThis(false);
+        if (argumentListExpressionList.size() > 1) {
+            methodCallExpression = DefaultGroovyMethods.inject(argumentListExpressionList.subList(1, argumentListExpressionList.size()), methodCallExpression, new Closure<MethodCallExpression>(null, null) {
+                public MethodCallExpression doCall(MethodCallExpression expr, TupleExpression argumentListExpression) {
+                    MethodCallExpression mce = new MethodCallExpression(expr, CALL, argumentListExpression);
+                    mce.setImplicitThis(false);
 
-                return setupNodeLocation(mce, argumentListExpression);
-            }
-        });
+                    return setupNodeLocation(mce, argumentListExpression);
+                }
+            });
+        }
 
         if (asBoolean(genericDeclarationListContext)) {
             methodCallExpression.setGenericsTypes(parseGenericDeclaration(genericDeclarationListContext));
