@@ -349,18 +349,21 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
+argumentListRule:
+    LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*;
+
 callExpressionRule:
-                    (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                    (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) argumentListRule+
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) argumentList
                   ;
 nonKwCallExpressionRule:
 // @baseContext{callExpressionRule} does not work in antlr4.5.3
-                    (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                    (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) argumentListRule+
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) argumentList
                   ;
 closureCallExpressionRule
 // @baseContext{callExpressionRule} does not work in antlr4.5.3
-                  : (c=closureExpressionRule        ) LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*
+                  : (c=closureExpressionRule        ) argumentListRule+
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (c=closureExpressionRule        ) argumentList
                   ;
 

@@ -866,7 +866,6 @@ public class ASTBuilder {
                     }
 
                 });
-                log.info(expression.getText());
                 break;
         }
         return new ArrayList<Object>(Arrays.asList(expression, DefaultGroovyMethods.last(identifiers).getSymbol().getText(), identifiers.size() == 1));
@@ -1645,22 +1644,30 @@ public class ASTBuilder {
             throw new IllegalStateException("method should not be null");
         }
 
-        TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? closureCallExpressionRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
+        List<TupleExpression> argumentListExpressionList = new LinkedList<TupleExpression>();
 
-        for (GroovyLangParser.ClosureExpressionRuleContext closureExpressionRuleContext : (isClosureCall ? closureCallExpressionRuleContext.closureExpressionRule() : asBoolean(ctx) ? ctx.closureExpressionRule() : nonKwCallExpressionRuleContext.closureExpressionRule())) {
-            if (isClosureCall && closureCallExpressionRuleContext.c == closureExpressionRuleContext) {
-                continue;
+        List<GroovyLangParser.ArgumentListRuleContext> argumentListRuleContextList = isClosureCall ? closureCallExpressionRuleContext.argumentListRule() : asBoolean(ctx) ? ctx.argumentListRule() : nonKwCallExpressionRuleContext.argumentListRule();
+        if (asBoolean(argumentListRuleContextList)) {
+            for (GroovyLangParser.ArgumentListRuleContext argumentListRuleContext : argumentListRuleContextList) {
+                TupleExpression argumentListExpression = (TupleExpression) createArgumentList(argumentListRuleContext.argumentList());
+
+                for (GroovyLangParser.ClosureExpressionRuleContext closureExpressionRuleContext : argumentListRuleContext.closureExpressionRule()) {
+                    argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
+                }
+
+                argumentListExpressionList.add(convertArgumentList(argumentListExpression));
             }
 
-            argumentListExpression.addExpression(parseExpression(closureExpressionRuleContext));
-        }
+        } else {
+            TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? closureCallExpressionRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
 
-        argumentListExpression = convertArgumentList(argumentListExpression);
+            argumentListExpressionList.add(convertArgumentList(argumentListExpression));
+        }
 
         boolean implicitThis = !isClosureCall && !asBoolean(expression);
         if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(method.getText())) {
             // Actually a constructor call
-            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpression);
+            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpressionList.get(0));
             return setupNodeLocation(call, isClosureCall ? closureCallExpressionRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
 //        } else if (implicitThis && VariableExpression.SUPER_EXPRESSION.getText().equals(methodName)) {
 //            // Use this once path methodCallExpression is refac'ed
@@ -1671,8 +1678,18 @@ public class ASTBuilder {
 
         MethodCallExpression methodCallExpression = new MethodCallExpression(isClosureCall ? parseExpression(closureCallExpressionRuleContext.c)
                                                                                  : (asBoolean(expression) ? expression : VariableExpression.THIS_EXPRESSION)
-                                                                   , method, argumentListExpression);
+                                                                   , method, argumentListExpressionList.get(0));
+
         methodCallExpression.setImplicitThis(implicitThis);
+
+        methodCallExpression = DefaultGroovyMethods.inject(argumentListExpressionList.subList(1, argumentListExpressionList.size()), methodCallExpression, new Closure<MethodCallExpression>(null, null) {
+            public MethodCallExpression doCall(MethodCallExpression expr, TupleExpression argumentListExpression) {
+                MethodCallExpression mce = new MethodCallExpression(expr, CALL, argumentListExpression);
+                mce.setImplicitThis(false);
+
+                return setupNodeLocation(mce, argumentListExpression);
+            }
+        });
 
         if (asBoolean(genericDeclarationListContext)) {
             methodCallExpression.setGenericsTypes(parseGenericDeclaration(genericDeclarationListContext));
