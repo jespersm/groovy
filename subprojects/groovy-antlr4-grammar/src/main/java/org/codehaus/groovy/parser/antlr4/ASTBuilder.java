@@ -842,35 +842,6 @@ public class ASTBuilder {
         return statement;
     }
 
-
-    /**
-     * Parse path expression.
-     *
-     * @param ctx
-     * @return tuple of 3 values: Expression, String methodName and boolean implicitThis flag.
-     */
-    public ArrayList<Object> parsePathExpression(GroovyLangParser.PathExpressionContext ctx) {
-        Expression expression;
-        List<TerminalNode> identifiers = ctx.IDENTIFIER();
-        switch (identifiers.size()) {
-            case 1:
-                expression = VariableExpression.THIS_EXPRESSION;
-                break;
-            case 2:
-                expression = new VariableExpression(identifiers.get(0).getText());
-                break;
-            default:
-                expression = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size() - 1), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
-                    public PropertyExpression doCall(Expression expr, Object prop) {
-                        return new PropertyExpression(expr, ((TerminalNode)prop).getText());
-                    }
-
-                });
-                break;
-        }
-        return new ArrayList<Object>(Arrays.asList(expression, DefaultGroovyMethods.last(identifiers).getSymbol().getText(), identifiers.size() == 1));
-    }
-
     public Expression parseExpression(GroovyLangParser.ExpressionContext ctx) {
         if (ctx instanceof GroovyLangParser.ParenthesisExpressionContext)
             return parseExpression((GroovyLangParser.ParenthesisExpressionContext)ctx);
@@ -1651,7 +1622,7 @@ public class ASTBuilder {
         }
 
         if (null == method) {
-            throw new IllegalStateException("method should not be null");
+            throw createParsingFailedException(new IllegalStateException("method should not be null"));
         }
 
         List<TupleExpression> argumentListExpressionList = new LinkedList<TupleExpression>();
