@@ -1431,18 +1431,23 @@ public class ASTBuilder {
 
     public Expression collectPathExpression(GroovyLangParser.PathExpressionContext ctx) {
         List<TerminalNode> identifiers = ctx.IDENTIFIER();
+
+        Expression result = null;
+
         switch (identifiers.size()) {
             case 1:
-                return new VariableExpression(identifiers.get(0).getText());
+                result = new VariableExpression(identifiers.get(0).getText());
+                break;
             default:
-                Expression inject = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size()), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
+                result = DefaultGroovyMethods.inject(identifiers.subList(1, identifiers.size()), new VariableExpression(identifiers.get(0).getText()), new Closure<PropertyExpression>(null, null) {
                     public PropertyExpression doCall(Object val, Object prop) {
-                        return new PropertyExpression(DefaultGroovyMethods.asType(val, Expression.class), new ConstantExpression(((TerminalNode)prop).getText()));
+                        return setupNodeLocation(new PropertyExpression((Expression) val, new ConstantExpression(((TerminalNode) prop).getText())), ((TerminalNode) prop).getSymbol());
                     }
-
                 });
-                return inject;
+                break;
         }
+
+        return setupNodeLocation(asBoolean(ctx.KW_CLASS()) ? new PropertyExpression(result, new ConstantExpression(ctx.KW_CLASS().getText())) : result, ctx);
     }
 
     public Expression collectPathExpression(GroovyLangParser.GstringPathExpressionContext ctx) {
