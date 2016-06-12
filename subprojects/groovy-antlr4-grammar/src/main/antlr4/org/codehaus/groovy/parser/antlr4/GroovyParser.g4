@@ -118,7 +118,7 @@ classBody[boolean isEnum, String className]
       ({$isEnum}? (enumConstant NL* COMMA NL*)* enumConstant NL* COMMA?
       |
       )
-      (classMember[$className] | NL | SEMICOLON)*
+      (classMember[$className] (NL | SEMICOLON) | NL | SEMICOLON)* (classMember[$className] (NL | SEMICOLON)*)?
       RCURVE;
 
 implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
