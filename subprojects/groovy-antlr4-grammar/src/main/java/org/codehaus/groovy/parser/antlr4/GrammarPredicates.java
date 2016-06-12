@@ -38,7 +38,11 @@ public class GrammarPredicates {
     }
 
     public static boolean isClassName(TokenStream nameOrPath) {
-        int index = 1;
+        return isClassName(nameOrPath, 1);
+    }
+
+    public static boolean isClassName(TokenStream nameOrPath, int nextPosition) {
+        int index = nextPosition;
         Token token = nameOrPath.LT(index);
 
         while (nameOrPath.LT(index+1).getType() == GroovyLangParser.DOT) {

@@ -1503,7 +1503,7 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyLangParser.CallExpressionContext ctx) {
-        Expression expression = parseCallExpressionRule(null, null, ctx.closureCallExpressionRule(), null, null);
+        Expression expression = parseCallExpressionRule(null, null, ctx.callRule(), null, null);
 
         return setupNodeLocation(expression, ctx);
     }
@@ -1607,9 +1607,9 @@ public class ASTBuilder {
     /*
      * "@baseContext" does not support in antlr4.5.3, so parse CallExpressionRule and ClosureCallExpressionRule in the same time, which is not elegant currently.
      */
-    public Expression parseCallExpressionRule(GroovyLangParser.CallExpressionRuleContext ctx, GroovyLangParser.NonKwCallExpressionRuleContext nonKwCallExpressionRuleContext, GroovyLangParser.ClosureCallExpressionRuleContext closureCallExpressionRuleContext, Expression expression, GroovyLangParser.GenericDeclarationListContext genericDeclarationListContext) {
+    public Expression parseCallExpressionRule(GroovyLangParser.CallExpressionRuleContext ctx, GroovyLangParser.NonKwCallExpressionRuleContext nonKwCallExpressionRuleContext, GroovyLangParser.CallRuleContext callRuleContext, Expression expression, GroovyLangParser.GenericDeclarationListContext genericDeclarationListContext) {
         Expression method;
-        boolean isClosureCall = asBoolean(closureCallExpressionRuleContext);
+        boolean isClosureCall = asBoolean(callRuleContext);
 
         if (isClosureCall) {
             method = new ConstantExpression(CALL);
@@ -1627,13 +1627,13 @@ public class ASTBuilder {
 
         List<TupleExpression> argumentListExpressionList = new LinkedList<TupleExpression>();
 
-        List<GroovyLangParser.ArgumentListRuleContext> argumentListRuleContextList = isClosureCall ? closureCallExpressionRuleContext.argumentListRule() : asBoolean(ctx) ? ctx.argumentListRule() : nonKwCallExpressionRuleContext.argumentListRule();
+        List<GroovyLangParser.ArgumentListRuleContext> argumentListRuleContextList = isClosureCall ? callRuleContext.argumentListRule() : asBoolean(ctx) ? ctx.argumentListRule() : nonKwCallExpressionRuleContext.argumentListRule();
         if (asBoolean(argumentListRuleContextList)) {
             for (GroovyLangParser.ArgumentListRuleContext argumentListRuleContext : argumentListRuleContextList) {
                 argumentListExpressionList.add(parseArgumentListRule(argumentListRuleContext));
             }
         } else {
-            TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? closureCallExpressionRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
+            TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? callRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
 
             argumentListExpressionList.add(convertArgumentList(argumentListExpression));
         }
@@ -1642,7 +1642,7 @@ public class ASTBuilder {
         if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(method.getText())) {
             // Actually a constructor call
             ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpressionList.get(0));
-            return setupNodeLocation(call, isClosureCall ? closureCallExpressionRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
+            return setupNodeLocation(call, isClosureCall ? callRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
 //        } else if (implicitThis && VariableExpression.SUPER_EXPRESSION.getText().equals(methodName)) {
 //            // Use this once path methodCallExpression is refac'ed
 //            // Actually a constructor call
@@ -1650,7 +1650,7 @@ public class ASTBuilder {
 //            return setupNodeLocation(call, ctx);
         }
 
-        MethodCallExpression methodCallExpression = new MethodCallExpression(isClosureCall ? parseExpression(closureCallExpressionRuleContext.c)
+        MethodCallExpression methodCallExpression = new MethodCallExpression(isClosureCall ? (null != callRuleContext.c ? parseExpression(callRuleContext.c) : parseExpression(callRuleContext.mne))
                                                                                  : (asBoolean(expression) ? expression : VariableExpression.THIS_EXPRESSION)
                                                                    , method, argumentListExpressionList.get(0));
 
@@ -1671,7 +1671,7 @@ public class ASTBuilder {
             methodCallExpression.setGenericsTypes(parseGenericDeclaration(genericDeclarationListContext));
         }
 
-        return setupNodeLocation(methodCallExpression, isClosureCall ? closureCallExpressionRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
+        return setupNodeLocation(methodCallExpression, isClosureCall ? callRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
     }
 
     public ConstructorCallExpression parseExpression(GroovyLangParser.ConstructorCallExpressionContext ctx) {

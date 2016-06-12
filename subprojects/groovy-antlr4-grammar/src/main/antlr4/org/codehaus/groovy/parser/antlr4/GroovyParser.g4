@@ -310,7 +310,7 @@ expression:
     | expression NL* op=(DOT | SAFE_DOT | STAR_DOT) NL* genericDeclarationList? c=callExpressionRule      (nonKwCallExpressionRule)* (IDENTIFIER | STRING | gstring)?   # cmdExpression
     |                                                                           n=nonKwCallExpressionRule (nonKwCallExpressionRule)* (IDENTIFIER | STRING | gstring)?   # cmdExpression
 
-    | closureCallExpressionRule                                                                    #callExpression
+    | callRule                                                                    #callExpression
 
     | LPAREN genericClassNameExpression RPAREN expression #castExpression
     | LPAREN expression RPAREN #parenthesisExpression
@@ -358,13 +358,13 @@ callExpressionRule:
                   ;
 nonKwCallExpressionRule:
 // @baseContext{callExpressionRule} does not work in antlr4.5.3
-                    (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) argumentListRule+
-                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER) argumentList
+                    (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER          ) argumentListRule+
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER          ) argumentList
                   ;
-closureCallExpressionRule
-// @baseContext{callExpressionRule} does not work in antlr4.5.3
-                  : (c=closureExpressionRule        ) argumentListRule+
-                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (c=closureExpressionRule        ) argumentList
+callRule
+                  : c=closureExpressionRule argumentListRule+
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (c=closureExpressionRule                                       ) argumentList
+                  | { !GrammarPredicates.isClassName(_input, 2)     }? LPAREN mne=expression RPAREN argumentListRule+
                   ;
 
 classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
