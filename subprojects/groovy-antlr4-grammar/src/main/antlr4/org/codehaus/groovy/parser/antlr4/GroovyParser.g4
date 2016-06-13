@@ -283,21 +283,9 @@ annotationParameter:
 //                     () {} [] (method call, closableBlock, list/map literal)
 //                     new () (object creation, explicit parenthesis)
 expression:
-      STRING  #constantExpression
-    | gstring #gstringExpression
-    | DECIMAL #constantDecimalExpression
-    | INTEGER #constantIntegerExpression
-    | KW_NULL #nullExpression
+      atomExpressionRule #atomExpression
     | KW_THIS #thisExpression
     | KW_SUPER #superExpression
-    | (KW_TRUE | KW_FALSE) #boolExpression
-    | IDENTIFIER #variableExpression
-    | classNameExpression #variableExpression
-    | newArrayRule #newArrayExpression
-    | newInstanceRule #newInstanceExpression
-    | closureExpressionRule #closureExpression
-    | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
-    | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
     | (KW_THIS | KW_SUPER) LPAREN argumentList? RPAREN  #constructorCallExpression
     | e=expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) #fieldAccessExpression
 
@@ -349,6 +337,22 @@ expression:
     |<assoc=right> LPAREN IDENTIFIER (COMMA IDENTIFIER)* RPAREN ASSIGN NL* expression #assignmentExpression
 ;
 
+atomExpressionRule:
+      STRING  #constantExpression
+    | gstring #gstringExpression
+    | DECIMAL #constantDecimalExpression
+    | INTEGER #constantIntegerExpression
+    | KW_NULL #nullExpression
+    | (KW_TRUE | KW_FALSE) #boolExpression
+    | IDENTIFIER #variableExpression
+    | classNameExpression #variableExpression
+    | closureExpressionRule #closureExpression
+    | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
+    | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
+    | newArrayRule #newArrayExpression
+    | newInstanceRule #newInstanceExpression
+;
+
 argumentListRule:
     LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*;
 
@@ -362,7 +366,7 @@ nonKwCallExpressionRule:
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring) argumentList
                   ;
 callRule
-                  : c=closureExpressionRule argumentListRule+
+                  : a=atomExpressionRule argumentListRule+
                   | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (c=closureExpressionRule                                       ) argumentList
                   | { !GrammarPredicates.isClassName(_input, 2)     }? LPAREN mne=expression RPAREN argumentListRule+
                   ;

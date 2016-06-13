@@ -842,19 +842,50 @@ public class ASTBuilder {
         return statement;
     }
 
-    public Expression parseExpression(GroovyLangParser.ExpressionContext ctx) {
-        if (ctx instanceof GroovyLangParser.ParenthesisExpressionContext)
-            return parseExpression((GroovyLangParser.ParenthesisExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.ConstantIntegerExpressionContext)
+    public Expression parseExpression(GroovyLangParser.AtomExpressionContext ctx) {
+        GroovyLangParser.AtomExpressionRuleContext atomExpressionRuleContext = ctx.atomExpressionRule();
+
+        return parseExpression(atomExpressionRuleContext);
+    }
+
+    public Expression parseExpression(GroovyLangParser.AtomExpressionRuleContext ctx) {
+        if (ctx instanceof GroovyLangParser.ConstantIntegerExpressionContext)
             return parseExpression((GroovyLangParser.ConstantIntegerExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.PostfixExpressionContext)
-            return parseExpression((GroovyLangParser.PostfixExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.ClosureExpressionContext)
             return parseExpression((GroovyLangParser.ClosureExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.AssignmentExpressionContext)
-            return parseExpression((GroovyLangParser.AssignmentExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.ConstantDecimalExpressionContext)
             return parseExpression((GroovyLangParser.ConstantDecimalExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.NullExpressionContext)
+            return parseExpression((GroovyLangParser.NullExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.ListConstructorContext)
+            return parseExpression((GroovyLangParser.ListConstructorContext)ctx);
+        else if (ctx instanceof GroovyLangParser.ConstantExpressionContext)
+            return parseExpression((GroovyLangParser.ConstantExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.NewArrayExpressionContext)
+            return parseExpression((GroovyLangParser.NewArrayExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.VariableExpressionContext)
+            return parseExpression((GroovyLangParser.VariableExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.NewInstanceExpressionContext)
+            return parseExpression((GroovyLangParser.NewInstanceExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.BoolExpressionContext)
+            return parseExpression((GroovyLangParser.BoolExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.MapConstructorContext)
+            return parseExpression((GroovyLangParser.MapConstructorContext)ctx);
+        else if (ctx instanceof GroovyLangParser.GstringExpressionContext)
+            return parseExpression((GroovyLangParser.GstringExpressionContext)ctx);
+
+        throw createParsingFailedException(new InvalidSyntaxException("Unsupported atom expression type! " + String.valueOf(ctx), ctx));
+    }
+
+    public Expression parseExpression(GroovyLangParser.ExpressionContext ctx) {
+        if (ctx instanceof GroovyLangParser.AtomExpressionContext)
+            return parseExpression((GroovyLangParser.AtomExpressionContext)ctx);
+        if (ctx instanceof GroovyLangParser.ParenthesisExpressionContext)
+            return parseExpression((GroovyLangParser.ParenthesisExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.PostfixExpressionContext)
+            return parseExpression((GroovyLangParser.PostfixExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.AssignmentExpressionContext)
+            return parseExpression((GroovyLangParser.AssignmentExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.TernaryExpressionContext)
             return parseExpression((GroovyLangParser.TernaryExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.CmdExpressionContext)
@@ -865,32 +896,14 @@ public class ASTBuilder {
             return parseExpression((GroovyLangParser.CastExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.BinaryExpressionContext)
             return parseExpression((GroovyLangParser.BinaryExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.NullExpressionContext)
-            return parseExpression((GroovyLangParser.NullExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.ListConstructorContext)
-            return parseExpression((GroovyLangParser.ListConstructorContext)ctx);
         else if (ctx instanceof GroovyLangParser.PrefixExpressionContext)
             return parseExpression((GroovyLangParser.PrefixExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.ConstantExpressionContext)
-            return parseExpression((GroovyLangParser.ConstantExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.NewArrayExpressionContext)
-            return parseExpression((GroovyLangParser.NewArrayExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.FieldAccessExpressionContext)
             return parseExpression((GroovyLangParser.FieldAccessExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.VariableExpressionContext)
-            return parseExpression((GroovyLangParser.VariableExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.NewInstanceExpressionContext)
-            return parseExpression((GroovyLangParser.NewInstanceExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.BoolExpressionContext)
-            return parseExpression((GroovyLangParser.BoolExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.ConstructorCallExpressionContext)
             return parseExpression((GroovyLangParser.ConstructorCallExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.UnaryExpressionContext)
             return parseExpression((GroovyLangParser.UnaryExpressionContext)ctx);
-        else if (ctx instanceof GroovyLangParser.MapConstructorContext)
-            return parseExpression((GroovyLangParser.MapConstructorContext)ctx);
-        else if (ctx instanceof GroovyLangParser.GstringExpressionContext)
-            return parseExpression((GroovyLangParser.GstringExpressionContext)ctx);
         if (ctx instanceof GroovyLangParser.IndexExpressionContext)
             return parseExpression((GroovyLangParser.IndexExpressionContext)ctx);
         if (ctx instanceof GroovyLangParser.SpreadExpressionContext)
@@ -1045,21 +1058,28 @@ public class ASTBuilder {
     protected Expression unaryMinusExpression(GroovyLangParser.ExpressionContext ctx) {
         // if we are a number literal then let's just parse it
         // as the negation operator on MIN_INT causes rounding to a long
-        if (ctx instanceof GroovyLangParser.ConstantDecimalExpressionContext) {
-            return parseDecimal('-' + ((GroovyLangParser.ConstantDecimalExpressionContext)ctx).DECIMAL().getText(), ctx);
-        } else if (ctx instanceof GroovyLangParser.ConstantIntegerExpressionContext) {
-            return parseInteger('-' + ((GroovyLangParser.ConstantIntegerExpressionContext)ctx).INTEGER().getText(), ctx);
-        } else {
-            return new UnaryMinusExpression(parseExpression(ctx));
+        if (ctx instanceof GroovyLangParser.AtomExpressionContext) {
+            GroovyLangParser.AtomExpressionRuleContext atomExpressionRuleContext = ((GroovyLangParser.AtomExpressionContext) ctx).atomExpressionRule();
+            if (atomExpressionRuleContext instanceof GroovyLangParser.ConstantDecimalExpressionContext) {
+                return parseDecimal('-' + ((GroovyLangParser.ConstantDecimalExpressionContext) atomExpressionRuleContext).DECIMAL().getText(), ctx);
+            } else if (atomExpressionRuleContext instanceof GroovyLangParser.ConstantIntegerExpressionContext) {
+                return parseInteger('-' + ((GroovyLangParser.ConstantIntegerExpressionContext) atomExpressionRuleContext).INTEGER().getText(), ctx);
+            }
         }
+
+        return new UnaryMinusExpression(parseExpression(ctx));
     }
 
     protected Expression unaryPlusExpression(GroovyLangParser.ExpressionContext ctx) {
-        if (ctx instanceof GroovyLangParser.ConstantDecimalExpressionContext || ctx instanceof GroovyLangParser.ConstantIntegerExpressionContext) {
-            return parseExpression(ctx);
-        } else {
-            return new UnaryPlusExpression(parseExpression(ctx));
+        if (ctx instanceof GroovyLangParser.AtomExpressionContext) {
+            GroovyLangParser.AtomExpressionRuleContext atomExpressionRuleContext = ((GroovyLangParser.AtomExpressionContext) ctx).atomExpressionRule();
+
+            if (atomExpressionRuleContext instanceof GroovyLangParser.ConstantDecimalExpressionContext || atomExpressionRuleContext instanceof GroovyLangParser.ConstantIntegerExpressionContext) {
+                return parseExpression(atomExpressionRuleContext);
+            }
         }
+
+        return new UnaryPlusExpression(parseExpression(ctx));
     }
 
     public Expression parseExpression(GroovyLangParser.UnaryExpressionContext ctx) {
@@ -1609,9 +1629,9 @@ public class ASTBuilder {
      */
     public Expression parseCallExpressionRule(GroovyLangParser.CallExpressionRuleContext ctx, GroovyLangParser.NonKwCallExpressionRuleContext nonKwCallExpressionRuleContext, GroovyLangParser.CallRuleContext callRuleContext, Expression expression, GroovyLangParser.GenericDeclarationListContext genericDeclarationListContext) {
         Expression method;
-        boolean isClosureCall = asBoolean(callRuleContext);
+        boolean isCall = asBoolean(callRuleContext);
 
-        if (isClosureCall) {
+        if (isCall) {
             method = new ConstantExpression(CALL);
         } else {
             if (asBoolean(ctx)) {
@@ -1627,20 +1647,20 @@ public class ASTBuilder {
 
         List<TupleExpression> argumentListExpressionList = new LinkedList<TupleExpression>();
 
-        List<GroovyLangParser.ArgumentListRuleContext> argumentListRuleContextList = isClosureCall ? callRuleContext.argumentListRule() : asBoolean(ctx) ? ctx.argumentListRule() : nonKwCallExpressionRuleContext.argumentListRule();
+        List<GroovyLangParser.ArgumentListRuleContext> argumentListRuleContextList = isCall ? callRuleContext.argumentListRule() : asBoolean(ctx) ? ctx.argumentListRule() : nonKwCallExpressionRuleContext.argumentListRule();
         if (asBoolean(argumentListRuleContextList)) {
             for (GroovyLangParser.ArgumentListRuleContext argumentListRuleContext : argumentListRuleContextList) {
                 argumentListExpressionList.add(parseArgumentListRule(argumentListRuleContext));
             }
         } else {
-            TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isClosureCall ? callRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
+            TupleExpression argumentListExpression = (TupleExpression) createArgumentList(isCall ? callRuleContext.argumentList() : asBoolean(ctx) ? ctx.argumentList() : nonKwCallExpressionRuleContext.argumentList());
 
             argumentListExpressionList.add(convertArgumentList(argumentListExpression));
         }
 
-        boolean implicitThis = !isClosureCall && !asBoolean(expression);
+        boolean implicitThis = !isCall && !asBoolean(expression);
 
-        MethodCallExpression methodCallExpression = new MethodCallExpression(isClosureCall ? (null != callRuleContext.c ? parseExpression(callRuleContext.c) : parseExpression(callRuleContext.mne))
+        MethodCallExpression methodCallExpression = new MethodCallExpression(isCall ? null != callRuleContext.a ? parseExpression(callRuleContext.a) : (null != callRuleContext.c ? parseExpression(callRuleContext.c) : parseExpression(callRuleContext.mne))
                                                                                  : (asBoolean(expression) ? expression : VariableExpression.THIS_EXPRESSION)
                                                                    , method, argumentListExpressionList.get(0));
 
@@ -1661,7 +1681,7 @@ public class ASTBuilder {
             methodCallExpression.setGenericsTypes(parseGenericDeclaration(genericDeclarationListContext));
         }
 
-        return setupNodeLocation(methodCallExpression, isClosureCall ? callRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
+        return setupNodeLocation(methodCallExpression, isCall ? callRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
     }
 
     public ConstructorCallExpression parseExpression(GroovyLangParser.ConstructorCallExpressionContext ctx) {
