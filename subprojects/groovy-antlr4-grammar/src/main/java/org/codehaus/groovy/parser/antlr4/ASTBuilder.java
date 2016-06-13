@@ -1617,7 +1617,7 @@ public class ASTBuilder {
             if (asBoolean(ctx)) {
                 method = this.parseName(ctx.selectorName(), ctx.STRING(), ctx.gstring(), ctx.mne);
             } else {
-                method = this.parseName(nonKwCallExpressionRuleContext.IDENTIFIER(), nonKwCallExpressionRuleContext.STRING(), nonKwCallExpressionRuleContext.gstring(), nonKwCallExpressionRuleContext.KW_THIS(), nonKwCallExpressionRuleContext.KW_SUPER());
+                method = this.parseName(nonKwCallExpressionRuleContext.IDENTIFIER(), nonKwCallExpressionRuleContext.STRING(), nonKwCallExpressionRuleContext.gstring());
             }
         }
 
@@ -1639,16 +1639,6 @@ public class ASTBuilder {
         }
 
         boolean implicitThis = !isClosureCall && !asBoolean(expression);
-        if (implicitThis && VariableExpression.THIS_EXPRESSION.getText().equals(method.getText())) {
-            // Actually a constructor call
-            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.THIS, argumentListExpressionList.get(0));
-            return setupNodeLocation(call, isClosureCall ? callRuleContext : asBoolean(ctx) ? ctx : nonKwCallExpressionRuleContext);
-//        } else if (implicitThis && VariableExpression.SUPER_EXPRESSION.getText().equals(methodName)) {
-//            // Use this once path methodCallExpression is refac'ed
-//            // Actually a constructor call
-//            ConstructorCallExpression call = new ConstructorCallExpression(ClassNode.SUPER, argumentListExpression);
-//            return setupNodeLocation(call, ctx);
-        }
 
         MethodCallExpression methodCallExpression = new MethodCallExpression(isClosureCall ? (null != callRuleContext.c ? parseExpression(callRuleContext.c) : parseExpression(callRuleContext.mne))
                                                                                  : (asBoolean(expression) ? expression : VariableExpression.THIS_EXPRESSION)
@@ -1676,7 +1666,7 @@ public class ASTBuilder {
 
     public ConstructorCallExpression parseExpression(GroovyLangParser.ConstructorCallExpressionContext ctx) {
         Expression argumentListExpression = createArgumentList(ctx.argumentList());
-        ConstructorCallExpression expression = new ConstructorCallExpression(ClassNode.SUPER, argumentListExpression);
+        ConstructorCallExpression expression = new ConstructorCallExpression(asBoolean(ctx.KW_SUPER()) ? ClassNode.SUPER : ClassNode.THIS, argumentListExpression);
         return setupNodeLocation(expression, ctx);
     }
 

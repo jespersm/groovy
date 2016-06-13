@@ -288,8 +288,8 @@ expression:
     | DECIMAL #constantDecimalExpression
     | INTEGER #constantIntegerExpression
     | KW_NULL #nullExpression
-    | KW_THIS # thisExpression
-    | KW_SUPER # superExpression
+    | KW_THIS #thisExpression
+    | KW_SUPER #superExpression
     | (KW_TRUE | KW_FALSE) #boolExpression
     | IDENTIFIER #variableExpression
     | classNameExpression #variableExpression
@@ -298,7 +298,7 @@ expression:
     | closureExpressionRule #closureExpression
     | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
     | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
-    | KW_SUPER LPAREN argumentList? RPAREN  #constructorCallExpression
+    | (KW_THIS | KW_SUPER) LPAREN argumentList? RPAREN  #constructorCallExpression
     | e=expression NL* op=(DOT | SAFE_DOT | STAR_DOT | ATTR_DOT | MEMBER_POINTER) (selectorName | STRING | gstring | LPAREN mne=expression RPAREN) #fieldAccessExpression
 
     | MULT expression #spreadExpression
@@ -358,8 +358,8 @@ callExpressionRule:
                   ;
 nonKwCallExpressionRule:
 // @baseContext{callExpressionRule} does not work in antlr4.5.3
-                    (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER          ) argumentListRule+
-                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring | KW_THIS | KW_SUPER          ) argumentList
+                    (IDENTIFIER   | STRING | gstring) argumentListRule+
+                  | { !GrammarPredicates.isFollowedByLPAREN(_input) }? (IDENTIFIER   | STRING | gstring) argumentList
                   ;
 callRule
                   : c=closureExpressionRule argumentListRule+
