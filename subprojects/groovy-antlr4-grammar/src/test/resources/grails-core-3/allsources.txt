@@ -969,7 +969,7 @@
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/json/JsonBindingSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/json/JsonBindingWithExceptionHandlerSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/xml/XmlBindingSpec.groovy
-[FIXME]	grails-test-suite-web/src/test/groovy/org/grails/web/codecs/CodecSpec.groovy
+[PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/codecs/CodecSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/commandobjects/ClassWithNoValidateMethod.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/commandobjects/CommandObjectInstantiationSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/commandobjects/CommandObjectNullabilitySpec.groovy

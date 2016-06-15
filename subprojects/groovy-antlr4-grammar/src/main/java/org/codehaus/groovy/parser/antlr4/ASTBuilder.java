@@ -2245,7 +2245,8 @@ public class ASTBuilder {
      */
     public String parseString(TerminalNode node) {
         String t = node.getText();
-        return asBoolean(t) ? DefaultGroovyMethods.getAt(t, new IntRange(true, 1, -2)) : t;
+
+        return asBoolean(t) ? DefaultGroovyMethods.getAt(StringUtil.replaceEscapes(t, StringUtil.NONE_SLASHY), new IntRange(true, 1, -2)) : t;
     }
 
     /**
