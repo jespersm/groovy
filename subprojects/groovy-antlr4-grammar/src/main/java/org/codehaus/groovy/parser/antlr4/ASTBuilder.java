@@ -2246,6 +2246,10 @@ public class ASTBuilder {
     public String parseString(TerminalNode node) {
         String t = node.getText();
 
+        if ("''".equals(t) || "\"\"".equals(t)) {
+            return "";
+        }
+
         return asBoolean(t) ? DefaultGroovyMethods.getAt(StringUtil.replaceEscapes(t, StringUtil.NONE_SLASHY), new IntRange(true, 1, -2)) : t;
     }
 

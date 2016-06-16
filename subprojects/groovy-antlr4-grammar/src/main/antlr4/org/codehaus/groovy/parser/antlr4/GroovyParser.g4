@@ -150,7 +150,7 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
         (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);})
         (memberModifier {!checkModifierDuplication($modifierAndDefSet, $memberModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $memberModifier.text)}> {collectModifier($modifierAndDefSet, $memberModifier.text);} | annotationClause | KW_DEF {!$modifierAndDefSet.contains($KW_DEF.text)}?<fail={createErrorMessageForStrictCheck($modifierAndDefSet, $KW_DEF.text)}> {$modifierAndDefSet.add($KW_DEF.text);} | NL)* genericClassNameExpression?
         | genericClassNameExpression)
-    singleDeclaration ( COMMA singleDeclaration)*
+    singleDeclaration ( COMMA NL* singleDeclaration)*
 ;
 
 objectInitializer: blockStatementWithCurve ;
@@ -185,7 +185,7 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule:  ( ((annotationClause NL*)* KW_FINAL? ((annotationClause NL*)* typeDeclaration | (annotationClause NL*)+) | (annotationClause NL*)* KW_FINAL (annotationClause NL*)*) singleDeclaration ( COMMA singleDeclaration)*
+declarationRule:  ( ((annotationClause NL*)* KW_FINAL? ((annotationClause NL*)* typeDeclaration | (annotationClause NL*)+) | (annotationClause NL*)* KW_FINAL (annotationClause NL*)*) singleDeclaration ( COMMA NL* singleDeclaration)*
                   | (annotationClause NL*)* KW_FINAL? KW_DEF tupleDeclaration
                   );
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;

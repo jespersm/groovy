@@ -1071,7 +1071,7 @@
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/PluginTagLibTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/RenderTagLibTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/ReturnValueTagLibTests.groovy
-[FIXME]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/SelectTagTests.groovy
+[PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/SelectTagTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/TagLibraryDynamicPropertyTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/UploadFormTagTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/ValidationTagLibSpec.groovy
