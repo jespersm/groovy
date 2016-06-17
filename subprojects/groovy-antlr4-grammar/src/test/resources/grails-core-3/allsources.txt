@@ -958,7 +958,7 @@
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/ControllerActionParameterBindingSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/DataBindingLazyMetaPropertyMapTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/DataBindingTests.groovy
-[FIXME]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/DefaultASTDatabindingHelperDomainClassSpecialPropertiesSpec.groovy
+[PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/DefaultASTDatabindingHelperDomainClassSpecialPropertiesSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/EnumBindingTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/GrailsParameterMapBindingSpec.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/binding/JSONBindingToNullTests.groovy
@@ -1048,7 +1048,7 @@
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/CoreTagsTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/CountryTagLibTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/FormRenderingTagLibTests.groovy
-[FIXME]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/FormTagLib2Tests.groovy
+[PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/FormTagLib2Tests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/FormTagLib3Tests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/FormTagLibResourceTests.groovy
 [PASS]	grails-test-suite-web/src/test/groovy/org/grails/web/taglib/FormTagLibTests.groovy

@@ -102,10 +102,10 @@ locals [Set<String> modifierSet = new HashSet<String>(), boolean isEnum = false,
         (     annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})
         (NL | annotationClause | classModifier {!checkModifierDuplication($modifierSet, $classModifier.text)}?<fail={createErrorMessageForStrictCheck($modifierSet, $classModifier.text)}> {collectModifier($modifierSet, $classModifier.text);})*
     )? (AT KW_INTERFACE | KW_CLASS | KW_INTERFACE {$isInterface=true;} | KW_TRAIT | KW_ENUM {$isEnum=true;}) IDENTIFIER { $className = $IDENTIFIER.text; }
-    ({!$isEnum}? genericDeclarationList? (extendsClause[$isInterface])?
+    ({!$isEnum}? genericDeclarationList? NL* (extendsClause[$isInterface])? NL*
     |
     )
-    implementsClause? (NL)*
+    implementsClause? NL*
     classBody[$isEnum, $className];
 
 classMember[String className]:
@@ -121,9 +121,9 @@ classBody[boolean isEnum, String className]
       (classMember[$className] (NL | SEMICOLON) | NL | SEMICOLON)* (classMember[$className] (NL | SEMICOLON)*)?
       RCURVE;
 
-implementsClause:  KW_IMPLEMENTS genericClassNameExpression (COMMA genericClassNameExpression)* ;
+implementsClause:  KW_IMPLEMENTS NL* genericClassNameExpression (COMMA NL* genericClassNameExpression)* ;
 extendsClause[boolean isInterface]
-    :  KW_EXTENDS genericClassNameExpression (COMMA {$isInterface}?<fail={"Only interface allows multi-inheritance"}> genericClassNameExpression)* ;
+    :  KW_EXTENDS NL* genericClassNameExpression (COMMA NL* {$isInterface}?<fail={"Only interface allows multi-inheritance"}> genericClassNameExpression)* ;
 
 // Members
 methodDeclaration[String classNameParam]
