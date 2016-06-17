@@ -103,7 +103,18 @@ public class StringUtil {
 
 	private static String replaceEscapes(String text) {
 		text = text.replace("\\$", "$");
-		text = text.replaceAll("\\\\\r?\n", "");
+//		text = text.replaceAll("\\\\\r?\n", "");
+
+		Pattern p = Pattern.compile("(\\\\*)\\\\\r?\n");
+		text = DefaultGroovyMethods.replaceAll(text, p, new Closure<Void>(null, null) {
+			Object doCall(String _0, String _1) {
+				if (null != _1 && _1.length() % 2 == 1) {
+					return _0;
+				}
+
+				return _1;
+			}
+		});
 
         return replaceStandardEscapes(replaceHexEscapes(replaceOctalEscapes(text)));
     }

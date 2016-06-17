@@ -27,3 +27,12 @@ f = "\
 ${'hello'},\
 world!\
 "
+
+g='''\\
+\
+\\
+\\\
+\\\\
+\\\\\
+Integrates Spring Web Flow with Grails \$ \\$ \\\$ \\\\$ \\\\\$
+'''

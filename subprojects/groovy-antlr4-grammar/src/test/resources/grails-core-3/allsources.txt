@@ -910,7 +910,7 @@
 [PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/hibernate-1.2-SNAPSHOT/scripts/_Install.groovy
 [PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/hibernate-1.2-SNAPSHOT/scripts/_Uninstall.groovy
 [PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/hibernate-1.2-SNAPSHOT/scripts/_Upgrade.groovy
-[FIXME]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/webflow-1.2-SNAPSHOT/WebflowGrailsPlugin.groovy
+[PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/webflow-1.2-SNAPSHOT/WebflowGrailsPlugin.groovy
 [PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/webflow-1.2-SNAPSHOT/dependencies.groovy
 [PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/webflow-1.2-SNAPSHOT/scripts/_Install.groovy
 [PASS]	grails-test-suite-uber/test/test-projects/plugin-build-settings/plugins/webflow-1.2-SNAPSHOT/scripts/_Uninstall.groovy
