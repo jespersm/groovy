@@ -1140,15 +1140,19 @@ public class ASTBuilder {
     }
 
     public Expression parseExpression(GroovyLangParser.VariableExpressionContext ctx) {
-        String variable;
-
         if (asBoolean(ctx.classNameExpression())) {
-            variable = parseExpression(ctx.classNameExpression()).getText();
-        } else {
-            variable = ctx.IDENTIFIER().getText();
-        }
+            GroovyLangParser.PathExpressionContext pec = ctx.classNameExpression().pathExpression();
+            if (asBoolean(pec)) {
+                return setupNodeLocation(collectPathExpression(pec), ctx);
+            } else {
+                VariableExpression ve = new VariableExpression(ctx.classNameExpression().BUILT_IN_TYPE().getText());
+                TerminalNode classTN = ctx.classNameExpression().KW_CLASS();
+                return setupNodeLocation(asBoolean(classTN) ? new PropertyExpression(ve, classTN.getText()) : ve, ctx);
+            }
 
-        return setupNodeLocation(new VariableExpression(variable), ctx);
+        } else {
+            return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText()), ctx);
+        }
     }
 
     public Expression parseExpression(GroovyLangParser.FieldAccessExpressionContext ctx) {
@@ -1696,7 +1700,7 @@ public class ASTBuilder {
         if (asBoolean(ctx.BUILT_IN_TYPE())) {
             classNode = ClassHelper.make(ctx.BUILT_IN_TYPE().getText());
         } else {
-            classNode = ClassHelper.make(DefaultGroovyMethods.join(ctx.IDENTIFIER(), "."));
+            classNode = ClassHelper.make(DefaultGroovyMethods.join(ctx.pathExpression().IDENTIFIER(), "."));
         }
 
         return setupNodeLocation(classNode, ctx);

@@ -1111,7 +1111,7 @@
 [PASS]	grails-web-common/src/main/groovy/org/codehaus/groovy/grails/web/servlet/FlashScope.groovy
 [PASS]	grails-web-common/src/main/groovy/org/codehaus/groovy/grails/web/servlet/GrailsApplicationAttributes.groovy
 [PASS]	grails-web-common/src/main/groovy/org/grails/databinding/bindingsource/DataBindingSourceCreator.groovy
-[FIXME]	grails-web-common/src/main/groovy/org/grails/web/beans/PropertyEditorRegistryUtils.groovy
+[PASS]	grails-web-common/src/main/groovy/org/grails/web/beans/PropertyEditorRegistryUtils.groovy
 [PASS]	grails-web-common/src/main/groovy/org/grails/web/context/ServletEnvironmentGrailsApplicationDiscoveryStrategy.groovy
 [PASS]	grails-web-common/src/main/groovy/org/grails/web/databinding/bindingsource/DataBindingSourceRegistry.groovy
 [PASS]	grails-web-common/src/main/groovy/org/grails/web/errors/ErrorsViewStackTracePrinter.groovy

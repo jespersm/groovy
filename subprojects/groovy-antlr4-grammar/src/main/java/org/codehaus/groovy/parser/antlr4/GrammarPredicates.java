@@ -45,12 +45,12 @@ public class GrammarPredicates {
         int index = nextPosition;
         Token token = nameOrPath.LT(index);
 
-        while (nameOrPath.LT(index+1).getType() == GroovyLangParser.DOT) {
+        while (nameOrPath.LT(index + 1).getType() == GroovyLangParser.DOT) {
             index += 2;
             token = nameOrPath.LT(index);
         }
 
-        return GroovyLangParser.BUILT_IN_TYPE == token.getType() || Character.isUpperCase(token.getText().codePointAt(0));
+        return GroovyLangParser.BUILT_IN_TYPE == token.getType() || token.getType() == GroovyLangParser.KW_CLASS || Character.isUpperCase(token.getText().codePointAt(0));
     }
 
     public static boolean isKeyword(TokenStream tokenStream, int... excludedKeywords) {

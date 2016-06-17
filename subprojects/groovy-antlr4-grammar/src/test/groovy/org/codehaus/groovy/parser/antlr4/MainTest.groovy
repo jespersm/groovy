@@ -140,6 +140,7 @@ class MainTest extends Specification {
         "ClassMembers_Issue3_3.groovy" | _
         "FieldAccess_1.groovy" | _
         "BreakAndContinue.groovy" | _
+        "ClassConstants.groovy" | _
         "Switch-Case_issue36.groovy" | addIgnore(CaseStatement, ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "ScriptSupport.groovy" | addIgnore([FieldNode, PropertyNode], ASTComparatorCategory.LOCATION_IGNORE_LIST)
 
@@ -1334,7 +1335,7 @@ class MainTest extends Specification {
         "grails-web-common/src/main/groovy/org/codehaus/groovy/grails/web/servlet/FlashScope.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-web-common/src/main/groovy/org/codehaus/groovy/grails/web/servlet/GrailsApplicationAttributes.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-web-common/src/main/groovy/org/grails/databinding/bindingsource/DataBindingSourceCreator.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
-//FIXME        "grails-web-common/src/main/groovy/org/grails/web/beans/PropertyEditorRegistryUtils.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
+        "grails-web-common/src/main/groovy/org/grails/web/beans/PropertyEditorRegistryUtils.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-web-common/src/main/groovy/org/grails/web/context/ServletEnvironmentGrailsApplicationDiscoveryStrategy.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-web-common/src/main/groovy/org/grails/web/databinding/bindingsource/DataBindingSourceRegistry.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)
         "grails-web-common/src/main/groovy/org/grails/web/errors/ErrorsViewStackTracePrinter.groovy" | addIgnore([Parameter, IfStatement, ThrowStatement, ExpressionStatement, ReturnStatement, ForStatement, CaseStatement, FieldNode, PropertyNode, MethodNode, GenericsType], ASTComparatorCategory.LOCATION_IGNORE_LIST)

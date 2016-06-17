@@ -371,7 +371,7 @@ callRule
                   | { !GrammarPredicates.isClassName(_input, 2)     }? LPAREN mne=expression RPAREN argumentListRule+
                   ;
 
-classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | IDENTIFIER (DOT IDENTIFIER)*) ;
+classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE (DOT KW_CLASS)? | pathExpression) ;
 
 genericClassNameExpression: classNameExpression genericList? (LBRACK RBRACK)* (ELLIPSIS { isEllipsisEnabled() }?<fail={ "The var-arg only be allowed to appear as the last parameter" }>)?;
 
