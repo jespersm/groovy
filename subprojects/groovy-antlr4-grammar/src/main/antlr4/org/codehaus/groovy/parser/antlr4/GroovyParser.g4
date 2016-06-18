@@ -231,7 +231,7 @@ finallyBlock: KW_FINALLY NL* blockStatementWithCurve;
 
 caseStatement: (KW_CASE expression COLON (statement (SEMICOLON | NL) | SEMICOLON | NL)* );
 
-pathExpression: (IDENTIFIER DOT)* IDENTIFIER (DOT KW_CLASS)?;
+pathExpression: (IDENTIFIER DOT)* IDENTIFIER;
 gstringPathExpression: IDENTIFIER (GSTRING_PATH_PART)* ;
 
 closureExpressionRule: LCURVE NL* (argumentDeclarationList NL* CLOSURE_ARG_SEPARATOR NL*)? blockStatement? RCURVE ;
@@ -249,7 +249,7 @@ gstring:  GSTRING_START gstringExpressionBody (GSTRING_PART  gstringExpressionBo
 
 annotationParameter:
     LBRACK (annotationParameter (COMMA annotationParameter)*)? RBRACK #annotationParamArrayExpression
-    | pathExpression #annotationParamPathExpression //class, enum or constant field
+    | pathExpression (DOT KW_CLASS)? #annotationParamPathExpression //class, enum or constant field
     | genericClassNameExpression #annotationParamClassExpression //class
     | STRING #annotationParamStringExpression //primitive
     | DECIMAL #annotationParamDecimalExpression //primitive
@@ -345,7 +345,7 @@ atomExpressionRule:
     | KW_NULL #nullExpression
     | (KW_TRUE | KW_FALSE) #boolExpression
     | IDENTIFIER #variableExpression
-    | classNameExpression #variableExpression
+    | classNameExpression (DOT KW_CLASS)? #variableExpression
     | closureExpressionRule #closureExpression
     | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
     | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
@@ -371,7 +371,8 @@ callRule
                   | { !GrammarPredicates.isClassName(_input, 2)     }? LPAREN mne=expression RPAREN argumentListRule+
                   ;
 
-classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE (DOT KW_CLASS)? | pathExpression) ;
+classNameExpression: { GrammarPredicates.isClassName(_input) }? (BUILT_IN_TYPE | pathExpression);
+
 
 genericClassNameExpression: classNameExpression genericList? (LBRACK RBRACK)* (ELLIPSIS { isEllipsisEnabled() }?<fail={ "The var-arg only be allowed to appear as the last parameter" }>)?;
 

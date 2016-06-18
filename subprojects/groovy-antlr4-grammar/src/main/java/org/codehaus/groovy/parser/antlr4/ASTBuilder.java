@@ -84,7 +84,7 @@ public class ASTBuilder {
         this.setupErrorListener(this.parser);
     }
 
-    public ModuleNode buildModuleNode() {
+    public ModuleNode buildAST() {
         this.startParsing(this.parser);
         this.addClasses();
 
@@ -137,7 +137,7 @@ public class ASTBuilder {
 
     public void parseImportStatement(GroovyLangParser.ImportStatementContext ctx) {
         ImportNode node;
-        List<TerminalNode> qualifiedClassName = new ArrayList<TerminalNode>(ctx.IDENTIFIER());
+        List<TerminalNode> qualifiedClassName = new LinkedList<TerminalNode>(ctx.IDENTIFIER());
         boolean isStar = ctx.MULT() != null;
         boolean isStatic = ctx.KW_STATIC() != null;
         String alias = (ctx.KW_AS() != null) ? DefaultGroovyMethods.pop(qualifiedClassName).getText() : null;
@@ -267,7 +267,7 @@ public class ASTBuilder {
                 || asBoolean(ctx.genericClassNameExpression());
         boolean hasDef = asBoolean(ctx.KW_DEF);
 
-        innerClassesStack.add(new ArrayList<InnerClassNode>());
+        innerClassesDefinedInMethodStack.add(new LinkedList<InnerClassNode>());
         Statement statement = asBoolean(ctx.blockStatementWithCurve())
                 ? parseBlockStatementWithCurve(ctx.blockStatementWithCurve())
                 : null;
@@ -287,7 +287,7 @@ public class ASTBuilder {
 
         final MethodNode methodNode = createMethodNode.call(classNode, ctx, methodName, modifiers, returnType, params, exceptions, statement);
 
-        for (InnerClassNode it : innerClassesStack.pop()) {
+        for (InnerClassNode it : innerClassesDefinedInMethodStack.pop()) {
             it.setEnclosingMethod(methodNode);
         }
 
@@ -728,7 +728,7 @@ public class ASTBuilder {
     }
 
     public Statement parseStatement(GroovyLangParser.SwitchStatementContext ctx) {
-        List<CaseStatement> caseStatements = new ArrayList<CaseStatement>();
+        List<CaseStatement> caseStatements = new LinkedList<CaseStatement>();
         for (GroovyLangParser.CaseStatementContext caseStmt : ctx.caseStatement()) {
 
             BlockStatement stmt =  new BlockStatement();// #BSC
@@ -940,7 +940,7 @@ public class ASTBuilder {
         final List collect = collect(ctx.mapEntry(), new MethodClosure(this, "parseExpression"));
         return setupNodeLocation(new MapExpression(asBoolean(collect)
                 ? collect
-                : new ArrayList()), ctx);
+                : new LinkedList()), ctx);
     }
 
     public MapEntryExpression parseExpression(GroovyLangParser.MapEntryContext ctx) {
@@ -1131,7 +1131,8 @@ public class ASTBuilder {
             return parseExpression((GroovyLangParser.AnnotationParamNullExpressionContext)ctx);
         } else if (ctx instanceof GroovyLangParser.AnnotationParamPathExpressionContext) {
             GroovyLangParser.AnnotationParamPathExpressionContext c = (GroovyLangParser.AnnotationParamPathExpressionContext) ctx;
-            return collectPathExpression(c.pathExpression());
+            Expression expr = collectPathExpression(c.pathExpression());
+            return setupNodeLocation(asBoolean(c.KW_CLASS()) ? new PropertyExpression(expr, c.KW_CLASS().getText()) : expr, ctx);
         } else if (ctx instanceof GroovyLangParser.AnnotationParamStringExpressionContext) {
             return parseExpression((GroovyLangParser.AnnotationParamStringExpressionContext)ctx);
         } else if (ctx instanceof GroovyLangParser.AnnotationParamClosureExpressionContext) {
@@ -1145,14 +1146,19 @@ public class ASTBuilder {
     public Expression parseExpression(GroovyLangParser.VariableExpressionContext ctx) {
         if (asBoolean(ctx.classNameExpression())) {
             GroovyLangParser.PathExpressionContext pec = ctx.classNameExpression().pathExpression();
+
+            Expression expr;
             if (asBoolean(pec)) {
-                return setupNodeLocation(collectPathExpression(pec), ctx);
+                expr = collectPathExpression(pec);
             } else {
-                VariableExpression ve = new VariableExpression(ctx.classNameExpression().BUILT_IN_TYPE().getText());
-                TerminalNode classTN = ctx.classNameExpression().KW_CLASS();
-                return setupNodeLocation(asBoolean(classTN) ? new PropertyExpression(ve, classTN.getText()) : ve, ctx);
+                expr = new VariableExpression(ctx.classNameExpression().BUILT_IN_TYPE().getText());
             }
 
+            if (asBoolean(ctx.KW_CLASS())) {
+                expr = new PropertyExpression(expr, ctx.KW_CLASS().getText());
+            }
+
+            return setupNodeLocation(expr, ctx);
         } else {
             return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText()), ctx);
         }
@@ -1347,11 +1353,10 @@ public class ASTBuilder {
             }
 
         };
-        Collection<String> strings = DefaultGroovyMethods.plus(DefaultGroovyMethods.plus(new ArrayList<String>(Arrays.asList(clearStart.call(ctx.GSTRING_START().getText()))), collect(ctx.GSTRING_PART(), new Closure<String>(null, null) {
+        Collection<String> strings = DefaultGroovyMethods.plus(DefaultGroovyMethods.plus(new LinkedList<String>(Arrays.asList(clearStart.call(ctx.GSTRING_START().getText()))), collect(ctx.GSTRING_PART(), new Closure<String>(null, null) {
             public String doCall(TerminalNode it) {return clearPart.call(it.getText());}
-        })), new ArrayList<String>(Arrays.asList(clearEnd.call(ctx.GSTRING_END().getText()))));
-        final List<Expression> expressions = new ArrayList<Expression>();
-
+        })), new LinkedList<String>(Arrays.asList(clearEnd.call(ctx.GSTRING_END().getText()))));
+        final List<Expression> expressions = new LinkedList<Expression>();
         final List<ParseTree> children = ctx.children;
 
         for (Object it : children) {
@@ -1444,7 +1449,7 @@ public class ASTBuilder {
                 break;
         }
 
-        return setupNodeLocation(asBoolean(ctx.KW_CLASS()) ? new PropertyExpression(result, new ConstantExpression(ctx.KW_CLASS().getText())) : result, ctx);
+        return setupNodeLocation(result, ctx);
     }
 
     public Expression collectPathExpression(GroovyLangParser.GstringPathExpressionContext ctx) {
@@ -1876,8 +1881,8 @@ public class ASTBuilder {
     }
 
     private Expression createArgumentList(GroovyLangParser.ArgumentListContext ctx) {
-        final List<MapEntryExpression> mapArgs = new ArrayList<MapEntryExpression>();
-        final List<Expression> expressions = new ArrayList<Expression>();
+        final List<MapEntryExpression> mapArgs = new LinkedList<MapEntryExpression>();
+        final List<Expression> expressions = new LinkedList<Expression>();
 
         if (ctx != null) {
             for (ParseTree it : ctx.children) {
@@ -1952,7 +1957,7 @@ public class ASTBuilder {
                 ? collect(ctx.classNameExpression(), new Closure<ClassNode>(null, null) {
             public ClassNode doCall(GroovyLangParser.ClassNameExpressionContext it) {return parseExpression(it);}
         })
-                : new ArrayList();
+                : new LinkedList();
         return (ClassNode[])list.toArray(new ClassNode[list.size()]);
     }
 
@@ -1987,7 +1992,7 @@ public class ASTBuilder {
             public Expression doCall(GroovyLangParser.ExpressionContext it) {return parseExpression(it);}
         });
 
-        ArrayExpression expression = new ArrayExpression(parseExpression(ctx.classNameExpression()), new ArrayList<Expression>(), collect);
+        ArrayExpression expression = new ArrayExpression(parseExpression(ctx.classNameExpression()), new LinkedList<Expression>(), collect);
         return setupNodeLocation(expression, ctx);
     }
 
@@ -2017,8 +2022,8 @@ public class ASTBuilder {
             expression.setUsingAnonymousInnerClass(true);
             classNode.setAnonymous(true);
 
-            if (!this.innerClassesStack.isEmpty()) {
-                DefaultGroovyMethods.last(this.innerClassesStack).add(classNode);
+            if (!this.innerClassesDefinedInMethodStack.isEmpty()) {
+                DefaultGroovyMethods.last(this.innerClassesDefinedInMethodStack).add(classNode);
             }
 
 //            this.moduleNode.addClass(classNode);
@@ -2033,7 +2038,7 @@ public class ASTBuilder {
 
     public Parameter[] parseParameters(GroovyLangParser.ArgumentDeclarationListContext ctx) {
         List<Parameter> parameterList = ctx == null || ctx.argumentDeclaration() == null ?
-                new ArrayList<Parameter>(0) :
+                new LinkedList<Parameter>() :
                 collect(ctx.argumentDeclaration(), new Closure<Parameter>(null, null) {
                     public Parameter doCall(GroovyLangParser.ArgumentDeclarationContext it) {
                         Parameter parameter = new Parameter(parseTypeDeclaration(it.typeDeclaration()), it.IDENTIFIER().getText());
@@ -2107,7 +2112,7 @@ public class ASTBuilder {
     }
 
     public int parseClassModifiers(List<GroovyLangParser.ClassModifierContext> ctxs) {
-        List<TerminalNode> visibilityModifiers = new ArrayList<TerminalNode>();
+        List<TerminalNode> visibilityModifiers = new LinkedList<TerminalNode>();
         int modifiers = 0;
         for (int i = 0; i < ctxs.size(); i++) {
             for (Object ctx : ctxs.get(i).children) {
@@ -2168,7 +2173,7 @@ public class ASTBuilder {
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
      * @see #checkModifierDuplication(int, int, TerminalNode)
      */
-    public ArrayList<Object> parseModifiers(List<GroovyLangParser.MemberModifierContext> ctxList, Integer defaultVisibilityModifier) {
+    public List<Object> parseModifiers(List<GroovyLangParser.MemberModifierContext> ctxList, Integer defaultVisibilityModifier) {
         int modifiers = 0;
         boolean hasVisibilityModifier = false;
         for (GroovyLangParser.MemberModifierContext it : ctxList) {
@@ -2203,7 +2208,7 @@ public class ASTBuilder {
         }
         if (!hasVisibilityModifier && defaultVisibilityModifier != null) modifiers |= defaultVisibilityModifier;
 
-        return new ArrayList<Object>(Arrays.asList(modifiers, hasVisibilityModifier));
+        return new LinkedList<Object>(Arrays.asList(modifiers, hasVisibilityModifier));
     }
 
     /**
@@ -2213,7 +2218,7 @@ public class ASTBuilder {
      * @return tuple of int modifier and boolean flag, signalising visibility modifiers presence(true if there is visibility modifier in list, false otherwise).
      * @see #checkModifierDuplication(int, int, TerminalNode)
      */
-    public ArrayList<Object> parseModifiers(List<GroovyLangParser.MemberModifierContext> ctxList) {
+    public List<Object> parseModifiers(List<GroovyLangParser.MemberModifierContext> ctxList) {
         return parseModifiers(ctxList, null);
     }
 
@@ -2491,12 +2496,11 @@ public class ASTBuilder {
                     return findOutestClass(outerClass);
                 }
 
-                private static final int NUM_LENGTH = 10;
-//                private static final long MAX_LINE_CNT = 10000000000L;
+                private static final String SEPARATOR = "@";
 
                 private String convert(ClassNode cn) {
-                    return DefaultGroovyMethods.padLeft(findOutestClass(cn).getLineNumber() + "", NUM_LENGTH, "0") + "@"
-                            + (cn.isInterface() || cn.isEnum() ? "1" : "0") + "@"
+                    return DefaultGroovyMethods.padLeft(findOutestClass(cn).getLineNumber() + "", 10, "0") + SEPARATOR
+                            + (cn.isInterface() || cn.isEnum() ? "1" : "0") + SEPARATOR
                             + cn.getName();
                 }
 
@@ -2519,7 +2523,7 @@ public class ASTBuilder {
     private final ClassLoader classLoader;
     private final List<ClassNode> classes = new LinkedList<ClassNode>();
     private final Stack<ClassNode> classNodeStack = new Stack<ClassNode>();
-    private final Stack<List<InnerClassNode>> innerClassesStack = new Stack<List<InnerClassNode>>();
+    private final Stack<List<InnerClassNode>> innerClassesDefinedInMethodStack = new Stack<List<InnerClassNode>>();
     private final Map<String, Integer> anonymousClassToSeqMap = new HashMap<String, Integer>();
     private final Logger log = Logger.getLogger(ASTBuilder.class.getName());
 }

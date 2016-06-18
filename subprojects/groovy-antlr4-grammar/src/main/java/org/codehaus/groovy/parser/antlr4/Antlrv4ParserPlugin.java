@@ -35,7 +35,7 @@ public class Antlrv4ParserPlugin implements ParserPlugin {
     public ModuleNode buildAST(SourceUnit sourceUnit, java.lang.ClassLoader classLoader, Reduction cst) throws ParserException {
 
         ASTBuilder builder = new ASTBuilder(sourceUnit, classLoader);
-        return builder.buildModuleNode();
+        return builder.buildAST();
     }
 
 }
