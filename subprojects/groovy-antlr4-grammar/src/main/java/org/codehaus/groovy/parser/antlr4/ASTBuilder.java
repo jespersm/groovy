@@ -50,6 +50,8 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.codehaus.groovy.runtime.DefaultGroovyMethods.*;
 
@@ -2005,7 +2007,7 @@ public class ASTBuilder {
                 outer = moduleNode.getScriptClassDummy();
             }
 
-            InnerClassNode classNode = new InnerClassNode(outer, outer.getName() + "$" + String.valueOf((this.anonymousClassesCount = ++this.anonymousClassesCount)), Opcodes.ACC_PUBLIC, ClassHelper.make(creatingClass.getName()));
+            InnerClassNode classNode = new InnerClassNode(outer, this.genAnonymousClassName(outer.getName()), Opcodes.ACC_PUBLIC, ClassHelper.make(creatingClass.getName()));
             classNode.setSuperClass(creatingClass);
 
 
@@ -2444,19 +2446,40 @@ public class ASTBuilder {
         return sw.toString();
     }
 
+    private String genAnonymousClassName(String outerClassName) {
+        return outerClassName + "$" + this.genAnonymousClassSeq(outerClassName);
+    }
+
+    private Integer genAnonymousClassSeq(String outerClassName) {
+        Matcher matcher = Pattern.compile("\\$\\d").matcher(outerClassName);
+
+        String outestNonAnonymousClassName;
+        if (matcher.find()) {
+            outestNonAnonymousClassName = outerClassName.substring(0, matcher.start());
+        } else {
+            outestNonAnonymousClassName = outerClassName;
+        }
+
+        Integer seq = anonymousClassToSeqMap.get(outestNonAnonymousClassName);
+
+        if (null == seq) {
+            seq = 0;
+        }
+
+        anonymousClassToSeqMap.put(outestNonAnonymousClassName, ++seq);
+
+        return seq;
+    }
+
     public ModuleNode getModuleNode() {
         return moduleNode;
     }
 
-    public void setModuleNode(ModuleNode moduleNode) {
-        this.moduleNode = moduleNode;
-    }
-
-    private ModuleNode moduleNode;
-    private SourceUnit sourceUnit;
-    private ClassLoader classLoader;
-    private Stack<ClassNode> classes = new Stack<ClassNode>();
-    private Stack<List<InnerClassNode>> innerClassesDefinedInMethod = new Stack<List<InnerClassNode>>();
-    private int anonymousClassesCount = 0;
-    private Logger log = Logger.getLogger(ASTBuilder.class.getName());
+    private final ModuleNode moduleNode;
+    private final SourceUnit sourceUnit;
+    private final ClassLoader classLoader;
+    private final Stack<ClassNode> classes = new Stack<ClassNode>();
+    private final Stack<List<InnerClassNode>> innerClassesDefinedInMethod = new Stack<List<InnerClassNode>>();
+    private final Map<String, Integer> anonymousClassToSeqMap = new HashMap<String, Integer>();
+    private final Logger log = Logger.getLogger(ASTBuilder.class.getName());
 }

@@ -1142,7 +1142,7 @@
 [PASS]	grails-web-databinding/src/test/groovy/org/grails/web/databinding/bindingsource/json/JsonDataBindingSourceCreatorSpec.groovy
 [PASS]	grails-web-gsp-taglib/src/main/groovy/org/grails/plugins/web/taglib/RenderTagLib.groovy
 [PASS]	grails-web-gsp-taglib/src/main/groovy/org/grails/plugins/web/taglib/SitemeshTagLib.groovy
-[FIXME]	grails-web-gsp/src/main/groovy/grails/gsp/PageRenderer.groovy
+[PASS]	grails-web-gsp/src/main/groovy/grails/gsp/PageRenderer.groovy
 [PASS]	grails-web-gsp/src/main/groovy/org/grails/web/pages/GroovyPageCompilerTask.groovy
 [PASS]	grails-web-gsp/src/test/groovy/org/grails/web/gsp/io/GrailsConventionGroovyPageLocatorSpec.groovy
 [PASS]	grails-web-gsp/src/test/groovy/org/grails/web/servlet/view/GroovyPageViewResolverSpec.groovy
