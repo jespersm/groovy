@@ -78,16 +78,17 @@ public class ASTBuilder {
             this.logTokens(text);
         }
 
-        GroovyLangLexer lexer = new GroovyLangLexer(new ANTLRInputStream(text));
-        GroovyLangParser parser = new GroovyLangParser(new CommonTokenStream(lexer));
+        this.lexer = new GroovyLangLexer(new ANTLRInputStream(text));
+        this.parser = new GroovyLangParser(new CommonTokenStream(lexer));
 
-        this.setupErrorListener(parser);
-
-        this.startParsing(parser);
+        this.setupErrorListener(this.parser);
     }
 
-    private void addEmptyReturnStatement() {
-        moduleNode.addStatement(new ReturnStatement(new ConstantExpression(null)));
+    public ModuleNode buildModuleNode() {
+        this.startParsing(this.parser);
+        this.addClasses();
+
+        return this.moduleNode;
     }
 
     private void startParsing(GroovyLangParser parser) {
@@ -266,7 +267,7 @@ public class ASTBuilder {
                 || asBoolean(ctx.genericClassNameExpression());
         boolean hasDef = asBoolean(ctx.KW_DEF);
 
-        innerClassesDefinedInMethod.add(new ArrayList<InnerClassNode>());
+        innerClassesStack.add(new ArrayList<InnerClassNode>());
         Statement statement = asBoolean(ctx.blockStatementWithCurve())
                 ? parseBlockStatementWithCurve(ctx.blockStatementWithCurve())
                 : null;
@@ -286,7 +287,7 @@ public class ASTBuilder {
 
         final MethodNode methodNode = createMethodNode.call(classNode, ctx, methodName, modifiers, returnType, params, exceptions, statement);
 
-        for (InnerClassNode it : innerClassesDefinedInMethod.pop()) {
+        for (InnerClassNode it : innerClassesStack.pop()) {
             it.setEnclosingMethod(methodNode);
         }
 
@@ -317,7 +318,7 @@ public class ASTBuilder {
     public ClassNode parseClassDeclaration(final GroovyLangParser.ClassDeclarationContext ctx) {
         boolean isEnum = asBoolean(ctx.KW_ENUM());
 
-        final ClassNode outerClass = asBoolean(classes) ? classes.peek() : null;
+        final ClassNode outerClass = asBoolean(classNodeStack) ? classNodeStack.peek() : null;
         ClassNode[] interfaces = asBoolean(ctx.implementsClause())
                 ? collect(ctx.implementsClause().genericClassNameExpression(), new Closure<ClassNode>(this, this) {
             public ClassNode doCall(GroovyLangParser.GenericClassNameExpressionContext it) {
@@ -349,7 +350,8 @@ public class ASTBuilder {
 
         attachAnnotations(classNode, ctx.annotationClause());
 
-        moduleNode.addClass(classNode);
+//        moduleNode.addClass(classNode);
+        classes.add(classNode);
         if (asBoolean(ctx.extendsClause())) {
             if (asBoolean(ctx.KW_INTERFACE()) && !asBoolean(ctx.AT())) { // interface(NOT annotation)
                 List<ClassNode> interfaceList = new LinkedList<ClassNode>();
@@ -396,9 +398,9 @@ public class ASTBuilder {
         }
 
 
-        classes.add(classNode);
+        classNodeStack.add(classNode);
         parseClassBody(classNode, ctx.classBody());
-        classes.pop();
+        classNodeStack.pop();
 
         if (classNode.isInterface()) { // FIXME why interface has null mixin
             try {
@@ -2001,8 +2003,8 @@ public class ASTBuilder {
         } else {
             ClassNode outer;
 
-            if (!this.classes.isEmpty()) {
-                outer = this.classes.peek();
+            if (!this.classNodeStack.isEmpty()) {
+                outer = this.classNodeStack.peek();
             } else {
                 outer = moduleNode.getScriptClassDummy();
             }
@@ -2015,14 +2017,15 @@ public class ASTBuilder {
             expression.setUsingAnonymousInnerClass(true);
             classNode.setAnonymous(true);
 
-            if (!this.innerClassesDefinedInMethod.isEmpty()) {
-                DefaultGroovyMethods.last(this.innerClassesDefinedInMethod).add(classNode);
+            if (!this.innerClassesStack.isEmpty()) {
+                DefaultGroovyMethods.last(this.innerClassesStack).add(classNode);
             }
 
-            this.moduleNode.addClass(classNode);
-            this.classes.add(classNode);
+//            this.moduleNode.addClass(classNode);
+            classes.add(classNode);
+            this.classNodeStack.add(classNode);
             parseClassBody(classNode, ctx.classBody());
-            this.classes.pop();
+            this.classNodeStack.pop();
         }
 
         return expression;
@@ -2262,6 +2265,10 @@ public class ASTBuilder {
         return asBoolean(t) ? DefaultGroovyMethods.getAt(StringUtil.replaceEscapes(t, StringUtil.NONE_SLASHY), new IntRange(true, 1, -2)) : t;
     }
 
+    private void addEmptyReturnStatement() {
+        moduleNode.addStatement(new ReturnStatement(new ConstantExpression(null)));
+    }
+
     /**
      * Attach doc comment to member node as meta data
      */
@@ -2471,15 +2478,48 @@ public class ASTBuilder {
         return seq;
     }
 
-    public ModuleNode getModuleNode() {
-        return moduleNode;
+    private void addClasses() {
+        if (this.classes.size() > 1) {
+            Collections.sort(this.classes, new Comparator<ClassNode>() {
+                private ClassNode findOutestClass(ClassNode cn) {
+                    ClassNode outerClass = cn.getOuterClass();
+
+                    if (null == outerClass) {
+                        return cn;
+                    }
+
+                    return findOutestClass(outerClass);
+                }
+
+                private static final int NUM_LENGTH = 10;
+//                private static final long MAX_LINE_CNT = 10000000000L;
+
+                private String convert(ClassNode cn) {
+                    return DefaultGroovyMethods.padLeft(findOutestClass(cn).getLineNumber() + "", NUM_LENGTH, "0") + "@"
+                            + (cn.isInterface() || cn.isEnum() ? "1" : "0") + "@"
+                            + cn.getName();
+                }
+
+                @Override
+                public int compare(ClassNode cn1, ClassNode cn2) {
+                    return convert(cn1).compareTo(convert(cn2));
+                }
+            });
+        }
+
+        for (ClassNode cn : this.classes) {
+            moduleNode.addClass(cn);
+        }
     }
 
+    private final GroovyLangLexer lexer;
+    private final GroovyLangParser parser;
     private final ModuleNode moduleNode;
     private final SourceUnit sourceUnit;
     private final ClassLoader classLoader;
-    private final Stack<ClassNode> classes = new Stack<ClassNode>();
-    private final Stack<List<InnerClassNode>> innerClassesDefinedInMethod = new Stack<List<InnerClassNode>>();
+    private final List<ClassNode> classes = new LinkedList<ClassNode>();
+    private final Stack<ClassNode> classNodeStack = new Stack<ClassNode>();
+    private final Stack<List<InnerClassNode>> innerClassesStack = new Stack<List<InnerClassNode>>();
     private final Map<String, Integer> anonymousClassToSeqMap = new HashMap<String, Integer>();
     private final Logger log = Logger.getLogger(ASTBuilder.class.getName());
 }

@@ -1,5 +1,5 @@
 
-class A {
+class AA {
     class Inner {
         public def innerMethod() {}
     }
@@ -22,5 +22,52 @@ class A {
         0
     }
 }
+
+
+
+interface A {
+    static enum B {
+        static interface C {
+        }
+    }
+}
+
+interface A2 {
+    static class B2 {
+        static enum C2 {
+        }
+    }
+}
+
+enum A4 {
+    static interface B4 {
+        static class C4 {
+        }
+    }
+}
+
+
+class A3 {
+    static class B3 {
+        static enum C3 {
+        }
+    }
+}
+
+class A5 {
+    static class B5 {
+        static class C5 {
+        }
+    }
+}
+
+interface A1 {
+    static interface B1 {
+        static enum C1 {
+        }
+    }
+}
+
+
 
 

@@ -657,7 +657,7 @@
 [PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/factory/ResourceResolvingCommandFactory.groovy
 [PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/factory/ServiceCommandFactory.groovy
 [PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/factory/YamlCommandFactory.groovy
-[FIXME]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/io/FileSystemInteraction.groovy
+[PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/io/FileSystemInteraction.groovy
 [PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/io/FileSystemInteractionImpl.groovy
 [PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/io/ServerInteraction.groovy
 [PASS]	grails-shell/src/main/groovy/org/grails/cli/profile/commands/script/GroovyScriptCommand.groovy
@@ -1212,3 +1212,4 @@
 [PASS]	grails-web/src/main/groovy/org/grails/web/servlet/ServletContextExtension.groovy
 [PASS]	grails-web/src/test/groovy/org/codehaus/groovy/grails/web/context/ServletContextHolderSpec.groovy
 [PASS]	grails-web/src/test/groovy/org/grails/web/servlet/ServletRequestXhrApiSpec.groovy
+
