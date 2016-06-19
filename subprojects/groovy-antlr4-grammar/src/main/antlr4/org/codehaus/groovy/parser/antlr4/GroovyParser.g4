@@ -249,7 +249,8 @@ gstring:  GSTRING_START gstringExpressionBody (GSTRING_PART  gstringExpressionBo
 
 annotationParameter:
     LBRACK (annotationParameter (COMMA annotationParameter)*)? RBRACK #annotationParamArrayExpression
-    | pathExpression (DOT KW_CLASS)? #annotationParamPathExpression //class, enum or constant field
+    | classConstantRule #annotationParamClassConstantExpression //class constant
+    | pathExpression #annotationParamPathExpression //constant field
     | genericClassNameExpression #annotationParamClassExpression //class
     | STRING #annotationParamStringExpression //primitive
     | DECIMAL #annotationParamDecimalExpression //primitive
@@ -345,13 +346,15 @@ atomExpressionRule:
     | KW_NULL #nullExpression
     | (KW_TRUE | KW_FALSE) #boolExpression
     | IDENTIFIER #variableExpression
-    | classNameExpression (DOT KW_CLASS)? #variableExpression
+    | classConstantRule #classConstantExpression
     | closureExpressionRule #closureExpression
     | LBRACK NL* (expression (NL* COMMA NL* expression NL*)* COMMA?)?  NL* RBRACK #listConstructor
     | LBRACK NL* (COLON NL*| (mapEntry (NL* COMMA NL* mapEntry NL*)*) COMMA?) NL* RBRACK #mapConstructor
     | newArrayRule #newArrayExpression
     | newInstanceRule #newInstanceExpression
 ;
+
+classConstantRule: classNameExpression (DOT KW_CLASS)?;
 
 argumentListRule:
     LPAREN NL* argumentList? NL* RPAREN closureExpressionRule*;

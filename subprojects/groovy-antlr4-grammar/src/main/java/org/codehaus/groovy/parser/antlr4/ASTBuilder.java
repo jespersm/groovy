@@ -837,7 +837,7 @@ public class ASTBuilder {
                 statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(ClassHelper.OBJECT_TYPE, var), catchBlock), it));
             } else {
                 for (GroovyLangParser.ClassNameExpressionContext classNameExpressionContext : classNameExpression) {
-                    statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(parseExpression((GroovyLangParser.ClassNameExpressionContext) classNameExpressionContext), var), catchBlock), classNameExpressionContext));
+                    statement.addCatch(setupNodeLocation(new CatchStatement(new Parameter(parseClassNameExpression((GroovyLangParser.ClassNameExpressionContext) classNameExpressionContext), var), catchBlock), classNameExpressionContext));
                 }
             }
         }
@@ -868,6 +868,8 @@ public class ASTBuilder {
             return parseExpression((GroovyLangParser.NewArrayExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.VariableExpressionContext)
             return parseExpression((GroovyLangParser.VariableExpressionContext)ctx);
+        else if (ctx instanceof GroovyLangParser.ClassConstantExpressionContext)
+            return parseExpression((GroovyLangParser.ClassConstantExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.NewInstanceExpressionContext)
             return parseExpression((GroovyLangParser.NewInstanceExpressionContext)ctx);
         else if (ctx instanceof GroovyLangParser.BoolExpressionContext)
@@ -1129,10 +1131,12 @@ public class ASTBuilder {
             return parseExpression((GroovyLangParser.AnnotationParamIntegerExpressionContext)ctx);
         } else if (ctx instanceof GroovyLangParser.AnnotationParamNullExpressionContext) {
             return parseExpression((GroovyLangParser.AnnotationParamNullExpressionContext)ctx);
+        } else if (ctx instanceof GroovyLangParser.AnnotationParamClassConstantExpressionContext) {
+            GroovyLangParser.AnnotationParamClassConstantExpressionContext c = (GroovyLangParser.AnnotationParamClassConstantExpressionContext) ctx;
+            return setupNodeLocation(parseExpression(c.classConstantRule()), ctx);
         } else if (ctx instanceof GroovyLangParser.AnnotationParamPathExpressionContext) {
             GroovyLangParser.AnnotationParamPathExpressionContext c = (GroovyLangParser.AnnotationParamPathExpressionContext) ctx;
-            Expression expr = collectPathExpression(c.pathExpression());
-            return setupNodeLocation(asBoolean(c.KW_CLASS()) ? new PropertyExpression(expr, c.KW_CLASS().getText()) : expr, ctx);
+            return parseExpression(c.pathExpression());
         } else if (ctx instanceof GroovyLangParser.AnnotationParamStringExpressionContext) {
             return parseExpression((GroovyLangParser.AnnotationParamStringExpressionContext)ctx);
         } else if (ctx instanceof GroovyLangParser.AnnotationParamClosureExpressionContext) {
@@ -1143,25 +1147,37 @@ public class ASTBuilder {
         throw createParsingFailedException(new IllegalStateException(String.valueOf(ctx) + " is prohibited inside annotations."));
     }
 
-    public Expression parseExpression(GroovyLangParser.VariableExpressionContext ctx) {
-        if (asBoolean(ctx.classNameExpression())) {
-            GroovyLangParser.PathExpressionContext pec = ctx.classNameExpression().pathExpression();
+    public Expression parseExpression(GroovyLangParser.ClassNameExpressionContext ctx) {
+        GroovyLangParser.PathExpressionContext pec = ctx.pathExpression();
 
-            Expression expr;
-            if (asBoolean(pec)) {
-                expr = collectPathExpression(pec);
-            } else {
-                expr = new VariableExpression(ctx.classNameExpression().BUILT_IN_TYPE().getText());
-            }
-
-            if (asBoolean(ctx.KW_CLASS())) {
-                expr = new PropertyExpression(expr, ctx.KW_CLASS().getText());
-            }
-
-            return setupNodeLocation(expr, ctx);
+        Expression expr;
+        if (asBoolean(pec)) {
+            expr = parseExpression(pec);
         } else {
-            return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText()), ctx);
+            expr = new VariableExpression(ctx.BUILT_IN_TYPE().getText());
         }
+
+        return setupNodeLocation(expr, ctx);
+    }
+
+    public Expression parseExpression(GroovyLangParser.ClassConstantRuleContext ctx) {
+        Expression expr = parseExpression(ctx.classNameExpression());
+
+        if (asBoolean(ctx.KW_CLASS())) {
+            expr = new PropertyExpression(expr, ctx.KW_CLASS().getText());
+        }
+
+        return setupNodeLocation(expr, ctx);
+    }
+
+    public Expression parseExpression(GroovyLangParser.ClassConstantExpressionContext ctx) {
+        GroovyParser.ClassConstantRuleContext ccrc = ctx.classConstantRule();
+
+        return parseExpression(ccrc);
+    }
+
+    public Expression parseExpression(GroovyLangParser.VariableExpressionContext ctx) {
+        return setupNodeLocation(new VariableExpression(ctx.IDENTIFIER().getText()), ctx);
     }
 
     public Expression parseExpression(GroovyLangParser.FieldAccessExpressionContext ctx) {
@@ -1367,7 +1383,7 @@ public class ASTBuilder {
             GroovyLangParser.GstringExpressionBodyContext gstringExpressionBodyContext = (GroovyLangParser.GstringExpressionBodyContext) it;
 
             if (asBoolean(gstringExpressionBodyContext.gstringPathExpression())) {
-                expressions.add(collectPathExpression(gstringExpressionBodyContext.gstringPathExpression()));
+                expressions.add(parseExpression(gstringExpressionBodyContext.gstringPathExpression()));
             } else if (asBoolean(gstringExpressionBodyContext.closureExpressionRule())) {
                 GroovyLangParser.ClosureExpressionRuleContext closureExpressionRule = gstringExpressionBodyContext.closureExpressionRule();
                 Expression expression = parseExpression(closureExpressionRule);
@@ -1431,7 +1447,7 @@ public class ASTBuilder {
         return setupNodeLocation(new BinaryExpression(left, token, right), ctx);
     }
 
-    public Expression collectPathExpression(GroovyLangParser.PathExpressionContext ctx) {
+    public Expression parseExpression(GroovyLangParser.PathExpressionContext ctx) {
         List<TerminalNode> identifiers = ctx.IDENTIFIER();
 
         Expression result = null;
@@ -1452,7 +1468,7 @@ public class ASTBuilder {
         return setupNodeLocation(result, ctx);
     }
 
-    public Expression collectPathExpression(GroovyLangParser.GstringPathExpressionContext ctx) {
+    public Expression parseExpression(GroovyLangParser.GstringPathExpressionContext ctx) {
         if (!asBoolean(ctx.GSTRING_PATH_PART()))
             return new VariableExpression(ctx.IDENTIFIER().getText());
         else {
@@ -1702,7 +1718,7 @@ public class ASTBuilder {
         return setupNodeLocation(expression, ctx);
     }
 
-    public ClassNode parseExpression(GroovyLangParser.ClassNameExpressionContext ctx) {
+    public ClassNode parseClassNameExpression(GroovyLangParser.ClassNameExpressionContext ctx) {
         ClassNode classNode;
 
         if (asBoolean(ctx.BUILT_IN_TYPE())) {
@@ -1715,7 +1731,7 @@ public class ASTBuilder {
     }
 
     public ClassNode parseExpression(GroovyLangParser.GenericClassNameExpressionContext ctx) {
-        ClassNode classNode = parseExpression(ctx.classNameExpression());
+        ClassNode classNode = parseClassNameExpression(ctx.classNameExpression());
 
         if (asBoolean(ctx.LBRACK())) {
             for (int i = 0, n = ctx.LBRACK().size(); i < n; i++) {
@@ -1955,7 +1971,7 @@ public class ASTBuilder {
     public ClassNode[] parseThrowsClause(GroovyLangParser.ThrowsClauseContext ctx) {
         List list = asBoolean(ctx)
                 ? collect(ctx.classNameExpression(), new Closure<ClassNode>(null, null) {
-            public ClassNode doCall(GroovyLangParser.ClassNameExpressionContext it) {return parseExpression(it);}
+            public ClassNode doCall(GroovyLangParser.ClassNameExpressionContext it) {return parseClassNameExpression(it);}
         })
                 : new LinkedList();
         return (ClassNode[])list.toArray(new ClassNode[list.size()]);
@@ -1992,14 +2008,14 @@ public class ASTBuilder {
             public Expression doCall(GroovyLangParser.ExpressionContext it) {return parseExpression(it);}
         });
 
-        ArrayExpression expression = new ArrayExpression(parseExpression(ctx.classNameExpression()), new LinkedList<Expression>(), collect);
+        ArrayExpression expression = new ArrayExpression(parseClassNameExpression(ctx.classNameExpression()), new LinkedList<Expression>(), collect);
         return setupNodeLocation(expression, ctx);
     }
 
     public ConstructorCallExpression parse(GroovyLangParser.NewInstanceRuleContext ctx) {
         ClassNode creatingClass = asBoolean(ctx.genericClassNameExpression())
                 ? parseExpression(ctx.genericClassNameExpression())
-                : parseExpression(ctx.classNameExpression());
+                : parseClassNameExpression(ctx.classNameExpression());
         if (asBoolean(ctx.LT())) creatingClass.setGenericsTypes(new GenericsType[0]);
 
         ConstructorCallExpression expression;
