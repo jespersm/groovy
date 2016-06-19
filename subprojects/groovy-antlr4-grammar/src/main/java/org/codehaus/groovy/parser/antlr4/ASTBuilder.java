@@ -1183,8 +1183,6 @@ public class ASTBuilder {
     public Expression parseExpression(GroovyLangParser.FieldAccessExpressionContext ctx) {
         Token op = ctx.op;
         Expression left = parseExpression(ctx.e);
-
-        GroovyLangParser.SelectorNameContext fieldName = ctx.selectorName();
         Expression right = this.parseName(ctx.selectorName(), ctx.STRING(), ctx.gstring(), ctx.mne);
 
         Expression node = null;
@@ -2424,12 +2422,12 @@ public class ASTBuilder {
                 s.append(multiply(".\t", indent));
                 s.append(GroovyLangParser.ruleNames[ctx.getRuleIndex()] + ": {");
                 s.append("\n");
-                indent = indent++;
+                indent++;
             }
 
             @Override
             public void exitEveryRule(ParserRuleContext ctx) {
-                indent = indent--;
+                indent--;
                 s.append(multiply(".\t", indent));
                 s.append("}");
                 s.append("\n");
