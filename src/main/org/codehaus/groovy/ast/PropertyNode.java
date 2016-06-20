@@ -20,6 +20,7 @@ package org.codehaus.groovy.ast;
 
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.syntax.Token;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -38,6 +39,14 @@ public class PropertyNode extends AnnotatedNode implements Opcodes, Variable {
     public PropertyNode(
             String name, int modifiers, ClassNode type, ClassNode owner,
             Expression initialValueExpression, Statement getterBlock,
+            Statement setterBlock, Token assignToken) {
+        this(new FieldNode(name, modifiers & ACC_STATIC, type, owner, initialValueExpression, assignToken), modifiers, getterBlock, setterBlock);
+
+    }
+
+    public PropertyNode(
+            String name, int modifiers, ClassNode type, ClassNode owner,
+            Expression initialValueExpression, Statement getterBlock,
             Statement setterBlock) {
         this(new FieldNode(name, modifiers & ACC_STATIC, type, owner, initialValueExpression), modifiers, getterBlock, setterBlock);
     }
@@ -51,6 +60,14 @@ public class PropertyNode extends AnnotatedNode implements Opcodes, Variable {
 
     public Statement getGetterBlock() {
         return getterBlock;
+    }
+
+    public Token getAssignToken() {
+        return field.getAssignToken();
+    }
+
+    public void setAssignToken(Token assignToken) {
+        field.setAssignToken(assignToken);
     }
 
     public Expression getInitialExpression() {

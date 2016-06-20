@@ -26,6 +26,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.ClassNodeUtils;
 import org.codehaus.groovy.ast.tools.ParameterUtils;
 import org.codehaus.groovy.control.CompilePhase;
+import org.codehaus.groovy.syntax.Token;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 import org.codehaus.groovy.vmplugin.VMPluginFactory;
@@ -565,6 +566,19 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
                                     ClassNode type,
                                     Expression initialValueExpression,
                                     Statement getterBlock,
+                                    Statement setterBlock,
+                                    Token assignToken) {
+        PropertyNode node = this.addProperty(name, modifiers, type, initialValueExpression, getterBlock, setterBlock);
+        node.setAssignToken(assignToken);
+
+        return node;
+    }
+
+    public PropertyNode addProperty(String name,
+                                    int modifiers,
+                                    ClassNode type,
+                                    Expression initialValueExpression,
+                                    Statement getterBlock,
                                     Statement setterBlock) {
         for (PropertyNode pn : getProperties()) {
             if (pn.getName().equals(name)) {
@@ -680,6 +694,12 @@ public class ClassNode extends AnnotatedNode implements Opcodes {
         MethodNode answer = addMethod(name, modifiers|ACC_SYNTHETIC, returnType, parameters, exceptions, code);
         answer.setSynthetic(true);
         return answer;
+    }
+
+    public FieldNode addField(String name, int modifiers, ClassNode type, Expression initialValue, Token assignToken) {
+        FieldNode node = this.addField(name, modifiers, type, initialValue);
+        node.setAssignToken(assignToken);
+        return node;
     }
 
     public FieldNode addField(String name, int modifiers, ClassNode type, Expression initialValue) {

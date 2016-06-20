@@ -560,15 +560,27 @@ public class ASTBuilder {
             Expression initialValue = classNode.isInterface() && (null == initialierExpression)
                     ? (null == defaultValue ? null : new ConstantExpression(defaultValue))
                     : initialierExpression;
+
+
+            org.codehaus.groovy.syntax.Token token;
+            if (asBoolean(variableCtx.ASSIGN())) {
+                token = createGroovyToken(variableCtx.ASSIGN().getSymbol(), Types.ASSIGN);
+            } else {
+                int line = variableCtx.start.getLine();
+                int col = -1; //ASSIGN TOKEN DOES NOT APPEAR, SO COL IS -1. IF NO ERROR OCCURS, THE ORIGINAL CODE CAN BE REMOVED IN THE FURTURE: variableCtx.getStart().getCharPositionInLine() + 1; // FIXME Why assignment token location is it's first occurrence.
+
+                token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, "=", line, col);
+            }
+
             if (classNode.isInterface() || hasVisibilityModifier) {
                 modifiers |= classNode.isInterface() ? Opcodes.ACC_PUBLIC : 0;
 
-                FieldNode field = classNode.addField(variableCtx.IDENTIFIER().getText(), modifiers, typeDeclaration, initialValue);
+                FieldNode field = classNode.addField(variableCtx.IDENTIFIER().getText(), modifiers, typeDeclaration, initialValue, token);
                 attachAnnotations(field, ctx.annotationClause());
                 node = setupNodeLocation(field, variables.size() == 1 ? ctx : variableCtx);
             } else {// no visibility specified. Generate property node.
                 Integer propertyModifier = modifiers | Opcodes.ACC_PUBLIC;
-                PropertyNode propertyNode = classNode.addProperty(variableCtx.IDENTIFIER().getText(), propertyModifier, typeDeclaration, initialValue, null, null);
+                PropertyNode propertyNode = classNode.addProperty(variableCtx.IDENTIFIER().getText(), propertyModifier, typeDeclaration, initialValue, null, null, token);
                 propertyNode.getField().setModifiers(modifiers | Opcodes.ACC_PRIVATE);
                 propertyNode.getField().setSynthetic(!classNode.isInterface());
                 node = setupNodeLocation(propertyNode.getField(), variables.size() == 1 ? ctx : variableCtx);
@@ -1800,8 +1812,6 @@ public class ASTBuilder {
     }
 
     public List<DeclarationExpression> parseDeclaration(GroovyLangParser.DeclarationRuleContext ctx) {
-        ClassNode type = parseTypeDeclaration(ctx.typeDeclaration());
-        List<GroovyLangParser.SingleDeclarationContext> variables = ctx.singleDeclaration();
         List<DeclarationExpression> declarations = new LinkedList<DeclarationExpression>();
 
         if (asBoolean(ctx.tupleDeclaration())) {
@@ -1812,28 +1822,20 @@ public class ASTBuilder {
             return declarations;
         }
 
-        for (GroovyLangParser.SingleDeclarationContext variableCtx : variables) {
-            VariableExpression left = new VariableExpression(variableCtx.IDENTIFIER().getText(), type);
+        ClassNode nullClassNode = new ClassNode("", Modifier.PUBLIC, ClassHelper.OBJECT_TYPE);
+        AnnotatedNode node = this.parseMember(nullClassNode, ctx.fieldDeclaration());
 
-            if (asBoolean(ctx.KW_FINAL())) {
-                left.setModifiers(Opcodes.ACC_FINAL);
-            }
+        for (PropertyNode propertyNode : nullClassNode.getProperties()) {
+            VariableExpression left = new VariableExpression(propertyNode.getName(), propertyNode.getType());
+            left.setModifiers(propertyNode.getModifiers() & Opcodes.ACC_FINAL);
 
-            org.codehaus.groovy.syntax.Token token;
-            if (asBoolean(variableCtx.ASSIGN())) {
-                token = createGroovyToken(variableCtx.ASSIGN().getSymbol(), Types.ASSIGN);
-            } else {
-                int line = variableCtx.start.getLine();
-                int col = -1; //ASSIGN TOKEN DOES NOT APPEAR, SO COL IS -1. IF NO ERROR OCCURS, THE ORIGINAL CODE CAN BE REMOVED IN THE FURTURE: variableCtx.getStart().getCharPositionInLine() + 1; // FIXME Why assignment token location is it's first occurrence.
+            Expression initialValue = propertyNode.getInitialExpression();
+            initialValue = initialValue != null ? initialValue : setupNodeLocation(new EmptyExpression(),ctx);
 
-                token = new org.codehaus.groovy.syntax.Token(Types.ASSIGN, "=", line, col);
-            }
+            DeclarationExpression expression = new DeclarationExpression(left, propertyNode.getAssignToken(), initialValue);
+            expression.addAnnotations(propertyNode.getField().getAnnotations());
 
-            GroovyLangParser.ExpressionContext initialValueCtx = variableCtx.expression();
-            Expression initialValue = initialValueCtx != null ? parseExpression(variableCtx.expression()) : setupNodeLocation(new EmptyExpression(),ctx);
-            DeclarationExpression expression = new DeclarationExpression(left, token, initialValue);
-            attachAnnotations(expression, ctx.annotationClause());
-            declarations.add(setupNodeLocation(expression, variableCtx));
+            declarations.add(setupNodeLocation(expression, propertyNode));
         }
 
         int declarationsSize = declarations.size();

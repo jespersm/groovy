@@ -153,6 +153,10 @@ locals [Set<String> modifierAndDefSet = new HashSet<String>()]
     singleDeclaration ( COMMA NL* singleDeclaration)*
 ;
 
+declarationRule:  ( fieldDeclaration
+                  | (annotationClause NL*)* KW_FINAL? KW_DEF tupleDeclaration
+                  );
+
 objectInitializer: blockStatementWithCurve ;
 classInitializer: KW_STATIC blockStatementWithCurve ;
 
@@ -185,9 +189,7 @@ blockStatement:
     (NL | SEMICOLON)+ (statement (NL | SEMICOLON)+)* statement? (NL | SEMICOLON)*
     | statement ((NL | SEMICOLON)+ statement)* (NL | SEMICOLON)*;
 
-declarationRule:  ( ((annotationClause NL*)* KW_FINAL? ((annotationClause NL*)* typeDeclaration | (annotationClause NL*)+) | (annotationClause NL*)* KW_FINAL (annotationClause NL*)*) singleDeclaration ( COMMA NL* singleDeclaration)*
-                  | (annotationClause NL*)* KW_FINAL? KW_DEF tupleDeclaration
-                  );
+
 singleDeclaration: IDENTIFIER (ASSIGN NL* expression)?;
 tupleDeclaration: LPAREN tupleVariableDeclaration (COMMA tupleVariableDeclaration)* RPAREN (ASSIGN NL* expression)?;
 tupleVariableDeclaration: genericClassNameExpression? IDENTIFIER;

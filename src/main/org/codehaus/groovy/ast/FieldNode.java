@@ -21,6 +21,7 @@ package org.codehaus.groovy.ast;
 import java.lang.reflect.Field;
 
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.syntax.Token;
 import org.objectweb.asm.Opcodes;
 
 /**
@@ -38,11 +39,18 @@ public class FieldNode extends AnnotatedNode implements Opcodes, Variable {
     private boolean dynamicTyped;
     private boolean holder;
     private ClassNode originType = ClassHelper.DYNAMIC_TYPE;
+    private Token assignToken;
 
     public static FieldNode newStatic(Class theClass, String name) throws SecurityException, NoSuchFieldException {
         Field field = theClass.getField(name);
         ClassNode fldType = ClassHelper.make(field.getType());
         return new FieldNode(name, ACC_PUBLIC | ACC_STATIC, fldType, ClassHelper.make(theClass), null);
+    }
+
+    public FieldNode(String name, int modifiers, ClassNode type, ClassNode owner, Expression initialValueExpression, Token assignToken) {
+        this(name, modifiers, type, owner, initialValueExpression);
+
+        this.assignToken = assignToken;
     }
 
     public FieldNode(String name, int modifiers, ClassNode type, ClassNode owner, Expression initialValueExpression) {
@@ -55,6 +63,14 @@ public class FieldNode extends AnnotatedNode implements Opcodes, Variable {
         this.originType = type;
         this.owner = owner;
         this.initialValueExpression = initialValueExpression;
+    }
+
+    public Token getAssignToken() {
+        return assignToken;
+    }
+
+    public void setAssignToken(Token assignToken) {
+        this.assignToken = assignToken;
     }
 
     public Expression getInitialExpression() {
